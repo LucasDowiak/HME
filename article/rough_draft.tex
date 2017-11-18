@@ -1,0 +1,346 @@
+\documentclass[12pt]{article}
+
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+%\usepackage{threeparttable}
+\usepackage{geometry}
+\usepackage{pdflscape}
+%\usepackage{algorithmic}
+%\usepackage{algorithm}
+\usepackage{graphicx}
+
+\graphicspath{{/Users/lucasdowiak/Dropbox/HME/images/}}
+
+\newtheorem{defn}{Definition}
+\newtheorem{thm}{Theorem}
+ 
+\title{Econometric Applications of Hierarchical Mixture of Experts}
+
+\begin{document}
+ 
+\maketitle{}
+
+
+\textbf{LUCAS C. DOWIAK\medskip}
+
+Department of Economics, City University of New York\smallskip, Graduate
+Center,
+
+New York, NY, 10016, \textit{Email: ldowiak@gc.cuny.edu}
+
+\qquad
+
+\begin{quotation}
+\textbf{Abstract:}
+\end{quotation}
+
+\vspace{1pt}
+
+\begin{quotation}
+\textbf{Keywords}: Hierarchical mixture of experts, expectation maximization, financial crisis, foreign exchange, time-varying dependence,
+
+\textbf{JEL Classification}: 
+\end{quotation}
+
+\vspace{1pt}
+
+\section{Introduction}
+
+\subsection{Brief History of }
+Machinge Learning's popularity has risen in tandem with its subtle ubiquity in modern-day society. Powering search engines, queueing your next Hulu marathon, or picking your next date, pattern recognition algorithms have become a mainstay of the modern economy. As their profile has risen, it's adventageous to ask whether any AI models can be appropriately used in the field of Econometrics.
+
+In this paper, we will conduct a series of Monte Carlo studies that test the efficacy of one particular machine learning model, the Hierarchical Mixture of Experts (HME). Monte carlo experiements will be conducted in a time series format as well as in the context of standard regression analysis. Additional tests on real-world data sets follow.
+
+The literature for this particular traces back to \cite{JJNH} who proposed combining a mixture local experts models, the wieghts of which are assigned by a gating network. Extending this approach, \cite{JordanJacobsHME} reshape the gating network into a recursive tree structure. An extended discussion on the convergence of the model are provided by \cite{JordanXuConverg} which formalizes the rate of convergence and provides suggested alorithimic improvements.
+
+Since the \cite{WMS} published in 95 a year after \cite{DieboldLeeWeinbach}
+
+Building dynanics into time series. Exploratory analysis of an unfamiliar dataset
+
+\section{Model}
+
+The network is structure as a tree that branches out at each successive layer. The non-terminal nodes of the tree are called "gating" nodes and split the input space into regions. The location of these nodes will be specified by their address. The root node resides at the apex of the tree and has the address $n_{0}$. In our study, each gating network will make a binary split of in the input space. The number of splits can be arbitrary and non-uniform across gating nodes. In our example with binary splits, the two children of the root node are $n_{1}$, which labels the node created from the left side of the split and $n_{2}$, the node from the right side of the split. Node $n_{1}$ will also partition the data into a left $n_{1|1}$ and right $n_{2|1}$ nodes. This recursive splitting continues until the last non-terminal node, whose addresses is the historical path of gating splits starting form the root node (e.g. $n_{2|1|1}$). The terminal nodes, which are labeled "experts", share the naming convetion for their addresses. For instance, the gating node $n_{2|1}$ can split into two different experts, one to the left $P_{1|2|1}$ and one to the right $P_{2|2|1}$ for a tree with three layers and eight experts). Figure (\ref{fig:HMEexample}) provides a graphical aid to this style of labeling.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{images/wt_network_fullsp3sp2.jpeg}
+  \caption{A Hierarchical Mixture of Expert model of depth of two with two experts. Gating nodes are depicted as circles and experts are rectangles. The root node $N^{0}$ lies at the apex and splits towards three additional gating nodes ($N^{1}$, $N^{2}$, $N^{3}$) one layer down, each providing an additional layer of soft-partitioning through a binary partition of the input space.}
+  \label{fig:HMEexample}
+\end{figure}
+
+
+
+\subsection{Experts}
+It is helpful to think of the HME as a mixture model with the terminal nodes of the tree in Figure 2.1 representing conditional distributions. These conditional distribution are usually formed by some flavor of regression. For cross-sectional analysis, \cite{JordanJacobsHME} provide a framework using generalized linear models (see \cite{GLM}). This type of network is suitable for time-series regression as \cite{HertaJiangTanner} lays out in detail. For a given input and output pair $(x_{t}, y_{t})$, each expert provides a probablistic model relating input $x_{t}$ to output $y_{t}$ and can be summarized as:
+
+\begin{equation} \label{eq:ConditionalDistribution}
+  P^{m}_{t} \equiv P^{m}(y_{t}|x_{t},\beta^{m}), \quad m = 1,2,...,M
+\end{equation}
+
+The experts are combined into a mixture distribution denoted:
+
+\begin{equation} \label{eq:mixture}
+  P(y_{t}|x_{t};\boldsymbol{\beta}) = \sum_{m=1}^{M}\mathbb{P}_{t}[m]P^{m}(y_{t}|x_{t},\beta^{m})
+\end{equation}
+
+where $m$ is one of the $M$ component experts in the mixture and $\mathbb{P}_{t}[m]$ is the probability that the input unit $t$ belongs to expert $m$. Each input unit $x_{t}$ is assigned a probability vector $[\mathbb{P}_{t}[1], \mathbb{P}_{t}[2],...,\mathbb{P}_{t}[M]]$ of membership to each expert with the usual restrictions: $0 \leq \mathbb{P}_{t}[m] \leq 1$ for each $m$ and $\mathbb{P}_{t}[1] + \mathbb{P}_{t}[2] + ... + \mathbb{P}_{t}[M] = 1$.
+
+
+\subsection{Gating Network and $\mathbb{P}_{t}[m]$}
+The main thrust of the HME architecture is the way it arrives at the mixture weights for each input vector. The probability of each input unit $x_{t}$ belonging to expert $m$ is calculated, in recursive fashion, by traversing the path from the root node to the the terminal gating node. The number of recursive steps is equal to the depth of the tree and each non-terminal node adds another layer of soft partitioning to the weights in equation \ref{eq:mixture}. Each node itself is a multinomial model with the number of classes equal to the number of children nodes it splits into. 
+
+\begin{equation} \label{eq:softmax}
+  g^{i}_{t} \equiv g^{i}_{t}(Z_{t},\boldsymbol{\omega}) = \frac{\exp(Z_{t}^{\prime}\omega^{i})}{\sum_{k}{\exp(Z_{t}^{\prime}\omega^{k})}}
+\end{equation}
+
+(the multinomial splits are subject to the usual identification restrictions. See Davidson and MacKinnon pg 469)The tree structure in figure () has binary splits, which reduces the multinomial model to a logistic model. At its most general, there is no particular reason why different gating nodes can't split into different number of children. It is important to keep track of the product path an input vector travels from one node to another. If the time index is supressed, the product path of from one node (say the root node $n_{0}$) to another (say $n_{m|\ldots|j|i}$) can be defined as
+
+\begin{equation} \label{eq:gpath}
+  \pi_{n_{0} \overset{l}{\longleftrightarrow} n_{k|\ldots|j|i}} =
+    \begin{cases} 
+       g^{i}g^{j|i} \ldots g^{k|\dots|j|i} & \textrm{if path is feasible} \\
+       1 & \textrm{otherwise}
+    \end{cases}
+\end{equation}
+
+If one of the nodes is an expert, then multiple paths may exists from the (repeated) expert to the higher-level gating node (as in figure (\ref{fig:HMEexample})). If this is the case, we can index these multiple paths by $l$. By collecting--and summing--all possible paths from the root node to each expert, the probability given in equation (\ref{eq:mixture}) can be expanded and expressed as a set of conditional probabilities
+
+\begin{equation} \label{eq:contribution}
+  P(y_{t}|x_{t};\boldsymbol{\theta}) = \sum_{m}P^{m}(y_{t}|x_{t},\beta^{m})\sum_{l}\pi_{n_{0} \overset{l}{\longleftrightarrow} P^{m}}
+\end{equation}
+
+The product of these individual probabilities across $T$ units in time yields the likelihood function
+\begin{equation} \label{eq:likelihood}
+  \mathcal{L}(\boldsymbol{\theta}|y,x) = \prod_{t}\sum_{m}P^{m}(y_{t}|x_{t},\beta^{m})\sum_{l}\pi_{n_{0} \overset{l}{\longleftrightarrow} P_{m}}
+\end{equation}
+
+.and taking its log yields to log likelihood
+
+\begin{equation} \label{eq:loglikelihood}
+  \boldsymbol{l}(\boldsymbol{\theta}|y,x) = \sum_{t}\log\sum_{m}P^{m}(y_{t}|x_{t},\beta^{m})\sum_{l}\pi_{n_{0}\overset{l}{\longleftrightarrow} P_{m}}
+\end{equation}
+
+The functional form of the log likelihood (\ref{eq:loglikelihood}) does not lend itself easily to direct optimization. Fortunately, a well established technique using expectation maximization \cite{EM_DLR} to estimate mixture models is available. This was the primary insight of Jordan and Jacob's \cite{JordanJacobsHME} original paper.
+
+\section{The EM Set-Up}
+The EM approach to estimating an HME model starts by suggesting that if a resarcher had perfect information, each input vector $x_{t}$ could be matched to the expert $P_{m}$ that generated it with certainty. If a set of indicator variables is introduced that captures this certainty, an \textit{augmented} version of the likelihood in equation (\ref{eq:likelihood}) can be put forward. Define the indicator set as:
+
+\begin{equation} \label{eq:indicator}
+  I_{t}(m) = \begin{cases} 
+     1 & \textrm{if input vector $x_{t}$ is generated ny expert $m$} \\
+     0 & \textrm{otherwise}
+             \end{cases}
+\end{equation}
+
+We can then reformulate the likelihood equation
+
+\begin{equation}  \label{eq:likelihood2}
+  \mathcal{L}_{c}(\boldsymbol{\theta}|y,x) = \prod_{t}\prod_{m}\prod_{l}[P^{m}(y_{t}|x_{t},\beta^{m})\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}]^{I_{t}(m)}
+\end{equation}
+
+leading to the complete-data log-likelihood
+
+\begin{equation}  \label{eq:loglikelihood2}
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}|y,x) = \sum_{t}\sum_{m}\sum_{l}I_{t}(m)\log[P^{m}(y_{t}|x_{t},\beta^{m})\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}]
+\end{equation}
+
+\subsection{E-Step}
+The E-step of the algorithm performs an expectation of over the log-likelhood equation.
+
+\begin{equation} \label{eq:Estep}
+  \begin{split}
+  \mathbb{E}\left[\boldsymbol{l}_{c}(\boldsymbol{\theta}|y,x)\right] & = \sum_{t}\sum_{m}\sum_{l}\mathbb{E}\left[I_{t}(m)\right]\log[P^{m}_{t}(y_{t}|x_{t},\beta^{m})\pi_{n_{o}\overset{l}{\longleftrightarrow} P^{m}}] \\
+   & = \sum_{t}\sum_{m}\sum_{l}h^{\cdotp}_{t}\log[P^{m}(y_{t}|x_{t},\beta^{m})\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}] \\
+   & = \sum_{t}\sum_{m}\sum_{l}h^{0}_{t}\log P^{m}_{t} + h^{\cdotp}_{t} \log g^{i}_{t} + h^{\cdotp}_{t} \log g^{j|i}_{t} + \ldots + h^{\cdotp}_{t} \log g^{k|\dots|j|i}_{t} \\
+  \end{split}
+\end{equation}
+
+In the last step, we substituted equation \ref{eq:gpath} for $\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}$. The value $h_{t}^{a}$ has a unique interpretation here as it implies different values along the node
+
+This approach is most useful when each expert is unique. If each expert is unique, the log in equation 6 passes through to each individual gating node and each expert, greatly simplifying its value and the value of its gradient and hession. On the other hand, if the same expert appears at the end of separate paths along the gating network, at some point (depending on the networks structure) we still need to take the log of a summation.
+
+The posterior probability at any given node $n^{a}$ can be calculated by
+
+\begin{equation} \label{eq:posteriorexpert}
+  \begin{split}
+    \mathbb{E}\left[I_{t}(m)\right] & = P(I_{t}(m)=1|y_{t},x_{t},\boldsymbol{\theta}) \\
+  \end{split}
+\end{equation}
+
+For each node $n^{a}$, the posterior weight works out to
+
+\begin{equation} \label{eq:posteriornode}
+    h_{t}^{a} = \frac{P^{m}\sum_{l}\pi_{n^{a}_{t}\overset{l}{\longleftrightarrow} P^{m}_{t}}}{\sum_{k}P^{k}\sum_{l}\pi_{n^{a}_{t}\overset{l}{\longleftrightarrow} P^{k}_{t}}}
+\end{equation}
+
+
+\begin{equation} \label{eq:nodehessianQ}
+  \mathbf{A}^{a} = (\mathbf{I}_{s-1} \otimes \mathbf{Z})^{\prime} \mathbf{Q}^{a} (\mathbf{I_{s-1}} \otimes \mathbf{Z})
+\end{equation}
+
+\begin{equation} \label{eq:}
+  \mathbf{Q^{a}} = h^{a} \begin{bmatrix}
+     g^{1|a}(1-g^{1|a}) & -g^{1|a}g^{2|a}    & \dots  & g^{1|a}g^{s-1|a}       \\
+     -g^{1|a}g^{2|a}    & g^{2|a}(1-g^{1|a}) & \dots  & g^{2|a}g^{s-1|a}       \\
+     \vdots             &                    & \ddots & \vdots                 \\
+     g^{1|a}g^{s-1|a}   &  \dots             &        & g^{s-1|a}(1-g^{s-1|a}) \\
+  \end{bmatrix}
+\end{equation}
+
+For multinomial regressios, each 
+
+\section{Miscellaneous}
+\subsection{Model Specification}
+When implementng a HME model, one of the major decision points is the exact specification for each of the model's experts. If comparing a trend-stationary model versus a random walk with drift (see \cite{HertaJiangTanner}), the correct specification for each expert requires the inclusion of the true number of lagged dependent variables. While standard approaches such as the autocorrelation and partial autocorrelation functions exist, the multi-state nature of model makes this appreach difficult due to the uncertianty surrounding which state is governing the series at any given time $t$. Unless the researcher has some previous knowledge of the model's form, they are left with performing standard model selection for each expert on the entire series or some subset of the series. To overcome this issue, we follow simple procedure in this paper.
+
+\begin{enumerate}
+\item The HME model is run where each expert is an AR(1) model without a constant.
+\item Use AIC/BIC to perform model selection on each expert, performed on the full series, where the each contribution to the likelihood has been weighted using the posterior weights from equation (\ref{eq:posterior}).
+\item Perform a final HME run using the specifications obtained in step (2) for each expert.
+\end{enumerate}
+
+The validity of this approach is tested on two sets of simulated autoregressive data. this approach
+
+% \begin{table}
+% \caption{Model Selection}{c}
+% \begin{threeparttable}
+%  \begin{tabular}[l]{l c c c | c c c || l c c c | c c c}
+%    \hline \hline
+% \multicolumn{7}{c}{Simulated HME-AR$^{1}$} & \multicolumn{7}{c}{Simulated Univariate AR} \\
+% & \multicolumn{3}{c}{AIC$^{2}$} & \multicolumn{3}{c}{BIC$^{3}$} & & \multicolumn{3}{c}{AIC$^{2}$} & \multicolumn{3}{c}{BIC$^{3}$} \\
+% N & E$_{1}$ & E$_{2}$ & E$_{3}$ & E$_{1}$ & E$_{2}$ & E$_{3}$ & N & E$_{1}$ & E$_{2}$ & E$_{3}$ & E$_{1}$ & E$_{2}$ & E$_{3}$ \\
+% \hline
+% 100   & 0.29 & 0.09 & 0.30 & 0.66 & 0.23 & 0.61 & 33  & 0.67 & 0.32 & 0.62 & 0.9 & 0.29 & 0.76 \\
+% 200   & 0.18 & 0.25 & 0.29 & 0.71 & 0.60 & 0.58 & 66  & 0.68 & 0.62 & 0.72 & 0.98 & 0.43 & 0.95 \\
+% 300   & 0.25 & 0.39 & 0.27 & 0.69 & 0.73 & 0.63 & 100 & 0.65 & 0.77 & 0.77 & 0.95 & 0.72 & 0.92 \\
+% 400   & 0.19 & 0.34 & 0.18 & 0.70 & 0.83 & 0.73 & 133 & 0.70 & 0.66 & 0.73 & 0.99 & 0.77 & 0.98 \\
+% 500   & 0.25 & 0.33 & 0.27 & 0.76 & 0.88 & 0.73 & 166 & 0.66 & 0.69 & 0.69 & 0.98 & 0.92 & 0.97 \\
+% 600   & 0.19 & 0.33 & 0.17 & 0.74 & 0.86 & 0.72 & 200 & 0.78 & 0.74 & 0.75 & 0.99 & 0.94 & 0.96 \\
+% 700   & 0.19 & 0.25 & 0.12 & 0.73 & 0.86 & 0.69 & 233 & 0.73 & 0.73 & 0.69 & 0.97 & 0.96 & 0.97 \\
+% 800   & 0.17 & 0.28 & 0.21 & 0.82 & 0.91 & 0.75 & 266 & 0.68 & 0.75 & 0.77 & 0.99 & 1.00 & 0.95 \\
+% 900   & 0.22 & 0.30 & 0.24 & 0.77 & 0.83 & 0.72 & 300 & 0.74 & 0.77 & 0.76 & 0.97 & 0.99 & 0.98 \\
+% 1000  & 0.14 & 0.34 & 0.29 & 0.80 & 0.90 & 0.70 & 333 & 0.69 & 0.76 & 0.77 & 0.98 & 0.98 & 0.99 \\
+% \hline \hline
+%   \end{tabular}
+%   \begin{tablenotes}
+%     \item Values in the tables are percentages, out of 100 simulations, of obtaining the correct lag order of the autoregressive process for each expert. The size of the simulated series is given by first and eigth columns (N). The experts in the HME share the same specification as their univariate counterparts.
+%     \item[1] Expert AR(p) specification:
+%     Expert 1: ($\phi_{1}=0.7$, $\sigma^{2}=0.03$);
+%     Expert 2: ($\phi_{1}=-0.5$, $\phi_{2}=0.3$, $\sigma^{2}=0.05$);
+%     Expert 3: ($\phi_{1}=0.05$, $\phi_{2}=0.1$, $\phi_{3}=0.6$, $\sigma^{2}=0.1$)
+%     \item[2]{AIC: -2 $\times$ loglikelihood + 2 $\times$ p}
+%     \item[3]{BIC: -2 $\times$ loglikelihood + ln(N) $\times$ p}
+%   \end{tablenotes}
+% \label{tbl:modelselection}
+% \end{threeparttable}
+% \end{table}
+
+\begin{enumerate}
+\item Future research: Agostinelli and Markatou \cite{AgostinelliMarkatou} investigated weighted likelihood ratio tests
+\end{enumerate}
+
+For a time series that moves back and forth between separate regiems, including a time trend can be tricky. Even though the weighting scheme allows different sets of observations to be more important than others when estimating model parameters, once the model parameters have been estimated, they are prescriptive for the entire series. Basically, if one model estimates a trend parameter, the trend for that entire expert is now set, and if/when the time series exists that particular regime and re-enters at a later date, it is re-entering at a level described by the trend.
+
+\subsection{Wald Test is Invalid}
+S+plus GLM section on problems with binomial GLMs
+  -- Hauck and Donner (1977) JASA \cite{HauckDonner} Quoting S+plus: If there are some $\hat{\beta}_{i}$ that are large, the curvature of the log-likelihood at $mathbf{\hat{\beta}}$ can be much less than near $\beta_{i}=0$, and so the Walk approximation understimates the change in log-likelihood on setting $\beta_{i}=0$. This happens in such a way that as $|\hat{\beta}_{i}| \rightarrow \infty$. Thus highly significant coefficients according to the likelihood ratio test may have non-significant t ratios ............. There is one fairly common circumstance in which both convergence problems and the Hauek-Donner phenomenon can occure. This is when the fitted probs are extremely close to zero or one.
+
+
+\subsection{Average Gating Marginal Effect}
+There is an issue of how to tie the variables in the gating network to the regression relationship described by experts. For logit/probit regression, there is the standard margins at the means (MEM) and the average marginal effect (AME). We should be able to extend this kind of analysis to the entire weighting network, chaining marginal effects from the root node down and determind/quantify/summarize the effect each gating factor has on directing which observation to which expert. These can then be tied with the marginal regression effect. Starting with \ref{eq:gpath}, and summing over all the paths from the root node to expert $m$, we can re-arrange the products of the collected path as follows:  
+
+\begin{equation}
+  \begin{split}
+  w^{m} &= \sum_{l} \pi_{n_{0} \overset{l}{\longleftrightarrow} P^{m}} \\
+        &= \sum_{i} \sum_{j} \cdots \sum_{k} g^{i} g^{j|i} \cdots g^{m|k|\cdots|j|i} \\
+%  \frac{\partial w^{m}}{\partial Z_{k}} &= \frac{\partial g^{1}}{\partial Z_{k}}g^{1|1} + g^{1}\frac{\partial g^{1|1}}{\partial Z_{k}} + \frac{\partial g^{2}}{\partial Z_{k}}g^{1|2} + g^{2}\frac{\partial g^{2|2}}{\partial Z_{k}} \\ 
+  \end{split}
+\end{equation}
+
+Applying the chain, we can calculate the marginal effect that variable $p$ has on the weight assinged to each observation being assinged to expert $m$.
+
+\begin{equation}
+  \begin{split}
+    \frac{\partial w^{m}}{\partial Z_{p}} &= \sum_{i} \frac{\partial g^{i}}{\partial Z_{p}} \sum_{j} g^{j|i} \cdots \sum_{k} g^{m|k|\cdots|j|i} \\
+    &+ \sum_{i} g^{i} \sum_{j} \frac{\partial g^{j|i}}{\partial Z_{p}} \cdots \sum_{k} g^{m|k|\cdots|j|i} \\
+    &+ \sum_{i} g^{i} \sum_{j} g^{j|i} \cdots \sum_{k} \frac{\partial g^{m|k|\cdots|j|i}}{\partial Z_{p}} \\
+  \end{split}
+\end{equation}
+
+
+\section{Standard Errors: SEM} \label{standarderrors}
+-- Put his directly after the log-likelihood equation in the EM section
+-- Reference \cite{MengRubinSEM} here because it's as cool as Miles Davis.
+-- Show how weights enter into the score and hessian
+
+\subsection{Simulations}
+In order to carry out simulated experiments of the HME framework, this paper will follow the following methodology.
+
+First, we decide on the model specification $M^{i}(\phi)$ for each expert (AR(p), trend stationary, random walk, etc.), including the choose error distribution. These models are then parameterzied with given values $\phi=(\phi^{1},\dots,\phi^{M})$ Parameters are choosen for each model
+
+Second, we a assign prior probabilties to each expert that summarizes the expectation of each expert being responsible for any given input vector $Z_{t}$. In most cases, when time is the only variable in the gating network, the transition between experts will be a smooth function of time such as the logistic function or a rescaled hyperbolioc tangent. In this paper, prior probabilities for two and three expert models are smooth transitions structured in a way that each expert governs the series for roughly the same amount of time (figure \ref{fig:expertmembership} provides a graphical example). We can organize our prior weights for each expert into a matrix, $G$, whose columns represent separate experts and rows index input patterns. For notational purposes, the M-vector of proabibility of belonging to each expert for input vector $t$ is written as $G_{t}$, while the T-vector of expert $i$'s membership across all input patterns will be written as $G^{s=i}$.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{images/smooth_expert_membership.jpeg}
+  \caption{Example of the smooth transitions probabilities between experts used in this study's simulations.}
+  \label{fig:expertmembership}
+\end{figure}
+
+This method of simulation, with a small tweak, provides a route to obtaining bootstrapped confidenced intervals for the estimated parameters of the an HME model. The only change is replace the random draws from a fixed distribution $F$ Another approach to parameter inference is the venerable bootstrap. If our gating network is a function of time, the following strategy using bootstrapped residuals can be used to find confidence intervals for our parameter estimates. Once an HME model is estimated, we can organize our prior weights for each expert into a matrix, $G$, where each column $s$ represents the (prior) probability of expert . Note that each row sums to one. Posterior expert weights can be collect in a similar matrix called $H$.
+
+% \begin{algorithm}
+%   \caption{Bootstrap Sample}
+%   \begin{algorithmic}[1]
+%     \REQUIRE $H$, $G$, $M(\hat{\phi})$, $\hat{e}$, $T$, $T_{B}$
+%     \FOR{$t=-T_{B}$ to $T$}
+%       \IF{$t < 1$}
+%         \STATE $s \thicksim G_{t=1}$
+%       \ELSE
+%         \STATE $s \thicksim G_{t}$
+%       \ENDIF
+%       \STATE $\epsilon^{*}_{t} \thicksim \hat{e}^{i=s}$ with weights $H^{i=s}$
+%       \STATE $y^{*}_{t} \leftarrow M^{i=s}(y^{*}_{-T_{B},...,t-1},\hat{\beta}^{i=s}) + \epsilon^{*}_{t}$
+%     \ENDFOR
+%     \RETURN $y^{*}_{1,...,T}$
+%   \end{algorithmic}
+% \end{algorithm}
+
+\section{Diagnostics}
+pg 7 of \cite{WMS} suggested observing the distribution of the terminal $g_{i}$. If only one expert is responsible for each observations, $g_{i}$ will be close to one for a single expert and near zero for all other experts. Can we formalize this comparison in to a specific test?
+
+Standard likelihood-ratio test with AIC/BIC penalty
+
+
+  
+\section{Discusion}
+\subsection{Wide networks vs Deep Networkds}
+In this form, a network of a single depth is similar/equal(?) to multinomial logistic regression.
+\subsection{Compare to Alternatives}
+\begin{enumerate}
+\item Smooth transition autogressive (STAR(p)) model has similiar logistic function but the lacks the flexibility of changing model types
+\item Fixed Memory Markov Process. Shares ability to switch between different expert types. Extensions have been provided by Diebold, Lee, and Weinback \cite{DieboldLeeWeinbach} as well as Filardo \cite{Filardo} to include conditional transitional dynamics based on other covariates.
+\item Smooth domain partitioning contrasts
+\end{enumerate}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{images/bias_2RD1.jpeg}
+  \caption{\textbf{HME: Experts=2, Depth=1} Plot of parameter bias of a two-expert HME model as the size of the simulated series increases. Bias is defined as $b=n^{-1}\textstyle{\sum}(\beta_{i}-\beta^{*})$. Simulations were carried out as described in section \ref{standarderrors} with two separate AR(1) processes and 500 replicates per series length. Regime one is generated with parameters ($\phi_{1}=0.8$, $\sigma^{2}_{1}=0.15$). Regime two is generated with parameters ($\phi_{1}=0.5$, $\sigma^{2}_{1}=0.07$).}
+  \label{fig:bias_2RD1}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{images/bias_2RD2.jpeg}
+  \caption{\textbf{HME: Experts=2, Depth=2} Plot of parameter bias of a two-expert HME model as the size of the simulated series increases. Bias is defined as $b=n^{-1}\textstyle{\sum}(\beta_{i}-\beta^{*})$. Simulations were carried out as described in section \ref{standarderrors} with two separate AR(1) processes and 500 replicates per series length. A smooth probability transition is generated by a rescaled hyperbolic tanget function $\pi=\frac{\tanh(\delta x) + 1}{2}$. AR(1) parameters for regime one: $\phi_{1}=0.8$, $\sigma^{2}_{1}=0.1$. AR(1) parameters for regime two: $\phi_{1}=0.5$, $\sigma^{2}_{1}=0.03$.}
+  \label{fig:bias_2RD2}
+\end{figure}
+
+
+
+
+\bibliography{hme_references}
+\bibliographystyle{abbrv}
+\end{document}
+
