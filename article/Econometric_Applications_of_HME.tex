@@ -10,19 +10,25 @@
 %\usepackage{algorithm}
 \usepackage{graphicx}
 
-\graphicspath{{/Users/lucasdowiak/Dropbox/HME/images/}}
+\usepackage[
+  backend=biber,
+  %style=alphabetic,
+  citestyle=authoryear
+]{biblatex}
 
-\newtheorem{defn}{Definition}
-\newtheorem{thm}{Theorem}
+
+\bibliography{hme_references}
+
+\graphicspath{{/Users/lucasdowiak/hme/article/images/}}
+
  
 \title{Econometric Applications of Hierarchical Mixture of Experts}
+\author{Lucas C. Dowiak}
 
 \begin{document}
  
 \maketitle{}
 
-
-\textbf{LUCAS C. DOWIAK\medskip}
 
 Department of Economics, City University of New York\smallskip, Graduate
 Center,
@@ -38,7 +44,8 @@ New York, NY, 10016, \textit{Email: ldowiak@gc.cuny.edu}
 \vspace{1pt}
 
 \begin{quotation}
-\textbf{Keywords}: Hierarchical mixture of experts, expectation maximization, financial crisis, foreign exchange, time-varying dependence,
+\textbf{Keywords}: Hierarchical mixture of experts, expectation maximization,
+financial crisis, foreign exchange, time-varying dependence,
 
 \textbf{JEL Classification}: 
 \end{quotation}
@@ -47,32 +54,154 @@ New York, NY, 10016, \textit{Email: ldowiak@gc.cuny.edu}
 
 \section{Introduction}
 
-\subsection{Brief History of }
-Machinge Learning's popularity has risen in tandem with its subtle ubiquity in modern-day society. Powering search engines, queueing your next Hulu marathon, or picking your next date, pattern recognition algorithms have become a mainstay of the modern economy. As their profile has risen, it's adventageous to ask whether any AI models can be appropriately used in the field of Econometrics.
+The concepts of mixture models and mixture distributions are old hat
+in the economics business. \cite{Hamilton1989} and \cite{GoldfeldQuant1973}
+are a few of the pioneering works for time series and cross sectional
+regression, respectively. We are also knee deep in the age of machine
+learning and it's reigning champion, the artificial neural network, has
+been successfuly adapted and studied in the context of applied econometrics.
+This article adds to the small body of literature that employ a specific
+neural network architecture to model the weights of a mixture model. In doing
+so, we leverage the highly flexible nature of a neural network but maintain
+interpretability and the means to quantify marginal effects.
+The model under investigation is called the Hierarchical Mixture
+of Experts (HME). The literature for this particular model traces back to
+\cite{JJNH1991} who proposed using a mixture of local experts to model vowel
+classifications. The weights given to each expert the result of a multinomial
+logistic regression. The section of the model that partitions the input space
+and assigns expert probabilities is refered to as the gating network. Extending
+this approach, \cite{JordanJacobs1993} reshape the gating network into a
+tree structure, with a set of recursive (hierarchical) splits.
 
-In this paper, we will conduct a series of Monte Carlo studies that test the efficacy of one particular machine learning model, the Hierarchical Mixture of Experts (HME). Monte carlo experiements will be conducted in a time series format as well as in the context of standard regression analysis. Additional tests on real-world data sets follow.
+\cite{WaterhouseRobinson1995} puts forth a method to grow an HME from a 
+single split from the root node.
 
-The literature for this particular traces back to \cite{JJNH} who proposed combining a mixture local experts models, the wieghts of which are assigned by a gating network. Extending this approach, \cite{JordanJacobsHME} reshape the gating network into a recursive tree structure. An extended discussion on the convergence of the model are provided by \cite{JordanXuConverg} which formalizes the rate of convergence and provides suggested alorithimic improvements.
+\cite{JordanXuConverge1995} An extended discussion on the convergence of the
+model used by \cite{JordanJacobs1993} ? (VERIFY). The authors also suggest
+alorithimic improvements to help with estimation.
 
-Since the \cite{WMS} published in 95 a year after \cite{DieboldLeeWeinbach}
+\cite{JiangTanner1999} discuss convergence rates of an HME model where experts
+are from the exponential family with generalized linear mean functions.
 
-Building dynanics into time series. Exploratory analysis of an unfamiliar dataset
+\cite{JiangTanner2000} provide regularity conditions on the HME structure for
+for a mixture of general linear models estimated by maximum likelihood to
+produce consistent and asymptotically normal estimates of the mean response.
+The conditions are validated for poisson, gamma, gaussian, and binomial experts.
+
+
+
+\subsection{Don't leave behind time series analysis}
+
+\cite{WMS1995} provides a detailed discussion about examining ME applied in
+a time series context and provide valuable insights to overfitting the model
+to the data, a common problem in neural network applications.
+
+\cite{HuertaJiangTanner2003} Extends \cite{WMS1995} to an HME.
+Five and a half decades of monthly US Industrial Production
+Index data. They allowed the series to choose between two models, one modeled
+as a random walk and the other as trend stationary. In addition, they present a
+Bayesian approach to estimation.
+
+\cite{CarvalhoTanner2006} refocus the discussion on MoE of time series
+regressions restricted to exponential family distributions. Distilling
+the available literature at the time, the authors cover the import topics of
+estimation and asymptotic properties in the maximum likelihood
+framework, selection of the number of experts, and model validation and
+fitting.
+
+\cite{CarvalhoSkoulakis2010} Applies mixture-of-experts of a single time series.
+Using stock returns, structures the gating network using lagged dependent
+variabels and an 'external' covariate capturing a measure of the trade
+volume at that time. THIS NEEDS A LOT MORE...Mention Simulations...READ 
+THIS ONE AGAIN
+
+
+
+
+\subsection{Additional Articles to Include}
+
+A.X. Carvalho, M.A. Tanner, "Hypothesis testing in mixtures-of-experts of generalized linear time series", Computational Intelligence for Financial Engineering 2003. Proceedings. 2003 IEEE International Conference on, pp. 285-292, 2003.
+
+A.X. Carvalho, M.A. Tanner, "Mixtures-of-experts of autoregressive time series: asymptotic normality and model specification", Neural Networks IEEE Transactions on, vol. 16, pp. 39-56, 2005, ISSN 1045-9227. 
+
+\cite{UedaGhahramani2002}
+
+\cite{BishopSvenson2003} find previous bayesian approaches to estimating an HME
+lacking [\cite{HuertaJiangTanner2003}, \cite{UedaGhahramani2002}]. Using
+variational inference, the authors provide a bayesian estimation approach
+to the log marginal likelihood. With an eye to prediction, the author's advocate
+that their approach makes the HME model easier to estimate without overfitting.
+[Discuss how the authors approach model selection]
+
+
+\cite{CarvalhoSkoulakis2005}
+
+This article investigates a deviation from the original HME as proposed by
+much of the previous literature. Instead of having a unique expert at the 
+end of any one path from the root node, we structure our gating expert to 
+allow multiple paths from the root node to a given expert. [Using a graph
+here to show the difference in the structure]
+
+This allows us to fix the number of experts but still allow the gating network
+to be as flexible as it needs to be. This contrasts with the original structure
+in that as the complexity (define complexity?) of the gating network increases,
+the number of unique experts has to increase as well.
+
+In the context of a time series, this generalization makes it possible to
+model a series that starts in one regime, temporarily switches to a second,
+and then reverts back to the original. This kind of behaviour is easily captured
+by a markov switching (\cite(Hamilton1989)) but has no natural analog when
+applied to the original ME (\cite{WMS1995}) and HME (\cite{HuertaJiangTanner2003})
+setup.
+
+
 
 \section{Model}
 
-The network is structure as a tree that branches out at each successive layer. The non-terminal nodes of the tree are called "gating" nodes and split the input space into regions. The location of these nodes will be specified by their address. The root node resides at the apex of the tree and has the address $n_{0}$. In our study, each gating network will make a binary split of in the input space. The number of splits can be arbitrary and non-uniform across gating nodes. In our example with binary splits, the two children of the root node are $n_{1}$, which labels the node created from the left side of the split and $n_{2}$, the node from the right side of the split. Node $n_{1}$ will also partition the data into a left $n_{1|1}$ and right $n_{2|1}$ nodes. This recursive splitting continues until the last non-terminal node, whose addresses is the historical path of gating splits starting form the root node (e.g. $n_{2|1|1}$). The terminal nodes, which are labeled "experts", share the naming convetion for their addresses. For instance, the gating node $n_{2|1}$ can split into two different experts, one to the left $P_{1|2|1}$ and one to the right $P_{2|2|1}$ for a tree with three layers and eight experts). Figure (\ref{fig:HMEexample}) provides a graphical aid to this style of labeling.
+The network is structure as a tree that branches out at each successive
+layer. The non-terminal nodes of the tree are called "gating" nodes and
+split the input space into regions. The location of these nodes will be
+specified by their address. The root node resides at the apex of the tree
+and has the address $n_{0}$. In our study, each gating network will make
+a binary split of in the input space. The number of splits can be
+arbitrary and non-uniform across gating nodes. In our example with binary
+splits, the two children of the root node are $n_{1}$, which labels the
+node created from the left side of the split and $n_{2}$, the node from
+the right side of the split. Node $n_{1}$ will also partition the data
+into a left $n_{1|1}$ and right $n_{2|1}$ nodes. This recursive splitting
+continues until the last non-terminal node, whose addresses is the
+historical path of gating splits starting form the root node (e.g. $n_{2|1|1}$).
+The terminal nodes, which are labeled "experts", share the naming
+convetion for their addresses. For instance, the gating node $n_{2|1}$
+can split into two different experts, one to the left $P_{1|2|1}$ and one
+to the right $P_{2|2|1}$ for a tree with three layers and eight experts).
+Figure (\ref{fig:HMEexample}) provides a graphical aid to this style of
+labeling.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{images/wt_network_fullsp3sp2.jpeg}
-  \caption{A Hierarchical Mixture of Expert model of depth of two with two experts. Gating nodes are depicted as circles and experts are rectangles. The root node $N^{0}$ lies at the apex and splits towards three additional gating nodes ($N^{1}$, $N^{2}$, $N^{3}$) one layer down, each providing an additional layer of soft-partitioning through a binary partition of the input space.}
+  \caption{A Hierarchical Mixture of Expert model of depth of two with two
+  experts. Gating nodes are depicted as circles and experts are rectangles.
+  The root node $N^{0}$ lies at the apex and splits towards three additional
+  gating nodes ($N^{1}$, $N^{2}$, $N^{3}$) one layer down, each providing an
+  additional layer of soft-partitioning through a binary partition of the input
+  space.}
   \label{fig:HMEexample}
 \end{figure}
 
 
 
 \subsection{Experts}
-It is helpful to think of the HME as a mixture model with the terminal nodes of the tree in Figure 2.1 representing conditional distributions. These conditional distribution are usually formed by some flavor of regression. For cross-sectional analysis, \cite{JordanJacobsHME} provide a framework using generalized linear models (see \cite{GLM}). This type of network is suitable for time-series regression as \cite{HertaJiangTanner} lays out in detail. For a given input and output pair $(x_{t}, y_{t})$, each expert provides a probablistic model relating input $x_{t}$ to output $y_{t}$ and can be summarized as:
+It is helpful to think of the HME as a mixture model with the terminal
+nodes of the tree in Figure 2.1 representing conditional distributions.
+These conditional distribution are usually formed by some flavor of
+regression. For cross-sectional analysis, \cite{JordanJacobs1993} provide
+a framework using generalized linear models (see \cite{GLM1972}). This type
+of network is suitable for time-series regression as \cite{HuertaJiangTanner2003}
+lays out in detail. For a given input and output pair $(x_{t}, y_{t})$,
+each expert provides a probablistic model relating input $x_{t}$ to output
+$y_{t}$ and can be summarized as:
 
 \begin{equation} \label{eq:ConditionalDistribution}
   P^{m}_{t} \equiv P^{m}(y_{t}|x_{t},\beta^{m}), \quad m = 1,2,...,M
@@ -84,17 +213,37 @@ The experts are combined into a mixture distribution denoted:
   P(y_{t}|x_{t};\boldsymbol{\beta}) = \sum_{m=1}^{M}\mathbb{P}_{t}[m]P^{m}(y_{t}|x_{t},\beta^{m})
 \end{equation}
 
-where $m$ is one of the $M$ component experts in the mixture and $\mathbb{P}_{t}[m]$ is the probability that the input unit $t$ belongs to expert $m$. Each input unit $x_{t}$ is assigned a probability vector $[\mathbb{P}_{t}[1], \mathbb{P}_{t}[2],...,\mathbb{P}_{t}[M]]$ of membership to each expert with the usual restrictions: $0 \leq \mathbb{P}_{t}[m] \leq 1$ for each $m$ and $\mathbb{P}_{t}[1] + \mathbb{P}_{t}[2] + ... + \mathbb{P}_{t}[M] = 1$.
+where $m$ is one of the $M$ component experts in the mixture and
+$\mathbb{P}_{t}[m]$ is the probability that the input unit $t$ belongs
+to expert $m$. Each input unit $x_{t}$ is assigned a probability vector
+$[\mathbb{P}_{t}[1], \mathbb{P}_{t}[2],...,\mathbb{P}_{t}[M]]$ of
+membership to each expert with the usual restrictions:
+$0 \leq \mathbb{P}_{t}[m] \leq 1$ for each $m$ and
+$\mathbb{P}_{t}[1] + \mathbb{P}_{t}[2] + ... + \mathbb{P}_{t}[M] = 1$.
 
 
 \subsection{Gating Network and $\mathbb{P}_{t}[m]$}
-The main thrust of the HME architecture is the way it arrives at the mixture weights for each input vector. The probability of each input unit $x_{t}$ belonging to expert $m$ is calculated, in recursive fashion, by traversing the path from the root node to the the terminal gating node. The number of recursive steps is equal to the depth of the tree and each non-terminal node adds another layer of soft partitioning to the weights in equation \ref{eq:mixture}. Each node itself is a multinomial model with the number of classes equal to the number of children nodes it splits into. 
+The main thrust of the HME architecture is the way it arrives at the mixture
+weights for each input vector. The probability of each input unit $x_{t}$
+belonging to expert $m$ is calculated, in recursive fashion, by traversing the
+path from the root node to the the terminal gating node. The number of
+recursive steps is equal to the depth of the tree and each non-terminal node
+adds another layer of soft partitioning to the weights in equation 
+\ref{eq:mixture}. Each node itself is a multinomial model with the number of
+classes equal to the number of children nodes it splits into. 
 
 \begin{equation} \label{eq:softmax}
   g^{i}_{t} \equiv g^{i}_{t}(Z_{t},\boldsymbol{\omega}) = \frac{\exp(Z_{t}^{\prime}\omega^{i})}{\sum_{k}{\exp(Z_{t}^{\prime}\omega^{k})}}
 \end{equation}
 
-(the multinomial splits are subject to the usual identification restrictions. See Davidson and MacKinnon pg 469)The tree structure in figure () has binary splits, which reduces the multinomial model to a logistic model. At its most general, there is no particular reason why different gating nodes can't split into different number of children. It is important to keep track of the product path an input vector travels from one node to another. If the time index is supressed, the product path of from one node (say the root node $n_{0}$) to another (say $n_{m|\ldots|j|i}$) can be defined as
+(the multinomial splits are subject to the usual identification restrictions.
+See Davidson and MacKinnon pg 469)The tree structure in figure () has binary
+splits, which reduces the multinomial model to a logistic model. At its most
+general, there is no particular reason why different gating nodes can't split
+into different number of children. It is important to keep track of the product
+path an input vector travels from one node to another. If the time index is
+supressed, the product path of from one node (say the root node $n_{0}$) to
+another (say $n_{m|\ldots|j|i}$) can be defined as
 
 \begin{equation} \label{eq:gpath}
   \pi_{n_{0} \overset{l}{\longleftrightarrow} n_{k|\ldots|j|i}} =
@@ -121,14 +270,23 @@ The product of these individual probabilities across $T$ units in time yields th
   \boldsymbol{l}(\boldsymbol{\theta}|y,x) = \sum_{t}\log\sum_{m}P^{m}(y_{t}|x_{t},\beta^{m})\sum_{l}\pi_{n_{0}\overset{l}{\longleftrightarrow} P_{m}}
 \end{equation}
 
-The functional form of the log likelihood (\ref{eq:loglikelihood}) does not lend itself easily to direct optimization. Fortunately, a well established technique using expectation maximization \cite{EM_DLR} to estimate mixture models is available. This was the primary insight of Jordan and Jacob's \cite{JordanJacobsHME} original paper.
+The functional form of the log likelihood (\ref{eq:loglikelihood}) does not
+lend itself easily to direct optimization. Fortunately, a well established
+technique using expectation maximization \cite{EM_DLR1977} to estimate mixture
+models is available. This was the primary insight of \cite{JordanJacobs1993}'s
+original paper.
 
 \section{The EM Set-Up}
-The EM approach to estimating an HME model starts by suggesting that if a resarcher had perfect information, each input vector $x_{t}$ could be matched to the expert $P_{m}$ that generated it with certainty. If a set of indicator variables is introduced that captures this certainty, an \textit{augmented} version of the likelihood in equation (\ref{eq:likelihood}) can be put forward. Define the indicator set as:
+The EM approach to estimating an HME model starts by suggesting that if a
+resarcher had perfect information, each input vector $x_{t}$ could be matched
+to the expert $P_{m}$ that generated it with certainty. If a set of indicator
+variables is introduced that captures this certainty, an \textit{augmented}
+version of the likelihood in equation (\ref{eq:likelihood}) can be put forward.
+Define the indicator set as:
 
 \begin{equation} \label{eq:indicator}
   I_{t}(m) = \begin{cases} 
-     1 & \textrm{if input vector $x_{t}$ is generated ny expert $m$} \\
+     1 & \textrm{if input vector $x_{t}$ is generated by expert $m$} \\
      0 & \textrm{otherwise}
              \end{cases}
 \end{equation}
@@ -136,17 +294,18 @@ The EM approach to estimating an HME model starts by suggesting that if a resarc
 We can then reformulate the likelihood equation
 
 \begin{equation}  \label{eq:likelihood2}
-  \mathcal{L}_{c}(\boldsymbol{\theta}|y,x) = \prod_{t}\prod_{m}\prod_{l}[P^{m}(y_{t}|x_{t},\beta^{m})\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}]^{I_{t}(m)}
+  \mathcal{L}_{c}(\boldsymbol{\theta}|y,x) = \prod_{t}\prod_{m}[P^{m}(y_{t}|x_{t},\beta^{m})\sum_{l}\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
 \begin{equation}  \label{eq:loglikelihood2}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}|y,x) = \sum_{t}\sum_{m}\sum_{l}I_{t}(m)\log[P^{m}(y_{t}|x_{t},\beta^{m})\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}]
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}|y,x) = \sum_{t}\sum_{m}I_{t}(m)[\log P^{m}(y_{t}|x_{t},\beta^{m}) \log\sum_{l}\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}]
 \end{equation}
 
 \subsection{E-Step}
-The E-step of the algorithm performs an expectation of over the log-likelhood equation.
+The E-step of the algorithm performs an expectation of over the log-likelhood
+equation.
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
@@ -156,9 +315,17 @@ The E-step of the algorithm performs an expectation of over the log-likelhood eq
   \end{split}
 \end{equation}
 
-In the last step, we substituted equation \ref{eq:gpath} for $\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}$. The value $h_{t}^{a}$ has a unique interpretation here as it implies different values along the node
+In the last step, we substituted equation \ref{eq:gpath} for
+$\pi_{n_{0}\overset{l}{\longleftrightarrow} P^{m}}$. The value $h_{t}^{a}$
+has a unique interpretation here as it implies different values along the
+node
 
-This approach is most useful when each expert is unique. If each expert is unique, the log in equation 6 passes through to each individual gating node and each expert, greatly simplifying its value and the value of its gradient and hession. On the other hand, if the same expert appears at the end of separate paths along the gating network, at some point (depending on the networks structure) we still need to take the log of a summation.
+This approach is most useful when each expert is unique. If each expert is
+unique, the log in equation 6 passes through to each individual gating node
+and each expert, greatly simplifying its value and the value of its gradient
+and hession. On the other hand, if the same expert appears at the end of
+separate paths along the gating network, at some point (depending on the
+networks structure) we still need to take the log of a summation.
 
 The posterior probability at any given node $n^{a}$ can be calculated by
 
@@ -175,24 +342,17 @@ For each node $n^{a}$, the posterior weight works out to
 \end{equation}
 
 
-\begin{equation} \label{eq:nodehessianQ}
-  \mathbf{A}^{a} = (\mathbf{I}_{s-1} \otimes \mathbf{Z})^{\prime} \mathbf{Q}^{a} (\mathbf{I_{s-1}} \otimes \mathbf{Z})
-\end{equation}
 
-\begin{equation} \label{eq:}
-  \mathbf{Q^{a}} = h^{a} \begin{bmatrix}
-     g^{1|a}(1-g^{1|a}) & -g^{1|a}g^{2|a}    & \dots  & g^{1|a}g^{s-1|a}       \\
-     -g^{1|a}g^{2|a}    & g^{2|a}(1-g^{1|a}) & \dots  & g^{2|a}g^{s-1|a}       \\
-     \vdots             &                    & \ddots & \vdots                 \\
-     g^{1|a}g^{s-1|a}   &  \dots             &        & g^{s-1|a}(1-g^{s-1|a}) \\
-  \end{bmatrix}
-\end{equation}
 
-For multinomial regressios, each 
+\section{Theoretical Considerations}
+
 
 \section{Miscellaneous}
+
+\
+
 \subsection{Model Specification}
-When implementng a HME model, one of the major decision points is the exact specification for each of the model's experts. If comparing a trend-stationary model versus a random walk with drift (see \cite{HertaJiangTanner}), the correct specification for each expert requires the inclusion of the true number of lagged dependent variables. While standard approaches such as the autocorrelation and partial autocorrelation functions exist, the multi-state nature of model makes this appreach difficult due to the uncertianty surrounding which state is governing the series at any given time $t$. Unless the researcher has some previous knowledge of the model's form, they are left with performing standard model selection for each expert on the entire series or some subset of the series. To overcome this issue, we follow simple procedure in this paper.
+When implementng a HME model, one of the major decision points is the exact specification for each of the model's experts. If comparing a trend-stationary model versus a random walk with drift (see \cite{HuertaJiangTanner2003}), the correct specification for each expert requires the inclusion of the true number of lagged dependent variables. While standard approaches such as the autocorrelation and partial autocorrelation functions exist, the multi-state nature of model makes this appreach difficult due to the uncertianty surrounding which state is governing the series at any given time $t$. Unless the researcher has some previous knowledge of the model's form, they are left with performing standard model selection for each expert on the entire series or some subset of the series. To overcome this issue, we follow simple procedure in this paper.
 
 \begin{enumerate}
 \item The HME model is run where each expert is an AR(1) model without a constant.
@@ -271,8 +431,24 @@ Applying the chain, we can calculate the marginal effect that variable $p$ has o
 
 \section{Standard Errors: SEM} \label{standarderrors}
 -- Put his directly after the log-likelihood equation in the EM section
--- Reference \cite{MengRubinSEM} here because it's as cool as Miles Davis.
+-- Reference \cite{MengRubinSEM1991} here because it's as cool as Miles Davis.
 -- Show how weights enter into the score and hessian
+
+
+\begin{equation} \label{eq:nodehessianQ}
+  \mathbf{A}^{a} = (\mathbf{I}_{s-1} \otimes \mathbf{Z})^{\prime} \mathbf{Q}^{a} (\mathbf{I_{s-1}} \otimes \mathbf{Z})
+\end{equation}
+
+\begin{equation} \label{eq:}
+  \mathbf{Q^{a}} = h^{a} \begin{bmatrix}
+     g^{1|a}(1-g^{1|a}) & -g^{1|a}g^{2|a}    & \dots  & g^{1|a}g^{s-1|a}       \\
+     -g^{1|a}g^{2|a}    & g^{2|a}(1-g^{1|a}) & \dots  & g^{2|a}g^{s-1|a}       \\
+     \vdots             &                    & \ddots & \vdots                 \\
+     g^{1|a}g^{s-1|a}   &  \dots             &        & g^{s-1|a}(1-g^{s-1|a}) \\
+  \end{bmatrix}
+\end{equation}
+
+For multinomial regressions, each 
 
 \subsection{Simulations}
 In order to carry out simulated experiments of the HME framework, this paper will follow the following methodology.
@@ -308,9 +484,15 @@ This method of simulation, with a small tweak, provides a route to obtaining boo
 % \end{algorithm}
 
 \section{Diagnostics}
-pg 7 of \cite{WMS} suggested observing the distribution of the terminal $g_{i}$. If only one expert is responsible for each observations, $g_{i}$ will be close to one for a single expert and near zero for all other experts. Can we formalize this comparison in to a specific test?
+pg 7 of \cite{WMS1995} suggested observing the distribution of the terminal
+$g_{i}$. If only one expert is responsible for each observations, $g_{i}$ will
+be close to one for a single expert and near zero for all other experts.
+Can we formalize this comparison in to a specific test?
 
-Standard likelihood-ratio test with AIC/BIC penalty
+density forecasts evaluations.
+
+Standard likelihood-ratio test is not valid (\cite{CarvalhoTanner2006}) with
+AIC/BIC/VOUNG test being prefered.
 
 
   
@@ -320,7 +502,7 @@ In this form, a network of a single depth is similar/equal(?) to multinomial log
 \subsection{Compare to Alternatives}
 \begin{enumerate}
 \item Smooth transition autogressive (STAR(p)) model has similiar logistic function but the lacks the flexibility of changing model types
-\item Fixed Memory Markov Process. Shares ability to switch between different expert types. Extensions have been provided by Diebold, Lee, and Weinback \cite{DieboldLeeWeinbach} as well as Filardo \cite{Filardo} to include conditional transitional dynamics based on other covariates.
+\item Fixed Memory Markov Process. Shares ability to switch between different expert types. Extensions have been provided by Diebold, Lee, and Weinback \cite{DieboldLeeWeinbach1994} as well as Filardo \cite{Filardo1994} to include conditional transitional dynamics based on other covariates.
 \item Smooth domain partitioning contrasts
 \end{enumerate}
 \begin{figure}[ht]
@@ -337,10 +519,8 @@ In this form, a network of a single depth is similar/equal(?) to multinomial log
   \label{fig:bias_2RD2}
 \end{figure}
 
+\printbibliography
 
 
-
-\bibliography{hme_references}
-\bibliographystyle{abbrv}
 \end{document}
 
