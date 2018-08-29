@@ -111,11 +111,24 @@ Index data. They allowed the series to choose between two models, one modeled
 as a random walk and the other as trend stationary. In addition, they present a
 Bayesian approach to estimation.
 
+\cite{CarvalhoTanner2003} lay out the necessary regularity conditions to perform
+hypthesis tests on stationarity MoE time series of generalized linear models (HoE-GLM)
+using Wald tests. The dual cases of a well-specificed and a miss-specified model
+are considered. The authors restrict their analysis to MoE-GLM models involving
+lagged dependent and lagged external covariate variables only. Generazlization to
+include lagged conditional mean values is left for another time.
+
+\cite{CarvalhoTanner2005} is similar to \cite{CarvalhoTanner2003} but applied
+in a purely auto-regressive context restricted to gaussian models. The authors
+extend arguments in \cite{CarvalhoTanner2003} to non-stationary series and
+provide simulated evidence that using the BIC is helpful in selecting the 
+approprite number of experts to include.
+
 \cite{CarvalhoTanner2006} refocus the discussion on MoE of time series
 regressions restricted to exponential family distributions. Distilling
-the available literature at the time, the authors cover the import topics of
-estimation and asymptotic properties in the maximum likelihood
-framework, selection of the number of experts, and model validation and
+the available literature at the time, the authors cover the important
+topics of estimation and asymptotic properties in the maximum likelihood
+framework, selection of the number of experts, model validation and
 fitting.
 
 \cite{CarvalhoSkoulakis2010} Applies mixture-of-experts of a single time series.
@@ -129,9 +142,11 @@ THIS ONE AGAIN
 
 \subsection{Additional Articles to Include}
 
-A.X. Carvalho, M.A. Tanner, "Hypothesis testing in mixtures-of-experts of generalized linear time series", Computational Intelligence for Financial Engineering 2003. Proceedings. 2003 IEEE International Conference on, pp. 285-292, 2003.
 
-A.X. Carvalho, M.A. Tanner, "Mixtures-of-experts of autoregressive time series: asymptotic normality and model specification", Neural Networks IEEE Transactions on, vol. 16, pp. 39-56, 2005, ISSN 1045-9227. 
+\cite{JeffriesPfeiffer2001} cross section
+
+\cite{BleiKucukelbirMcAuliffe2006} A review of variational inference applied
+to generalized linear models and basic examples.
 
 \cite{UedaGhahramani2002}
 
@@ -367,13 +382,22 @@ The posterior weight for any gating node $n^{a}$ can be calculated by
 If each expert is unique, there is only a single path from the root node to each
 expert. In equation (\ref{eq:Estep}), this implies that $l = 1$ and the researcher
 can avoid taking the log of a summation, greatly simplifying the value of the
-gradient and hession. On the other hand, if the same expert appears at the end of
+gradient and hessian. On the other hand, if the same expert appears at the end of
 separate paths along the gating network, at some point (depending on the network's
 structure) we still need to take the log of a summation. If the researcher wants
 to specify the number of expert regimes beforehand, she can do so but at the
-expense of a more complicated complete log-likelhood equation.
+expense of a more complicated complete log-likelihood equation.
 
+It's important to note a relationship between the posterior weights for consecutive
+nodes in a feasible path.
 
+\begin{equation} \label{eq:posteriorrelation}
+  \mathbb{E}\left[I_{t}(1)\right] = h^{0,1}_{t} h^{1|0,1}_{t} h^{1|1|0,1}_{t}
+\end{equation}
+
+The posterior specification for equation (\ref{eq:posteriornode}) is for the
+repeated expert HME only. A different notation is needed for the original HME
+design and it's adaptively grown counterpart.
 
 \subsection{M-Step}
 
@@ -390,7 +414,15 @@ Jacobian of the gating portion of equation (\ref{eq:Estep}) is:
 Where we have the ratio of the posterior $h^{0,m}$ and prior 
 $\sum_{l} \pi_{n^{a} \overset{l}{\longleftrightarrow} P^{m}}$ weights with resepect
 to the root node and the gradient of the posterior weight with respect to the node
-in questions $\frac{\partial g^{a,m}}{\partial \omega^{a,i}_{p}}$.
+in questions $\frac{\partial g^{a,m}}{\partial \omega^{a,i}_{p}}$. Since
+$\pi_{n^{a} \overset{l}{\longleftrightarrow} P^{m}}$ is a product of values, the
+partial in equation (\ref{eq:gateJacobian}) is simply that same product chain but
+absent of node $g^a$ times the partial of node $g^a$ with respect to
+$\omega^{a,i}_{p}$.
+
+\begin{equation} \label{eq:gatechainpartial}
+  \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}} = [\pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}} (-g^{a})] \frac{\partial g^{a, j(l)}}{\partial \omega^{a, i}}
+\end{equation}
 
 
 
