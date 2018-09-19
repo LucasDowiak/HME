@@ -5,6 +5,7 @@ article/*
 !article/Econometric_Applications_of_HME.tex
 !article/hme_references.bib
 
+data/*
 lit/*
-
 misc/*
+robjects/*

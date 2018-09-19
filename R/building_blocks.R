@@ -205,77 +205,44 @@ napply <- function(x, f_, ...)
 }
 
 
-which_experts_split <- function(d, nodes)
-{
-  experts <- unlist(is_terminal(nodes, nodes))
-  childs <- unlist(children(d, nodes))
-  f_ <- function(x)
-  {
-    p <- nodes[grepl(sprintf("^%s\\.", x), nodes)]
-    if (length(p) == 0)
-      return(x)
-    else
-      return(intersect(p, nodes[experts]))
-  }
-  lapply(childs, f_)
-}
 
 
 # ---------------------------------------------------------------------------
 # Set of functions to obtain prior and posterior weights
 
-test <- c("0",
-          "0.1", "0.2",
-          "0.1.1", "0.1.2", "0.2.1", "0.2.2",
-          "0.1.1.1", "0.1.1.2")
+par_to_exp_gate_paths <- function(node, gate_par_list, X)
+{
+  pars <- gate_par_list[[node]]
+  if (!is.list(pars)) {
+    pars <- list(pars)
+  }
+  f_ <- function(p)
+  {
+    return(exp(X %*% p))
+  }
+  numerator <- lapply(pars, f_)
+  G <- matrix(unlist(numerator), ncol=length(pars))
+  G <- cbind(G, 1)
+  return(G)
+}
 
-test1 <- c("0",
-           "0.1", "0.2", "0.3",
-           "0.1.1", "0.1.2", "0.1.3", "0.2.1", "0.2.2", "0.2.3",
-           "0.1.3.1", "0.1.3.2", "0.1.3.3", "0.2.3.1", "0.2.3.2", "0.2.3.3")
+par_to_gate_paths <- function(node, gate_par_list, X)
+{
+  G <- par_to_exp_gate_paths(node, gate_par_list, X)
+  return(sweep(G, 1, rowSums(G), `/`))
+}
 
-# Take in matrix
-# return list
-# match_terminals_dens <- function(hme_type=c("hme", "hmre"), treestr)
-# {
-#   
-#   hme_type <- match.arg(hme_type)
-#   idx <- expert_index(hme_type, treestr)
-#   if (hme_type == "hme") {
-#     # run expert_index 
-#     # 
-#   }
-#   if (hme_type == "hmre")
-#   {
-#     last_split()
-#   }
-# }
-# 
-# 
-# random_split <- function(nr, nc)
-# {
-#   M <- matrix(nrow=nr, ncol=nc)
-#   M[, 1] <- runif(nr)
-#   i <- 2
-#   while (i < nc) {
-#     M[, i] <- runif(nr, max = 1 - rowSums(M, na.rm=T))
-#     i <- i + 1
-#   }
-#   M[, nc] <- 1 - rowSums(M, na.rm=T)
-#   return(M)
-# }
-# 
-# NE <- 3
-# NR <- 10
-# 
-# expnames <- test1[unlist(is_terminal(test1, test1))]
-# gatenames <- setdiff(test1, expnames)
-# 
-# list_nodes <- lapply(seq_len(length(gatenames)), function(x) random_split(NR, NE))
-# names(list_nodes) <- gatenames
-# 
-# list_experts <- lapply(seq_len(NE), function(x) matrix(dnorm(rnorm(NR))))
-# names(list_experts) <- as.character(seq_len(NE))
+
+par_to_expert_dens <- function(node, expert_type, expert_par_list, Y, X, ...)
+{
+  if (expert_type == "gaussian") {
+    parm <- expert_par_list[[node]]
+    beta <- parm[1:(length(parm) - 1)]
+    variance <- exp(parm[length(parm)])
+    mu <- X %*% beta
+    return(dnorm(Y, mean=mu, sd=sqrt(variance), ...))
+  }
+}
 
 
 "Input: 
@@ -301,39 +268,7 @@ gate_path_values <- function(branches, ln)
 }
 
 
-par_to_gate_paths <- function(node, node_type, gate_par_list, X)
-{
-  if (node_type == "binomial") {
-    pars <- gate_par_list[[node]]
-    eta <- X %*% pars
-    leftpath <- exp(eta) / (1 + exp(eta))
-    return(matrix(c(leftpath, 1 - leftpath), ncol=2))
-  }
-}
-
-
-par_to_expert_dens <- function(node, expert_type, expert_par_list, Y, X, ...)
-{
-  if (expert_type == "gaussian") {
-    parm <- expert_par_list[[node]]
-    beta <- parm[1:(length(parm) - 1)]
-    variance <- exp(parm[length(parm)])
-    mu <- X %*% beta
-    return(dnorm(Y, mean=mu, sd=sqrt(variance), ...))
-  }
-}
-
-
-"Input:
-       geezer  - the name of a gating node
-       youngin - the name of a gating node or expert that is an
-                 ancestor of `geezer`
-       treestr - list of all gating and expert nodes in the HME
-       ln      - list of gating network split probabilities
- Output:
-       cumulative product of the paths from the `geezer` node to the
-       `youngin` node"
-gate_path_product <- function(geezer, youngin, treestr, ln)
+inter_node_paths <- function(geezer, youngin, ln)
 {
   "product path from node1 down to node2"
   a1 <- unlist(ancestors(geezer))
@@ -342,8 +277,24 @@ gate_path_product <- function(geezer, youngin, treestr, ln)
     stext <- "Node1 [%s] must be an ancestor of node2 [%s]."
     stop(sprintf(stext, node1, node2))
   }
-  Reduce(`*`, gate_path_values(setdiff(a2, a1), ln))
+  return(gate_path_values(setdiff(a2, a1), ln))
 }
+
+
+"Input:
+       geezer  - the name of a gating node
+       youngin - the name of a gating node or expert that is an
+                 ancestor of `geezer`
+       ln      - list of gating network split probabilities
+ Output:
+       cumulative product of the paths from the `geezer` node to the
+       `youngin` node"
+gate_path_product <- function(geezer, youngin, ln)
+{
+  inp <- inter_node_paths(geezer, youngin, ln)
+  Reduce(`*`, inp)
+}
+
 
 
 "Input:
@@ -371,7 +322,7 @@ get_expert_densities <- function(x, le)
 prior_weights <- function(node, treestr, ln)
 {
   "prior weights go from root node down"
-  gate_path_product("0", node, treestr, ln)
+  gate_path_product("0", node, ln)
 }
 
 
@@ -391,7 +342,7 @@ posterior_weights <- function(node, treestr, ln, le)
   terminals <- p[unlist(is_terminal(p, treestr))]
   childs <- unlist(children(node, treestr))
   
-  Gs <- napply(terminals, function(x) gate_path_product(node, x, treestr, ln))
+  Gs <- napply(terminals, function(x) gate_path_product(node, x, ln))
   # first match terminal paths with their densities
   f_ <- function(x)
   {
@@ -419,5 +370,33 @@ joint_posterior_weight <- function(node, treestr, lp)
   if (node == "0") {
     return(rep(1, nrow(lp[[1]])))
   }
-  return(gate_path_product("0", node, treestr, ln=lp))
+  return(gate_path_product("0", node, ln=lp))
+}
+
+
+
+log_likelihood <- function(treestr, ln, lp, ld)
+{
+  expert.nodes <- treestr[unlist(is_terminal(treestr, treestr))]
+  full_log_path <- function(node)
+  {
+    inp <- inter_node_paths("0", node, ln)
+    logs <- lapply(c(inp, list(ld[[node]])), log)
+    sumlogs <- Reduce(`+`, logs)
+    post <- joint_posterior_weight(node, treestr, lp)
+    return(post * sumlogs)
+  }
+  lst <- lapply(expert.nodes, full_log_path)
+  sum(unlist(lst))
+}
+
+# ----------------------------------------------------------------------------
+init_gate_node_pars <- function(node, tree, n)
+{
+  nchilds <- length(unlist(children(node, tree)))
+  if (nchilds == 2) {
+    return(runif(n, -2, 2))
+  } else {
+    return(lapply(seq_len(nchilds - 1), function(x) runif(n, -2, 2)))
+  }
 }
