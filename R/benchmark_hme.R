@@ -3,10 +3,12 @@ setwd("hme/R/")
 source("building_blocks.R")
 source("marginal_effects.R")
 source("optimization_functions.R")
+source("summary_functions.R")
+source("plot_functions")
 library(Formula)
 
 
-hme <- function(formula, tree, hme_type=c("hme", "hmre"),
+hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                 expert_type=c("gaussian"), data,
                 maxiter=100, tolerance=1e-4, trace=0)
 {
@@ -47,7 +49,7 @@ hme <- function(formula, tree, hme_type=c("hme", "hmre"),
   parM <- matrix(NA_real_, ncol=length(unlist(c(gate.pars, expert.pars))),
                  nrow=maxiter + 1)
   parM[1, ] <- unlist(c(gate.pars, expert.pars))
-  newLL <- -Inf
+  logL[1, ] <- newLL <- -Inf
   for (ii in seq_len(maxiter)) {
     oldLL <- newLL
     mstep <- m_step(tree, hme_type, Y=Y, X=X, Z=Z, exp.pars=expert.pars, gat.pars=gate.pars)
@@ -86,6 +88,7 @@ hme <- function(formula, tree, hme_type=c("hme", "hmre"),
                  Y=Y,
                  X=X,
                  Z=Z,
+                 N=length(Y),
                  no.of.pars=NN,
                  gate.margins=gate.margins,
                  gate.info.matrix=gate.info.matrix),
@@ -96,18 +99,20 @@ hme <- function(formula, tree, hme_type=c("hme", "hmre"),
 data(iris)
 
 tree <- c("0",
-          "0.1", "0.2",
-          "0.1.1", "0.1.2")
+          "0.1", "0.2")
+          #"0.1.1", "0.1.2")
 tree2 <- c("0",
            "0.1", "0.2", "0.3")
 debugonce(hme)
 
 # -1 + Species + Petal.Length + Sepal.Length
 "Sepal.Width ~ Petal.Width | Petal.Width + Petal.Length + Sepal.Length"
-tst <- hme("Sepal.Width ~ Petal.Width | Petal.Width + Petal.Length + Sepal.Length",
-           tree=tree, data=iris, maxiter=200, tolerance = 1e-6, trace=1)
-tst2 <- hme("Sepal.Width ~ Petal.Width | -1 + Species + Petal.Width + Petal.Length + Sepal.Length",
-           tree=tree2, data=iris, maxiter=250, tolerance=1e-5, trace=1)
+tst <- hme(tree,
+           "Sepal.Width ~ Petal.Width | Petal.Width + Petal.Length + Sepal.Length",
+           data=iris, maxiter=200, tolerance = 1e-6, trace=1)
+tst2 <- hme(tree2,
+            "Sepal.Width ~ Petal.Width | -1 + Species + Petal.Width + Petal.Length + Sepal.Length",
+           data=iris, maxiter=250, tolerance=1e-5, trace=1)
 
 
 cols <- c("blue", "orange", "green")
@@ -116,62 +121,24 @@ for (e in tst$expert.pars) {
   abline(e[1], e[2])
 }
 
+criterion <- function(obj, type=c("aic", "bic"))
+{
+  L <- tail(obj[["logL"]][!is.na(tst[["logL"]])], 1)
+  K <- length(unlist(c(tst$expert.pars, tst$gate.pars)))
 
-summary.hme <- function(obj)
-{  
-  # cat(sprintf("Log-Likelihood: %f", log_Like(obj)))
-  for (g in names(obj[["gate.pars"]])) {
-    
-    pars <- obj[["gate.pars"]][[g]]
-    if (!is(pars, "list"))
-      pars <- list(pars)
-    info <- obj[["gate.info.matrix"]]
-    if (!is(info, "list"))
-      info <- list(info)
-    
-    nn <- length(pars)
-    cat(sprintf("\n--------------------------\ngate-%s\n", g))
-    for (i in seq_len(nn)) {
-      p <- pars[[i]]
-      se <- sqrt(diag(info[[i]][["sandwich"]]))
-      zstat <- p / se
-      tbl <- cbind(p, se, zstat, 2 * pnorm(-abs(zstat)))
-      colnames(tbl) <- c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)")
-      printCoefmat(tbl, digits = 3)
-      
-      # zscore <- 
-      #colnames(p) <- list("Estimate Std.", "Std. Error") # "t-value", "Pr(>|t|)")
-      #print(p)
-      cat("\n")
-    }
+  if (type == "aic") {
+    penalty <- 2
+  } else if (type == "bic") {
+    N <- obj[["N"]]
+    penalty <- log(N)
   }
-  
-  cat("\n\n----------------------------------------------------\n\n")
-  
-  for (e in names(obj[["expert.pars"]])) {
-    p <- obj[["expert.pars"]][[e]]
-
-    p <- as.matrix(round(c(p, exp(p[length(p)])), 4))
-    dimnames(p) <- list(c(obj[["expert.pars.nms"]], ""), "")
-    cat(sprintf("\n--------------------------\nexpert-%s\n", e))
-    print(p)
-  }
-  
-  cat("\n\n----------------------------------------------------\n\n")
-  
-  for (e in names(obj[["expert.pars"]])) {
-    p <- obj[["gate.margins"]][[e]]
-    
-    p <- as.matrix(round(p, 4))
-    dimnames(p) <- list(c(obj[["gate.pars.nms"]]), "")
-    cat(sprintf("\n--------------------------\nexpert-%s marginal effects\n", e))
-    print(p)
-  }
+  return(penalty * K - 2 * L)
 }
-
-debugonce(summary.hme)
-summary(tst)
-
+grow_the_tree <- function(...)
+{
+  tree <- c("0", "0.1", "0.2")
+  hme(tree, ...)
+}
 
 
 

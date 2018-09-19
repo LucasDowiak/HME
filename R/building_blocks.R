@@ -176,7 +176,7 @@ tree_depth <-function(nodes)
   max(unlist(lapply(nodes, f_)))
 }
 
-" generalize to HMRE "
+
 expert_index <- function(hme_type, nodes)
 {
   idx <- unlist(is_terminal(nodes, nodes))

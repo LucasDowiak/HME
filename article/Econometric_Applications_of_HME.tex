@@ -14,9 +14,11 @@
 \usepackage[
   backend=biber,
   style=alphabetic,
-  citestyle=chicago-authordate
+  url=true,
+  doi=true,
+  style=authoryear
 ]{biblatex}
-
+\addbibresource{hme_references.bib}
 
 \newcommand{\mean}[1]{\bar{#1}}
 \newcommand{\gateprod}[2]{\pi_{#1 \longleftrightarrow #2}}
@@ -89,21 +91,49 @@ of this extension is a gating network that takes on a tree-like structure,
 stemming from an initial multinomial split and filtering down through additional
 multinomial partitions of the input space. The hierarchical nature of this
 gating network is what gives this class of model it's name: the Hierarchical
-Mixture of Experts (HME). HME models nest ME models as special case.
+Mixture of Experts (HME). HME models nest ME models as special case. Pushing a 
+little further, one additional case is studied as well. As the depth of an HME
+grows, so too must the number of experts. If we have a symmetric HME network,
+this growth is geometric with respect to the network's depth. With this in mind,
+we propose a model where each expert is not unique, but a member of a fixed
+set of experts that are allowed to repeat at different terminal nodes of the
+network. We refer to this additional model as a Hierarchical Mixture of Repeated
+Experts (HMRE). Figure (\ref{fig:network_comparison}) provides an example
+of each of these models studied in this article.
 
 \bigskip
 
-This article investigates the adoption of ME and HME models to an applied
+This article investigates the adoption of ME, HME, and HMRE models to an applied
 econometric framework, with particular attention focused on interpretation of
 the gating network and robust inference of parameter estimates. The outline for the
 rest of this manuscript is as follows: the remainder of this section
-fills out the literature review for the HME, section \ref{sec:Model} describes
+fills out the literature review and section \ref{sec:Model} describes
 the model in formal detail. Section \ref{sec:Estimation} discuss approaches
 for estimation while section \ref{sec:Inference} concerns itself with robust
 inference of the estimated parameters. Section \ref{sec:MarginalEffects}
 provides detail on marginal effects of the gating network. Section
 \ref{sec:NetworkGrowth} develops a proceedure to grow the gating network
 in an objective manner. 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{network_types.jpeg}
+  \caption{Networks \textbf{A} - \textbf{D} depict various network
+  architectures that are discussed in this article. For all four networks,
+  gating nodes are represented as blue circles and experts as orange
+  rectangles. Network \textbf{A} illustrates the original Mixture of
+  Experts (ME) architexture with a single multinomial split leading
+  to a set of experts one layer down. Networks \textbf{B} and \textbf{C} both
+  represent different flavors of a Hierarchical Mixture of Experts (HME). Network
+  \textbf{B} is a symmetric network of depth 2 with successive binary splits.
+  Network \textbf{C} is an asymmetric network of depth 3 with successive
+  binary splits. Network \textbf{D} is an example of the Hierarchical
+  Mixture of Repeated Experts (HMRE) architecture. Notice that multiple paths
+  exist from the root node $0$ to each expert. Compare this to networks
+  \textbf{A} - \textbf{C}, where there is only one unique path from the root
+  node to each expert.}
+  \label{fig:network_comparison}
+\end{figure}
 
 
 \subsection{Relevant Literature}
@@ -194,28 +224,6 @@ that their approach makes the HME model easier to estimate without overfitting.
 \bigskip
 
 
-Figure (\ref{fig:HMEcomparison}) depicts the differece between an HME as
-described in the current literature and what is proposed in this paper.
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{Org_vs_Ext.jpeg}
-  \caption{Two Hierarchical Mixture of Expert models with symmetric
-  binary splits and a depth of two. Gating nodes are depicted as circles
-  and experts are rectangles. The root node $N^{0}$ lies at the apex and
-  splits towards two additional gating nodes ($N^{1|0}$, $N^{2|0}$) one layer
-  down, each providing an  additional layer of soft-partitioning through a
-  binary partition of the input space. On the left is the original expert
-  design, where each path flows into a unique expert. The modification
-  proposed in this paper is given on the right, with the existance of multiple
-  paths leading from the root node to a reduced number of experts.}
-  \label{fig:HMEcomparison}
-\end{figure}
-
-
-
-
-
 \section{Model} \label{sec:Model}
 
 We start by presenting the HME model as a standard mixture model.
@@ -258,10 +266,8 @@ arbitrary number of splits. While a fully generalized gating network is
 conceptually attractive, it presents practical challenges for implementation.
 In this paper we address several architectures for the gating network, each
 with its own set of structural restrictions on the shape of the newtork and
-the number of splits each gating node can take. Figure () illustrates the 
-variety of architectures that are covered this article. For arbitary
-node at address $a$, we use a multinomial logistic regression to model the
-split in direction $i$ to be:
+the number of splits each gating node can take. For arbitary node at address $a$,
+we use a multinomial logistic regression to model the split in direction $i$ to be:
 
 \begin{equation} \label{eq:softmax}
   g^{a,i}_{t} \equiv g^{a,i}_{t}(Z_{t}, \boldsymbol{\omega}^{a}) = \frac{\exp(Z_{t} \ \boldsymbol{\omega}^{a,i})}{\sum^{J}_{j=1} {\exp(Z_{t} \ \boldsymbol{\omega}^{a,j})}}
@@ -284,29 +290,29 @@ can be defined as
 \end{equation}
 
 If one of the nodes is an expert, then we can define the mixture weight
-of expert $m$ for input pattern to be:
+of expert $m$ for input pattern $i$ to be:
 
 \begin{equation} \label{eq:pathsum}
-  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \gateprod{n^{0}}{P^{m}}
+  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
 \end{equation}
 
-For network architectures with multiple paths from the root node to the same expert
-(see bottom right of figure ()), we can index these multiples by $l$ so that:
+For network architectures with multiple paths from the root node to
+the same expert (see bottom right of figure (\ref{fig:network_comparison})),
+we can index these multiples paths by $l$ so that:
 
 \begin{equation} \label{eq:pathsums}
-  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l} 
+  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} 
 \end{equation}
-
 
 
 By collecting--and summing--all possible paths from the root node to each
-expert, the probability given in equation (\ref{eq:mixture}) can be expanded
-and expressed as a set of conditional probabilities.
+expert, the conditional probability given in equation (\ref{eq:mixture}) can be
+expanded and expressed as:
 
 \begin{equation} \label{eq:contribution}
   \begin{split}
     P(Y_{t}|X_{t}, Z_{t}; \boldsymbol{\omega}, \boldsymbol{\beta}) =& \sum_{m} \expmixwt(m | Z_{t}, \boldsymbol{\omega}) P^{m}(Y_{t}|X_{t},\beta^{m}) \\ 
-      =& \sum_{m} P^{m}(Y_{t}|X_{t}, \beta^{m}) \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l}
+      =& \sum_{m} P^{m}(Y_{t}|X_{t}, \beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
   \end{split}
 \end{equation}
 
@@ -314,13 +320,13 @@ The product of these individual probabilities across the full sample size $T$ yi
 the likelihood function.
 
 \begin{equation} \label{eq:likelihood}
-  \mathcal{L}(\boldsymbol{\theta}| Y, X, Z) = \prod_{t}\sum_{m}P^{m}(Y_{t}|X_{t}, \beta^{m}) \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l}
+  \mathcal{L}(\boldsymbol{\theta}| Y, X, Z) = \prod_{t}\sum_{m}P^{m}(Y_{t}|X_{t}, \beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
 \end{equation}
 
 And taking its log yields to log likelihood
 
 \begin{equation} \label{eq:loglikelihood}
-  \boldsymbol{l}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t}\log\sum_{m}P^{m}(Y_{t}|X_{t},\beta^{m}) \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l}
+  \boldsymbol{l}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t}\log\sum_{m}P^{m}(Y_{t}|X_{t},\beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
 \end{equation}
 
 The functional form of the log likelihood (\ref{eq:loglikelihood}) does not
@@ -330,14 +336,11 @@ models is available. This was the primary insight of \cite{JordanJacobs1993}'s
 original paper.
 
 
-
-
-
 \section{The EM Set-Up} \label{sec:Estimation}
 
 The EM approach to estimating an HME model starts by suggesting that if a
 resarcher had perfect information, each input vector $X_{t}$ could be matched
-to the expert $P_{m}$ that generated it with certainty. If a set of indicator
+to the expert $P^{m}$ that generated it with certainty. If a set of indicator
 variables is introduced that captures this certainty, an \textit{augmented}
 version of the likelihood in equation (\ref{eq:likelihood}) can be put forward.
 Define the indicator set as:
@@ -351,28 +354,36 @@ Define the indicator set as:
 
 We can then reformulate the likelihood equation
 
-\begin{equation}  \label{eq:likelihood}
-  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t},\beta^{m}) \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
+\begin{equation}  \label{eq:auglikelihood}
+  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t},\beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
-\begin{equation}  \label{eq:loglikelihood}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l} \right]
+\begin{equation}  \label{eq:augloglikelihood}
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
 \end{equation}
 
-In previous works, each terminal node of the tree was usually its own unique
-expert. This assumption would simplify equation (\ref{eq:likelihood})
-by removing the summation of the gating paths to expert $m$ into a 
-single path,
-$\prod_{t}\prod_{m}[P^{m}(Y_{t}|X_{t}, Z_{t}, \beta^{m}) \pi_{n_{0} \longleftrightarrow P^{m}}]^{I_{t}(m)}$,
-simplifying its value and the value of it's gradient and hessian. This paper
-allows the analyst to specify the number of experts before optimization,
-adding a bit more control over the mixture model but at the cost of a more
-complicated complete likelihood function. In fact this paper will test whether
-this can lead to any improvements, specifically the concers regarding overfitting
-(see \cite{BishopSvenson2003} for more references on this) when an expert latches
-on to a single observation, producing a singularity in the likelihood function.
+As mentioned previously, summing over multiple paths $l$ in equation
+(\ref{eq:augloglikelihood}) is only necessary in the HMRE case. For the ME
+and HME cases, $l = 1$, simplifying the second log in (\ref{eq:augloglikelihood})
+to $log(\gateprod{g^{0}}{P^{m}})$. Going forward, we will focus our analysis on
+the ME and HME specifications with work on the HMRE case arriving in subsequent
+iterations of the article.
+
+
+%In previous works, each terminal node of thevtree was usually its own unique
+%expert. This assumption would simplify equation (\ref{eq:likelihood})
+%by removing the summation of the gating paths to expert $m$ into a 
+%single path,
+%$\prod_{t}\prod_{m}[P^{m}(Y_{t}|X_{t}, Z_{t}, \beta^{m}) \pi_{n_{0} \longleftrightarrow P^{m}}]^{I_{t}(m)}$,
+%simplifying its value and the value of it's gradient and hessian. This paper
+%allows the analyst to specify the number of experts before optimization,
+%adding a bit more control over the mixture model but at the cost of a more
+%complicated complete likelihood function. In fact this paper will test whether
+%this can lead to any improvements, specifically the concers regarding overfitting
+%(see \cite{BishopSvenson2003} for more references on this) when an expert latches
+%on to a single observation, producing a singularity in the likelihood function.
 
 
 \subsection{E-Step}
@@ -381,8 +392,8 @@ equation (\ref{eq:loglikelihood}).
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
-  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l} \right] \\ 
-   & = \sum_{t} \sum_{m} h^{0,m}_{t} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \shortsum{l} \sumgateprod{n^{0}}{P^{m}}{l} \right]
+  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}}{P^{m}} \right] \\ 
+   & = \sum_{t} \sum_{m} h^{0,m}_{t} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}}{P^{m}} \right]
  \end{split}
 \end{equation}
 
@@ -392,21 +403,12 @@ produced by expert $m$, given our tree structure starts at the root node $n^{0}$
 The posterior weight for any gating node $n^{a}$ can be calculated by
 
 \begin{equation} \label{eq:posteriornode}
-  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{n^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{n^{a}_{t}}{P^{k}_{t}}{l}}
+  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
 \end{equation}
 
 \begin{equation} \label{eq:posteriornode2}
-  h^{a, i}_{t} = \frac{ g^{a, i}_{t} \shortsum{l} \sumgateprod{n^{i|a, \, j}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{n^{a}_{t}}{P^{k}_{t}}{l}}
+  h^{a, i}_{t} = \frac{ g^{a, i}_{t} \shortsum{l} \sumgateprod{g^{i|a, \, j}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
 \end{equation}
-
-If each expert is unique, there is only a single path from the root node to each
-expert. In equation (\ref{eq:Estep}), this implies that $l = 1$ and the researcher
-can avoid taking the log of a summation, greatly simplifying the value of the
-gradient and hessian. On the other hand, if the same expert appears at the end of
-separate paths along the gating network, at some point (depending on the network's
-structure) we still need to take the log of a summation. If the researcher wants
-to specify the number of expert regimes beforehand, she can do so but at the
-expense of a more complicated complete log-likelihood equation.
 
 It's important to note a relationship between the posterior weights for consecutive
 nodes in a feasible path.
@@ -542,87 +544,15 @@ we can substitute equation (\ref{eq:gate_marginal_effect}) into
 
 
 
-
-
 \section{Growing and Pruning the Gating Network} \label{sec:NetworkGrowth}
 
 
 
 \section{Miscellaneous}
 
-
-
-\subsection{Model Specification}
-When implementng a HME model, one of the major decision points is the exact
-specification for each of the model's experts. If comparing a trend-stationary
-model versus a random walk with drift (see \cite{HuertaJiangTanner2003}), the
-correct specification for each expert requires the inclusion of the true number
-of lagged dependent variables. While standard approaches such as the autocorrelation
-and partial autocorrelation functions exist, the multi-state nature of model makes
-this appreach difficult due to the uncertianty surrounding which state is governing
-the series at any given time $t$. Unless the researcher has some previous knowledge
-of the model's form, they are left with performing standard model selection for
-each expert on the entire series or some subset of the series. To overcome this
-issue, we follow simple procedure in this paper.
-
-\begin{enumerate}
-\item The HME model is run where each expert is an AR(1) model without a constant.
-\item Use AIC/BIC to perform model selection on each expert, performed on the full series, where the each contribution to the likelihood has been weighted using the posterior weights from equation (\ref{eq:posterior}).
-\item Perform a final HME run using the specifications obtained in step (2) for each expert.
-\end{enumerate}
-
-The validity of this approach is tested on two sets of simulated autoregressive data. this approach
-
-% \begin{table}
-% \caption{Model Selection}{c}
-% \begin{threeparttable}
-%  \begin{tabular}[l]{l c c c | c c c || l c c c | c c c}
-%    \hline \hline
-% \multicolumn{7}{c}{Simulated HME-AR$^{1}$} & \multicolumn{7}{c}{Simulated Univariate AR} \\
-% & \multicolumn{3}{c}{AIC$^{2}$} & \multicolumn{3}{c}{BIC$^{3}$} & & \multicolumn{3}{c}{AIC$^{2}$} & \multicolumn{3}{c}{BIC$^{3}$} \\
-% N & E$_{1}$ & E$_{2}$ & E$_{3}$ & E$_{1}$ & E$_{2}$ & E$_{3}$ & N & E$_{1}$ & E$_{2}$ & E$_{3}$ & E$_{1}$ & E$_{2}$ & E$_{3}$ \\
-% \hline
-% 100   & 0.29 & 0.09 & 0.30 & 0.66 & 0.23 & 0.61 & 33  & 0.67 & 0.32 & 0.62 & 0.9 & 0.29 & 0.76 \\
-% 200   & 0.18 & 0.25 & 0.29 & 0.71 & 0.60 & 0.58 & 66  & 0.68 & 0.62 & 0.72 & 0.98 & 0.43 & 0.95 \\
-% 300   & 0.25 & 0.39 & 0.27 & 0.69 & 0.73 & 0.63 & 100 & 0.65 & 0.77 & 0.77 & 0.95 & 0.72 & 0.92 \\
-% 400   & 0.19 & 0.34 & 0.18 & 0.70 & 0.83 & 0.73 & 133 & 0.70 & 0.66 & 0.73 & 0.99 & 0.77 & 0.98 \\
-% 500   & 0.25 & 0.33 & 0.27 & 0.76 & 0.88 & 0.73 & 166 & 0.66 & 0.69 & 0.69 & 0.98 & 0.92 & 0.97 \\
-% 600   & 0.19 & 0.33 & 0.17 & 0.74 & 0.86 & 0.72 & 200 & 0.78 & 0.74 & 0.75 & 0.99 & 0.94 & 0.96 \\
-% 700   & 0.19 & 0.25 & 0.12 & 0.73 & 0.86 & 0.69 & 233 & 0.73 & 0.73 & 0.69 & 0.97 & 0.96 & 0.97 \\
-% 800   & 0.17 & 0.28 & 0.21 & 0.82 & 0.91 & 0.75 & 266 & 0.68 & 0.75 & 0.77 & 0.99 & 1.00 & 0.95 \\
-% 900   & 0.22 & 0.30 & 0.24 & 0.77 & 0.83 & 0.72 & 300 & 0.74 & 0.77 & 0.76 & 0.97 & 0.99 & 0.98 \\
-% 1000  & 0.14 & 0.34 & 0.29 & 0.80 & 0.90 & 0.70 & 333 & 0.69 & 0.76 & 0.77 & 0.98 & 0.98 & 0.99 \\
-% \hline \hline
-%   \end{tabular}
-%   \begin{tablenotes}
-%     \item Values in the tables are percentages, out of 100 simulations, of obtaining the correct lag order of the autoregressive process for each expert. The size of the simulated series is given by first and eigth columns (N). The experts in the HME share the same specification as their univariate counterparts.
-%     \item[1] Expert AR(p) specification:
-%     Expert 1: ($\phi_{1}=0.7$, $\sigma^{2}=0.03$);
-%     Expert 2: ($\phi_{1}=-0.5$, $\phi_{2}=0.3$, $\sigma^{2}=0.05$);
-%     Expert 3: ($\phi_{1}=0.05$, $\phi_{2}=0.1$, $\phi_{3}=0.6$, $\sigma^{2}=0.1$)
-%     \item[2]{AIC: -2 $\times$ loglikelihood + 2 $\times$ p}
-%     \item[3]{BIC: -2 $\times$ loglikelihood + ln(N) $\times$ p}
-%   \end{tablenotes}
-% \label{tbl:modelselection}
-% \end{threeparttable}
-% \end{table}
-
-\begin{enumerate}
-\item Future research: Agostinelli and Markatou \cite{AgostinelliMarkatou} investigated weighted likelihood ratio tests
-\end{enumerate}
-
-For a time series that moves back and forth between separate regiems, including
-a time trend can be tricky. Even though the weighting scheme allows different
-sets of observations to be more important than others when estimating model
-parameters, once the model parameters have been estimated, they are prescriptive
-for the entire series. Basically, if one model estimates a trend parameter, the
-trend for that entire expert is now set, and if/when the time series exists that
-particular regime and re-enters at a later date, it is re-entering at a level
-described by the trend.
-
 \subsection{Wald Test is Invalid}
 S+plus GLM section on problems with binomial GLMs
-  -- Hauck and Donner (1977) JASA \cite{HauckDonner} Quoting S+plus: If there are
+  -- Hauck and Donner (1977) JASA. Quoting S+plus: If there are
   some $\hat{\beta}_{i}$ that are large, the curvature of the log-likelihood at
   $mathbf{\hat{\beta}}$ can be much less than near $\beta_{i}=0$, and so the Walk
   approximation understimates the change in log-likelihood on setting $\beta_{i}=0$.
@@ -633,55 +563,6 @@ S+plus GLM section on problems with binomial GLMs
   This is when the fitted probs are extremely close to zero or one.
 
 
-
-\subsection{Simulations}
-In order to carry out simulated experiments of the HME framework, this paper will 
-follow the following methodology.
-
-First, we decide on the model specification $M^{i}(\phi)$ for each expert (AR(p),
-trend stationary, random walk, etc.), including the choose error distribution.
-These models are then parameterzied with given values $\phi=(\phi^{1},\dots,\phi^{M})$
-Parameters are choosen for each model
-
-Second, we a assign prior probabilties to each expert that summarizes the
-expectation of each expert being responsible for any given input vector $Z_{t}$.
-In most cases, when time is the only variable in the gating network, the
-transition between experts will be a smooth function of time such as the
-logistic function or a rescaled hyperbolioc tangent. In this paper, prior
-probabilities for two and three expert models are smooth transitions
-structured in a way that each expert governs the series for roughly the same
-amount of time (figure \ref{fig:expertmembership} provides a graphical example).
-We can organize our prior weights for each expert into a matrix, $G$, whose
-columns represent separate experts and rows index input patterns. For notational
-purposes, the M-vector of proabibility of belonging to each expert for input
-vector $t$ is written as $G_{t}$, while the T-vector of expert $i$'s membership
-across all input patterns will be written as $G^{s=i}$.
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{images/smooth_expert_membership.jpeg}
-  \caption{Example of the smooth transitions probabilities between experts used in this study's simulations.}
-  \label{fig:expertmembership}
-\end{figure}
-
-This method of simulation, with a small tweak, provides a route to obtaining bootstrapped confidenced intervals for the estimated parameters of the an HME model. The only change is replace the random draws from a fixed distribution $F$ Another approach to parameter inference is the venerable bootstrap. If our gating network is a function of time, the following strategy using bootstrapped residuals can be used to find confidence intervals for our parameter estimates. Once an HME model is estimated, we can organize our prior weights for each expert into a matrix, $G$, where each column $s$ represents the (prior) probability of expert . Note that each row sums to one. Posterior expert weights can be collect in a similar matrix called $H$.
-
-% \begin{algorithm}
-%   \caption{Bootstrap Sample}
-%   \begin{algorithmic}[1]
-%     \REQUIRE $H$, $G$, $M(\hat{\phi})$, $\hat{e}$, $T$, $T_{B}$
-%     \FOR{$t=-T_{B}$ to $T$}
-%       \IF{$t < 1$}
-%         \STATE $s \thicksim G_{t=1}$
-%       \ELSE
-%         \STATE $s \thicksim G_{t}$
-%       \ENDIF
-%       \STATE $\epsilon^{*}_{t} \thicksim \hat{e}^{i=s}$ with weights $H^{i=s}$
-%       \STATE $y^{*}_{t} \leftarrow M^{i=s}(y^{*}_{-T_{B},...,t-1},\hat{\beta}^{i=s}) + \epsilon^{*}_{t}$
-%     \ENDFOR
-%     \RETURN $y^{*}_{1,...,T}$
-%   \end{algorithmic}
-% \end{algorithm}
 
 \section{Diagnostics}
 pg 7 of \cite{WMS1995} suggested observing the distribution of the terminal
@@ -697,7 +578,6 @@ AIC/BIC/VOUNG test being prefered.
 
 
 \printbibliography
-
 
 \end{document}
 
