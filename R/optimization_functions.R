@@ -1,5 +1,5 @@
 "standard hme approach where each node is updated independently"
-m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
+m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars, root_prior)
 {
   gat.out <- lapply(gat.pars, function(x) list())
   exp.out <- lapply(exp.pars, function(x) list())
@@ -11,9 +11,8 @@ m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
                             tree, list_priors, list_density)
   
   for (e in names(exp.pars)) {
-    opt_blk <- optimize_block(e, tree, exp.pars, Y, X,
-                              joint_posterior_weight(e, tree, list_posteriors),
-                              "gaussian", hme_type)
+    jpw <- joint_posterior_weight(e, tree, list_posteriors, root_prior)
+    opt_blk <- optimize_block(e, tree, exp.pars, Y, X, jpw, "gaussian", hme_type)
     exp.out[[e]] <- opt_blk$par
   }
   
@@ -24,7 +23,7 @@ m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
     if (nchds == 2)
       node_type <- "binomial"
     # joint posterior weights
-    wt <- joint_posterior_weight(g, tree, list_posteriors)
+    wt <- joint_posterior_weight(g, tree, list_posteriors, root_prior)
     # posterior branches
     target <- list_posteriors[[g]]
     wts=list(branch=target, joint_post=wt)
@@ -37,7 +36,8 @@ m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
                          exp.pars, Y, X)
   list_posteriors <- napply(names(gat.pars), posterior_weights,
                             tree, list_priors, list_density)
-  lik <- log_likelihood(tree, list_priors, list_posteriors, list_density)
+  lik <- log_likelihood(tree, list_priors, list_posteriors, list_density,
+                        root_prior)
   
   return(list(exp.pars=exp.out, gat.pars=gat.out, loglik=lik,
               list_priors=list_priors, list_posteriors=list_posteriors,
@@ -185,14 +185,15 @@ Q <- function(like_type)
 
 
 
-multinomial_info_matrix <- function(node, treestr, gate.pars, ln, lp, Z)
+multinomial_info_matrix <- function(node, treestr, gate.pars, ln, lp, Z,
+                                    rp)
 {
   gate.par <- gate.pars[[node]]
   if (is.list(gate.par))
     m <- length(gate.pars) + 1
   else
     m <- 2
-  H <- joint_posterior_weight(node=node, treestr=treestr, lp=lp)
+  H <- joint_posterior_weight(node=node, treestr=treestr, lp=lp, rp=rp)
   h <- lp[[node]]
   g <- ln[[node]]
   

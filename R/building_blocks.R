@@ -191,11 +191,6 @@ expert_index <- function(hme_type, nodes)
   return(idx)
 }
 
-#expert_index("hme", sort(test1))
-#expert_index("hmre", sort(test1))
-#expert_index("hme", sort(test))
-#expert_index("hmre", sort(test))
-
 
 napply <- function(x, f_, ...)
 {
@@ -329,7 +324,7 @@ prior_weights <- function(node, treestr, ln)
 "Calculate the posterior weights for a gating node
  
  Input:
-       node    - any given non-terminal node
+       node    - any gating node
        treestr - list of all gating and expert nodes in the HME
        ln      - list of gating network split probabilities
        le      - list of expert densities
@@ -364,18 +359,24 @@ posterior_weights <- function(node, treestr, ln, le)
 
  Output:
        the cumulative product of posterior weights from the root to `node`"
-joint_posterior_weight <- function(node, treestr, lp)
+joint_posterior_weight <- function(node, treestr, lp, rp)
 {
   # not feasible for the root node
+  lrp <- length(rp)
+  nlp <- nrow(lp[[1]])
+  stopifnot(lrp == 1 || lrp == nlp)
   if (node == "0") {
-    return(rep(1, nrow(lp[[1]])))
+    if (lrp == 1)
+      return(rep(1, nlp))
+    else
+      return(rp)
   }
-  return(gate_path_product("0", node, ln=lp))
+  return(rp * gate_path_product("0", node, ln=lp))
 }
 
 
 
-log_likelihood <- function(treestr, ln, lp, ld)
+log_likelihood <- function(treestr, ln, lp, ld, rp)
 {
   expert.nodes <- treestr[unlist(is_terminal(treestr, treestr))]
   full_log_path <- function(node)
@@ -383,7 +384,7 @@ log_likelihood <- function(treestr, ln, lp, ld)
     inp <- inter_node_paths("0", node, ln)
     logs <- lapply(c(inp, list(ld[[node]])), log)
     sumlogs <- Reduce(`+`, logs)
-    post <- joint_posterior_weight(node, treestr, lp)
+    post <- joint_posterior_weight(node, treestr, lp, rp)
     return(post * sumlogs)
   }
   lst <- lapply(expert.nodes, full_log_path)

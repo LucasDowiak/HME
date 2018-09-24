@@ -4,12 +4,13 @@ source("building_blocks.R")
 source("marginal_effects.R")
 source("optimization_functions.R")
 source("summary_functions.R")
-source("plot_functions")
+source("plot_functions.R")
 library(Formula)
 
 
 hme <- function(tree, formula, hme_type=c("hme", "hmre"),
-                expert_type=c("gaussian"), data,
+                expert_type=c("gaussian"), data, root_prior=1,
+                init_gate_pars=NULL, init_expert_pars=NULL,
                 maxiter=100, tolerance=1e-4, trace=0)
 {
   cl <- match.call()
@@ -20,7 +21,8 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   hme_type <- match.arg(hme_type)
   
   mf <- match.call(expand.dots = FALSE)
-  #m <- match(c("formula", "data"), names(mf), 0)
+  call_ <- as.list(mf)
+  m <- match(c("formula", "data"), names(mf), 0)
   form <- Formula::as.Formula(formula)
   stopifnot(length(form)[1] == 1L, length(form)[2] == 2L)
   mf <- model.frame(form, data = data)
@@ -35,9 +37,19 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   # This needs to be generalized for HMRE
   expert.index <- expert_index(hme_type, tree)
   
-  gate.pars <- napply(gate.nodes, init_gate_node_pars, tree, ncol(Z))
-  expert.pars <- napply(expert.nodes, function(x) c(runif(ncol(X) , -2, 2),
-                                                    runif(1, 1, 5)))
+  if (is(init_gate_pars, "NULL")) {
+    gate.pars <- napply(gate.nodes, init_gate_node_pars, tree, ncol(Z))
+  } else {
+    gate.pars <- init_gate_pars
+  }
+  
+  if (is(init_expert_pars, "NULL")) {
+    expert.pars <- napply(expert.nodes, function(x) c(runif(ncol(X) , -2, 2),
+                                                      runif(1, 1, 5)))
+  } else {
+    expert.pars <- init_expert_pars
+  }
+
   NN <- length(c(unlist(gate.pars), unlist(expert.pars)))
   
   list_nodes <- napply(gate.nodes, par_to_gate_paths, gate.pars, Z)
@@ -52,7 +64,8 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   logL[1, ] <- newLL <- -Inf
   for (ii in seq_len(maxiter)) {
     oldLL <- newLL
-    mstep <- m_step(tree, hme_type, Y=Y, X=X, Z=Z, exp.pars=expert.pars, gat.pars=gate.pars)
+    mstep <- m_step(tree, hme_type, Y=Y, X=X, Z=Z, exp.pars=expert.pars,
+                    gat.pars=gate.pars, root_prior=root_prior)
     expert.pars <- mstep[["exp.pars"]]
     gate.pars <- mstep[["gat.pars"]]
     newLL <- mstep[["loglik"]]
@@ -70,7 +83,8 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   
   gate.margins <- margin_matrix(expert.nodes, gate.pars, mstep$list_priors)
   gate.info.matrix <- napply(gate.nodes, multinomial_info_matrix, tree, gate.pars,
-                             mstep$list_priors, mstep$list_posteriors, Z)
+                             mstep$list_priors, mstep$list_posteriors, Z,
+                             root_prior)
   
   structure(list(tree=tree,
                  gate.nodes=gate.nodes,
@@ -91,7 +105,8 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                  N=length(Y),
                  no.of.pars=NN,
                  gate.margins=gate.margins,
-                 gate.info.matrix=gate.info.matrix),
+                 gate.info.matrix=gate.info.matrix,
+                 call_=call_),
             class="hme")
 }
 
@@ -100,7 +115,10 @@ data(iris)
 
 tree <- c("0",
           "0.1", "0.2")
-          #"0.1.1", "0.1.2")
+treeL <- c("0",
+           "0.1", "0.2",
+           "0.1.1", "0.1.2")
+
 tree2 <- c("0",
            "0.1", "0.2", "0.3")
 debugonce(hme)
@@ -110,35 +128,20 @@ debugonce(hme)
 tst <- hme(tree,
            "Sepal.Width ~ Petal.Width | Petal.Width + Petal.Length + Sepal.Length",
            data=iris, maxiter=200, tolerance = 1e-6, trace=1)
-tst2 <- hme(tree2,
-            "Sepal.Width ~ Petal.Width | -1 + Species + Petal.Width + Petal.Length + Sepal.Length",
-           data=iris, maxiter=250, tolerance=1e-5, trace=1)
 
+newtree <- grow_the_tree(tst)
+
+newcall <- tst$call_
+newcall[["tree"]] <- newtree
+
+tst2 <- do.call(hme, newcall[-1])
 
 cols <- c("blue", "orange", "green")
 with(iris, plot(Petal.Width, Sepal.Width, col=cols[as.integer(iris$Species)]))
-for (e in tst$expert.pars) {
+for (e in tst2$expert.pars) {
   abline(e[1], e[2])
 }
 
-criterion <- function(obj, type=c("aic", "bic"))
-{
-  L <- tail(obj[["logL"]][!is.na(tst[["logL"]])], 1)
-  K <- length(unlist(c(tst$expert.pars, tst$gate.pars)))
-
-  if (type == "aic") {
-    penalty <- 2
-  } else if (type == "bic") {
-    N <- obj[["N"]]
-    penalty <- log(N)
-  }
-  return(penalty * K - 2 * L)
-}
-grow_the_tree <- function(...)
-{
-  tree <- c("0", "0.1", "0.2")
-  hme(tree, ...)
-}
 
 
 

@@ -25,7 +25,7 @@
 \newcommand{\sumgateprod}[3]{\pi_{#1 \overset{#3}{\longleftrightarrow} #2}}
 \newcommand{\shortsum}[1]{\sum \nolimits_{#1}}
 \newcommand{\expmixwt}[0]{\mathbb{\Pi}}
-
+\newcommand{\h}[2]{h^{#1}_{#2}}
 
 \setlength{\parindent}{10pt}
 
@@ -253,7 +253,7 @@ second set of covariates $Z_{t}$ and parameter vector $\boldsymbol{\omega}$:
 \end{equation}
 
 
-\subsection{Gating Network and $\expmixwt(m | Z_{t}, \boldsymbol{\omega})$}
+\subsection{Gating Network and $\expmixwt(m | Z, \boldsymbol{\omega})$} \label{subsec:GatingNetwork}
 
 The gating network model is structured as a collection of nodes in a tree
 structure that branches out in successive layers. The location of these nodes will
@@ -265,7 +265,7 @@ rest of network is traversed. At its most general, each gating node can yield an
 arbitrary number of splits. While a fully generalized gating network is
 conceptually attractive, it presents practical challenges for implementation.
 In this paper we address several architectures for the gating network, each
-with its own set of structural restrictions on the shape of the newtork and
+with its own set of structural restrictions on the shape of the network and
 the number of splits each gating node can take. For arbitary node at address $a$,
 we use a multinomial logistic regression to model the split in direction $i$ to be:
 
@@ -282,18 +282,19 @@ from one node (say the root node $0$) to another (say $m|\ldots|j|i$)
 can be defined as
 
 \begin{equation} \label{eq:gpath}
-  \gateprod{g^{0}}{g^{\ldots|j|i|0, \, m}} =
+  \gateprod{g^{0}}{g^{k|\ldots|j|i|0}} =
     \begin{cases} 
-       g^{0, \, i} \ g^{i|0, \, j} \ldots g^{\dots|j|i|0, \, m} & \textrm{if path is feasible} \\
+       g^{0, \, i} \, g^{i|0, \, j} \ldots g^{\dots|j|i|0, \, k} & \textrm{if path is feasible} \\
        1 & \textrm{otherwise}
     \end{cases}
 \end{equation}
 
 If one of the nodes is an expert, then we can define the mixture weight
-of expert $m$ for input pattern $i$ to be:
+of expert $m$ for input pattern $i$ to be the product of the path taken
+from the root node to expert $m$:
 
 \begin{equation} \label{eq:pathsum}
-  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
+  \expmixwt(m | Z, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
 \end{equation}
 
 For network architectures with multiple paths from the root node to
@@ -367,7 +368,7 @@ leading to the complete-data log-likelihood
 As mentioned previously, summing over multiple paths $l$ in equation
 (\ref{eq:augloglikelihood}) is only necessary in the HMRE case. For the ME
 and HME cases, $l = 1$, simplifying the second log in (\ref{eq:augloglikelihood})
-to $log(\gateprod{g^{0}}{P^{m}})$. Going forward, we will focus our analysis on
+to $\log(\gateprod{g^{0}}{P^{m}})$. Going forward, we will focus our analysis on
 the ME and HME specifications with work on the HMRE case arriving in subsequent
 iterations of the article.
 
@@ -387,46 +388,142 @@ iterations of the article.
 
 
 \subsection{E-Step}
-The E-step of the algorithm performs an expectation of over the log-likelhood
-equation (\ref{eq:loglikelihood}).
+The E-step of the algorithm performs an expectation over the complete
+log-likelhood equation (\ref{eq:augloglikelihood}), where the expectation
+includes the additional information contained in the expert regressions.
+One of the results of this expectation is the creation of second set of
+weights $h^{a}$ that parallel the weights from the gating network $g^{a}$
+discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
-  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}}{P^{m}} \right] \\ 
-   & = \sum_{t} \sum_{m} h^{0,m}_{t} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}}{P^{m}} \right]
+  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
+   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right]
  \end{split}
 \end{equation}
 
-Here $h^{0,m}_{t} \equiv \mathbb{E}\left[I_{t}(m)\right] = \mathbb{P}[I_{t}(m) = 1| y_{t}, x_{t}, z_{t}; \boldsymbol{\theta}]$
-is what we define as the posterior probability of oberserved value $y_{t}$ being
-produced by expert $m$, given our tree structure starts at the root node $n^{0}$.
-The posterior weight for any gating node $n^{a}$ can be calculated by
+Here $\gateprod{h^{0}}{h^{k,\dots|j|i|0}}$ is analagous to equation (\ref{eq:gpath})
+
+\begin{equation} \label{eq:hpath}
+  \gateprod{h^{0}}{h^{k|\ldots|j|i|0}} =
+    \begin{cases} 
+       h^{0, \, i} \ h^{i|0, \, j} \ldots h^{\dots|j|i|0, \, k} & \textrm{if path is feasible} \\
+       1 & \textrm{otherwise}
+    \end{cases}
+\end{equation}
+
+and the $h^{a, i}$ are arrived at using bayes' theoreom.
 
 \begin{equation} \label{eq:posteriornode}
-  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
+  \h{a,i}{t} = \frac{P^{m}_{t} \gateprod{g^{a,i}_{t}}{P^{m}_{t}}}{ \shortsum{k} P^{k}_{t} \gateprod{g^{a, j \neq i}_{t}}{P^{k}_{t}}}
 \end{equation}
 
-\begin{equation} \label{eq:posteriornode2}
-  h^{a, i}_{t} = \frac{ g^{a, i}_{t} \shortsum{l} \sumgateprod{g^{i|a, \, j}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
+So, now we have two different forms of weights, $g$'s and $h$'s. The
+way the $g$'s are formed in equation (\ref{eq:softmax}), they are only
+functions of the nodes in the gating network, separate from the
+expert regressions and the information they contain. For this reason,
+the authors in Jacob et. al. 1993 refer to $g$'s as \textit{priors}.
+The $h$'s draw from both the gating network and the expert regressions and
+are referred to as \textit{posterior} weights.
+
+One property that $\gateprod{h^{0}}{P^{m}}$ enjoys is for any
+node $a$ that belongs to the gate path from the root node
+to expert $m$, then:
+
+\begin{equation}
+  \gateprod{h^{0}}{P^{m}} = \gateprod{h^{0}}{h^{a}} \, h^{a,i}
 \end{equation}
 
-It's important to note a relationship between the posterior weights for consecutive
-nodes in a feasible path.
-
-\begin{equation} \label{eq:posteriorrelation}
-  \mathbb{E}\left[I_{t}(1)\right] = h^{0,1}_{t} h^{1|0,1}_{t} h^{1|1|0,1}_{t}
-\end{equation}
-
-The posterior specification for equation (\ref{eq:posteriornode}) is for the
-repeated expert HME only. A different notation is needed for the original HME
-design and it's adaptively grown counterpart.
-
+so that when at node $a$, split $i$ is the one needed in order to
+reach exert $m$.
 
 \subsection{M-Step}
 
 Note that the paramters governing the experts and the gating network in
 equation (\ref{eq:Estep}) are additively seperable. Taking each in turn, the
 Jacobian of the gating portion of equation (\ref{eq:Estep}) is:
+
+
+
+
+
+
+
+\section{Inference} \label{sec:Inference}
+
+The score vector:
+
+\begin{equation} \label{eq:gateScore}
+  \begin{split}
+    \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) &\equiv \frac{\partial Q}{\partial \boldsymbol{\omega}^{a,i}} \\
+                                                   &= \gateprod{h^{0}_{t}}{h^{a}_{t}} \left[h^{a, i}_{t} - g^{a, i}_{t} \right] Z_{t}
+  \end{split}
+\end{equation}
+
+\begin{equation}
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a}) = \left[\boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, 1}),
+                                                      \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, 2}),
+                                                      \hdots, 
+                                                      \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, J - 1})\right]
+\end{equation}
+
+\begin{equation}
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}) = \left[\boldsymbol{S}_{t}(\boldsymbol{\omega}^{0}),
+                                                  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{1|a}),
+                                                  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{2|0})
+                                                  \hdots \right]
+\end{equation}
+
+\begin{equation}
+  \boldsymbol{S}(\boldsymbol{\omega}) = \sum_{t}^{T} \boldsymbol{S}_{t}(\boldsymbol{\omega})
+\end{equation}
+
+\bigskip
+
+
+
+
+The hessian:
+\newcommand{\bw}[1]{\boldsymbol{\omega}^{#1}}
+\newcommand{\Ht}[1]{\mathbf{H}_{t}(#1)}
+\newcommand{\HH}[1]{\boldsymbol{H}(#1)}
+\newcommand{\HI}[1]{\boldsymbol{H}^{-1}(#1)}
+
+\begin{equation} \label{eq:nodehessian}
+  \begin{split}
+  \Ht{\bw{a}} &\equiv \frac{\partial^{2} Q}{\partial \boldsymbol{\omega}^{a,i} \partial \boldsymbol{\omega}^{a,j}} \\
+     &= \gateprod{h^{0}}{h^{a}} Z_{t} \begin{bmatrix}
+     g_{t}^{a|1}(1-g_{t}^{a|1}) & -g_{t}^{1|a}g_{t}^{2|a}    & \dots  & g_{t}^{1|a}g_{t}^{s-1|a}       \\
+     -g_{t}^{1|a}g_{t}^{2|a}    & g_{t}^{a|2}(1-g_{t}^{a|2}) & \dots  & g_{t}^{2|a}g_{t}^{s-1|a}       \\
+     \vdots                     &                            & \ddots & \vdots                 \\
+     g_{t}^{1|a}g_{t}^{s-1|a}   &  \dots                     &        & g_{t}^{a|J-1}(1-g_{t}^{a|J-}) \\
+  \end{bmatrix} Z_{t}^\top
+  \end{split}
+\end{equation}
+
+
+\begin{equation} 
+  \mathbf{H}_{t} =  \begin{bmatrix}
+    \Ht{\bw{0}}    & \boldsymbol{0} & \boldsymbol{0} & \dots   \\
+    \boldsymbol{0} & \Ht{\bw{1|0}}  & \boldsymbol{0} & \dots   \\
+    \boldsymbol{0} & \boldsymbol{0} & \Ht{\bw{2|0}}  & \vdots  \\
+    \vdots         & \vdots         & \vdots         & \ddots  \\
+  \end{bmatrix}
+\end{equation}
+
+\begin{equation}
+  \HH{\boldsymbol{\omega}} = \sum_{t}^{T} \Ht{\boldsymbol{\omega}}
+\end{equation}
+
+Leading to the sandwich estimator:
+
+\begin{equation}
+  \boldsymbol{V}(\boldsymbol{\omega}) = \HI{\boldsymbol{\omega}} \boldsymbol{S}(\boldsymbol{\omega}) \boldsymbol{S}(\boldsymbol{\omega})^\top \HI{\boldsymbol{\omega}}
+\end{equation}
+\section{HMRE}
+
+
+Score function for HMRE
 
 \begin{equation} \label{eq:gateJacobian}
   \begin{split}
@@ -449,43 +546,18 @@ $\omega^{a,i}_{p}$.
 
 
 
-
-
-\section{Inference} \label{sec:Inference}
-
-\begin{equation} \label{eq:gateScore}
-  \boldsymbol{S}_{i}(\omega^{a}) = h^{a}_{i} \left[h^{a, j}_{i} - g^{a, j}_{i} \right] Z_{i}
-\end{equation}
-
-
-\begin{equation} \label{eq:gateHessian}
+Hessian for HMRE
+\begin{equation}
   \begin{split}
     \frac{\partial^{2} Q}{\partial \omega^{a,i}_{p} \partial \omega^{a',j}_{q}} =& \sum_{t} \sum_{m} \left[  \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}} - \left( \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \right)^{2} \sum_{l} \sum_{l'} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}}  \frac{\partial \pi_{n^{0}_{t} \overset{l'}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a',j}_{q}} \right]
   \end{split}
 \end{equation}
 
--- Put his directly after the log-likelihood equation in the EM section
--- Reference \cite{MengRubinSEM1991}
--- Show how weights enter into the score and hessian
 
-\bigskip
-
-This isn't correct
-
-\begin{equation} \label{eq:gatinghessianQ}
-  \mathbf{A}^{a} = (\mathbf{I}_{s-1} \otimes \mathbf{Z})^{\prime} \mathbf{G}^{a} (\mathbf{I_{s-1}} \otimes \mathbf{Z})
+Posterior node for HMRE
+\begin{equation} 
+  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
 \end{equation}
-
-\begin{equation} \label{eq:nodehessian}
-  \mathbf{G}^{a} = h^{a} \begin{bmatrix}
-     g^{1|a}(1-g^{1|a}) & -g^{1|a}g^{2|a}    & \dots  & g^{1|a}g^{s-1|a}       \\
-     -g^{1|a}g^{2|a}    & g^{2|a}(1-g^{1|a}) & \dots  & g^{2|a}g^{s-1|a}       \\
-     \vdots             &                    & \ddots & \vdots                 \\
-     g^{1|a}g^{s-1|a}   &  \dots             &        & g^{s-1|a}(1-g^{s-1|a}) \\
-  \end{bmatrix}
-\end{equation}
-
-For multinomial regressions, each 
 
 
 
