@@ -236,6 +236,11 @@ par_to_expert_dens <- function(node, expert_type, expert_par_list, Y, X, ...)
     variance <- exp(parm[length(parm)])
     mu <- X %*% beta
     return(dnorm(Y, mean=mu, sd=sqrt(variance), ...))
+  } else if (expert_type == "bernoulli") {
+    # if Y is a bernoulli variable {1, 0}
+    g <- par_to_gate_paths(node, expert_par_list, X)
+    # pmax(g[,1] * Y, g[,2] * (1 - Y))
+    g[,1] * Y + g[,2] * (1 - Y)
   }
 }
 
@@ -359,7 +364,7 @@ posterior_weights <- function(node, treestr, ln, le)
 
  Output:
        the cumulative product of posterior weights from the root to `node`"
-joint_posterior_weight <- function(node, treestr, lp, rp)
+joint_posterior_weight <- function(node, lp, rp)
 {
   # not feasible for the root node
   lrp <- length(rp)
@@ -376,7 +381,7 @@ joint_posterior_weight <- function(node, treestr, lp, rp)
 
 
 
-log_likelihood <- function(treestr, ln, lp, ld, rp)
+Qlog_likelihood <- function(treestr, ln, lp, ld, rp)
 {
   expert.nodes <- treestr[unlist(is_terminal(treestr, treestr))]
   full_log_path <- function(node)
@@ -391,7 +396,22 @@ log_likelihood <- function(treestr, ln, lp, ld, rp)
   sum(unlist(lst))
 }
 
+log_likelihood <- function(treestr, ln, lp, ld, rp)
+{
+  expert.nodes <- treestr[unlist(is_terminal(treestr, treestr))]
+  product_path <- function(node)
+  {
+    gpp <- gate_path_product("0", node, ln)
+    return(rp * gpp * ld[[node]])
+  }
+  lst <- lapply(expert.nodes, product_path)
+  
+  sum(log(Reduce(`+`, lst)))
+}
+
+
 # ----------------------------------------------------------------------------
+
 init_gate_node_pars <- function(node, tree, n)
 {
   nchilds <- length(unlist(children(node, tree)))
@@ -401,3 +421,4 @@ init_gate_node_pars <- function(node, tree, n)
     return(lapply(seq_len(nchilds - 1), function(x) runif(n, -2, 2)))
   }
 }
+

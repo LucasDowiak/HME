@@ -53,6 +53,11 @@ plot_network <- function(tree, hme_type=c("hme", "hmre"), title)
 }
 
 
+plot.hme <- function(obj)
+{
+  plot_network(obj[["tree"]], obj[["hme.type"]], "Needs a Title")
+}
+
 if (FALSE) {
   debugonce(plot_network)
   

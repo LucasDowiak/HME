@@ -226,7 +226,7 @@ that their approach makes the HME model easier to estimate without overfitting.
 
 \section{Model} \label{sec:Model}
 
-We start by presenting the HME model as a standard mixture model.
+We start by presenting the HME as a standard mixture model.
 For a given input and output pair $(X_{t}, Y_{t})$, each expert
 provides a probablistic model relating input $X_{t}$ to output
 $Y_{t}$:
@@ -293,7 +293,7 @@ If one of the nodes is an expert, then we can define the mixture weight
 of expert $m$ for input pattern $i$ to be the product of the path taken
 from the root node to expert $m$:
 
-\begin{equation} \label{eq:pathsum}
+\begin{equation} \label{eq:gpath2}
   \expmixwt(m | Z, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
 \end{equation}
 
@@ -434,8 +434,8 @@ to expert $m$, then:
   \gateprod{h^{0}}{P^{m}} = \gateprod{h^{0}}{h^{a}} \, h^{a,i}
 \end{equation}
 
-so that when at node $a$, split $i$ is the one needed in order to
-reach exert $m$.
+so that when at node $a$, split $i$ is the direction needed in order to
+reach expert $m$.
 
 \subsection{M-Step}
 
@@ -454,11 +454,10 @@ Jacobian of the gating portion of equation (\ref{eq:Estep}) is:
 The score vector:
 
 \begin{equation} \label{eq:gateScore}
-  \begin{split}
-    \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) &\equiv \frac{\partial Q}{\partial \boldsymbol{\omega}^{a,i}} \\
-                                                   &= \gateprod{h^{0}_{t}}{h^{a}_{t}} \left[h^{a, i}_{t} - g^{a, i}_{t} \right] Z_{t}
-  \end{split}
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) \equiv \frac{\partial Q}{\partial \boldsymbol{\omega}^{a,i}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} \left[h^{a, i}_{t} - g^{a, i}_{t} \right] Z_{t}
 \end{equation}
+
+With
 
 \begin{equation}
   \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a}) = \left[\boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, 1}),
@@ -467,15 +466,10 @@ The score vector:
                                                       \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, J - 1})\right]
 \end{equation}
 
-\begin{equation}
-  \boldsymbol{S}_{t}(\boldsymbol{\omega}) = \left[\boldsymbol{S}_{t}(\boldsymbol{\omega}^{0}),
-                                                  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{1|a}),
-                                                  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{2|0})
-                                                  \hdots \right]
-\end{equation}
+And
 
 \begin{equation}
-  \boldsymbol{S}(\boldsymbol{\omega}) = \sum_{t}^{T} \boldsymbol{S}_{t}(\boldsymbol{\omega})
+  \boldsymbol{S}(\boldsymbol{\omega}^{a}) = \sum_{t}^{T} \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a})
 \end{equation}
 
 \bigskip
@@ -490,35 +484,30 @@ The hessian:
 \newcommand{\HI}[1]{\boldsymbol{H}^{-1}(#1)}
 
 \begin{equation} \label{eq:nodehessian}
-  \begin{split}
-  \Ht{\bw{a}} &\equiv \frac{\partial^{2} Q}{\partial \boldsymbol{\omega}^{a,i} \partial \boldsymbol{\omega}^{a,j}} \\
-     &= \gateprod{h^{0}}{h^{a}} Z_{t} \begin{bmatrix}
-     g_{t}^{a|1}(1-g_{t}^{a|1}) & -g_{t}^{1|a}g_{t}^{2|a}    & \dots  & g_{t}^{1|a}g_{t}^{s-1|a}       \\
-     -g_{t}^{1|a}g_{t}^{2|a}    & g_{t}^{a|2}(1-g_{t}^{a|2}) & \dots  & g_{t}^{2|a}g_{t}^{s-1|a}       \\
-     \vdots                     &                            & \ddots & \vdots                 \\
-     g_{t}^{1|a}g_{t}^{s-1|a}   &  \dots                     &        & g_{t}^{a|J-1}(1-g_{t}^{a|J-}) \\
-  \end{bmatrix} Z_{t}^\top
-  \end{split}
+  \Ht{\bw{a}} \equiv \frac{\partial^{2} Q}{\partial \boldsymbol{\omega}^{a,i} \partial \boldsymbol{\omega}^{a,j}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} Z_{t} \boldsymbol{\Gamma}^{a}_{t}  Z_{t}^\top
 \end{equation}
 
-
-\begin{equation} 
-  \mathbf{H}_{t} =  \begin{bmatrix}
-    \Ht{\bw{0}}    & \boldsymbol{0} & \boldsymbol{0} & \dots   \\
-    \boldsymbol{0} & \Ht{\bw{1|0}}  & \boldsymbol{0} & \dots   \\
-    \boldsymbol{0} & \boldsymbol{0} & \Ht{\bw{2|0}}  & \vdots  \\
-    \vdots         & \vdots         & \vdots         & \ddots  \\
-  \end{bmatrix}
-\end{equation}
+With
 
 \begin{equation}
-  \HH{\boldsymbol{\omega}} = \sum_{t}^{T} \Ht{\boldsymbol{\omega}}
+  \boldsymbol{\Gamma}^{a}_{t} = \begin{bmatrix}
+  g_{t}^{a,1}(1-g_{t}^{a,1}) & -g_{t}^{a,1}g_{t}^{a,2}    & \dots  & -g_{t}^{a,1}g_{t}^{a,J-1}       \\
+  -g_{t}^{a,1}g_{t}^{a,2}    & g_{t}^{a,2}(1-g_{t}^{a,2}) & \dots  & -g_{t}^{a,2}g_{t}^{a,J-1}       \\
+  \vdots                     &  \vdots                    & \ddots & \vdots                 \\
+  -g_{t}^{a,1}g_{t}^{a,J-1}  & -g_{t}^{a,2}g_{t}^{a,J-1}  & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
+    \end{bmatrix}
+\end{equation}
+
+And
+
+\begin{equation}
+  \HH{\boldsymbol{\omega}^{a}} = \sum_{t}^{T} \Ht{\boldsymbol{\omega}^{a}}
 \end{equation}
 
 Leading to the sandwich estimator:
 
-\begin{equation}
-  \boldsymbol{V}(\boldsymbol{\omega}) = \HI{\boldsymbol{\omega}} \boldsymbol{S}(\boldsymbol{\omega}) \boldsymbol{S}(\boldsymbol{\omega})^\top \HI{\boldsymbol{\omega}}
+\begin{equation} \label{eq:robustgatevarcov}
+  \boldsymbol{V}(\boldsymbol{\omega}^{a}) = \HI{\boldsymbol{\omega}^{a}} \boldsymbol{S}(\boldsymbol{\omega}^{a}) \boldsymbol{S}(\boldsymbol{\omega}^{a})^\top \HI{\boldsymbol{\omega}^{a}}
 \end{equation}
 \section{HMRE}
 
@@ -562,62 +551,79 @@ Posterior node for HMRE
 
 
 \section{Marginal Effects} \label{sec:MarginalEffects}
-There is an issue of how to tie the variables in the gating network to the regression
-relationship described by experts. For logit/probit regression, there is the
-standard margins at the means (MEM) and the average marginal effect (AME). We should
-be able to extend this kind of analysis to the entire weighting network, chaining
-marginal effects from the root node down and determind/quantify/summarize the effect
-each gating factor has on directing which observation to which expert. These can
-then be tied with the marginal regression effect. Starting with \ref{eq:gpath},
-and summing over all the paths from the root node to expert $m$, we can re-arrange
-the products of the collected path as follows:  
+Just as for logistic regressions, we can calculate the marginal effect of the entire
+gating network, providing a sense of what gating variables play a decisive role in 
+directing input patterns to the appropriate expert regression. Starting with equation
+(\ref{eq:gpath2}), we take the partial with respect to gating matrix $Z_{t}$.
 
 \begin{equation}
-  \begin{split}
-  w^{m} &= \sum_{l} \pi_{n_{0} \overset{l}{\longleftrightarrow} P^{m}} \\
-        &= \sum_{i} \sum_{j} \cdots \sum_{k} g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
-  \end{split}
+  \delta^{m} \equiv \frac{\partial \gateprod{g^{0}}{P^{m}}}{\partial Z} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial Z}
 \end{equation}
 
-Applying the chain, we can calculate the marginal effect that variable $p$ has on
-the weight assinged to each observation being assinged to expert $m$.
-
-\begin{equation}
-  \begin{split}
-    \frac{\partial w^{m}}{\partial Z_{p}} &= \sum_{i} \frac{\partial g^{0, i}}{\partial Z_{p}} \sum_{j} g^{i|0, j} \cdots \sum_{k} g^{k|\cdots|j|i|0, m} \\
-    &+ \sum_{i} g^{0, i} \sum_{j} \frac{\partial g^{i|0, j}}{\partial Z_{p}} \cdots \sum_{k} g^{k|\cdots|j|i|0, m} \\
-    &+ \sum_{i} g^{0, i} \sum_{j} g^{i|0, j} \cdots \sum_{k} \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z_{p}} \\
-  \end{split}
-\end{equation}
-
-For the original hierarchical mixture of expert model, this simplifies to
+Applying the product rule gives us:
 
 \begin{equation} \label{eq:hme_gate_marginal_effect}
   \begin{split}
-    \frac{\partial w^{m}}{\partial Z_{p}} &= \frac{\partial g^{0, i}}{\partial Z_{p}} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
-    &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial Z_{p}} \cdots g^{k|\cdots|j|i|0, m} \\
-    &+ g^{0, i} g^{i|0, j} \cdots \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z_{p}} \\
+    \delta^{m} &= \frac{\partial g^{0, i}}{\partial Z} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
+                                     &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial Z} \cdots g^{k|\cdots|j|i|0, m} + \dots \\
+                                     &+ g^{0, i} g^{i|0, j} \cdots \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z} \\
   \end{split}
 \end{equation}
 
 and since:
 
 \begin{equation} \label{eq:gate_marginal_effect}
-  \frac{\partial g^{a, i}}{\partial Z_{p}} = g^{a, i}(\omega^{a, i} - \sum_{j} g^{a, j} \omega^{a, j}) = g^{a, i}(\omega^{a, i} - \mean{\omega}^{a})
+  \frac{\partial g^{a, i}}{\partial Z} = g^{a, i}(\omega^{a, i} - \sum_{j} g^{a, j} \omega^{a, j}) = g^{a, i}(\omega^{a, i} - \mean{\omega}^{a})
 \end{equation}
 
 we can substitute equation (\ref{eq:gate_marginal_effect}) into
 (\ref{eq:hme_gate_marginal_effect}) to arrive at:
 
-\begin{equation}
-  \frac{\partial w^{m}}{\partial Z_{p}} = \pi_{n_{0} {\longleftrightarrow} P^{m}} (\omega^{0, i} + \omega^{i|0, j} + \cdots + \omega^{k|\cdots|j|i|0, m} - (\mean{\omega}^{0} + \mean{\omega}^{i|0} + \cdots + \mean{\omega}^{k|\cdots|j|i|0}))
+\begin{equation} \label{eq:marginal_effects}
+  \delta^{m} = \gateprod{g^{0}}{P^{m}} (\omega^{0, i} + \omega^{i|0, j} + \cdots + \omega^{k|\cdots|j|i|0, m} - (\mean{\omega}^{0} + \mean{\omega}^{i|0} + \cdots + \mean{\omega}^{k|\cdots|j|i|0}))
 \end{equation}
 
+Standard errors for these marginal effects can be estimated using the
+delta method.
 
+\newcommand{\deltavar}{%
+  \begin{bmatrix}
+    \boldsymbol{V}(\boldsymbol{\omega}^{0}) & \boldsymbol{0}                            & \boldsymbol{0}                            & \dots  \\ 
+    \boldsymbol{0}                          & \boldsymbol{V}(\boldsymbol{\omega}^{1|0}) & \boldsymbol{0}                            & \dots  \\
+    \boldsymbol{0}                          & \boldsymbol{0}                            & \boldsymbol{V}(\boldsymbol{\omega}^{2|0}) &        \\
+    \vdots                                  & \vdots                                    &                                           & \ddots \\
+  \end{bmatrix}
+}
+
+\begin{equation}
+    \boldsymbol{V}(\boldsymbol{\delta^{m}}) = \left(\frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}} \right) \deltavar  \left(\frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}} \right)^{\top}
+\end{equation}
+
+where $\boldsymbol{V}(\boldsymbol{\omega}^{a})$ is the sandwich estimator
+in equation (\ref{eq:robustgatevarcov}) and:
+
+\begin{equation}
+  \frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}^{a,p}} = [1 - g^{a, p}] (\delta^{m} Z + \gateprod{g^{0}}{P^{m}}) - g^{a,p} \gateprod{g^{0}}{P^{m}} [\omega^{a,p} - \mean{\omega}^{a}] Z
+\end{equation}
+
+if $\boldsymbol{\omega}^{a,p}$ appears in the path of $\gateprod{g^{0}}{P^{m}}$, or if not,
+then:
+
+\begin{equation}
+  \frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}^{a,p}} = -g^{a, p} (\delta^{m} Z + \gateprod{g^{0}}{P^{m}}) - g^{a,l} \gateprod{g^{0}}{P^{m}} [\omega^{a,p} - \mean{\omega}^{a}] Z
+\end{equation}
 
 
 \section{Growing and Pruning the Gating Network} \label{sec:NetworkGrowth}
 
+\section{A simple example} \label{sec:SimpleExample}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{Iris_fit_and_predict.jpeg}
+  \caption{Does it Work?}
+  \label{fig:Iris_fit_and_predict}
+\end{figure}
 
 
 \section{Miscellaneous}
