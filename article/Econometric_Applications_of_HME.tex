@@ -4,7 +4,7 @@
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{mathbbol}
-%\usepackage{threeparttable}
+\usepackage{threeparttable}
 \usepackage{geometry}
 \usepackage{pdflscape}
 %\usepackage{algorithmic}
@@ -551,13 +551,49 @@ Posterior node for HMRE
 
 
 \section{Marginal Effects} \label{sec:MarginalEffects}
-Just as for logistic regressions, we can calculate the marginal effect of the entire
-gating network, providing a sense of what gating variables play a decisive role in 
-directing input patterns to the appropriate expert regression. Starting with equation
-(\ref{eq:gpath2}), we take the partial with respect to gating matrix $Z_{t}$.
+
+To explore what kind of marginal effects each variable has on the mixture's 
+output, we start with equation (\ref{eq:mixture}) but replace the
+expert distributions $P^{m}_{t}$ with the functional form of the 
+expert regression $f^{m}_{t}$ and use the relationship in equation
+(\ref{eq:gpath2}). 
+
+\begin{equation} \label{eq:mixture2}
+  f_{t} = f(Y_{t} | X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(Y_{t} | X_{t}, \boldsymbol{\beta}^{m})
+\end{equation}
+
+The functional form of the marginal effect depends if the variables are
+exclusive to the gating network, $Z$, exclusive to the expert
+regressions, $X$, or is present in both sets of covariates,
+$W \subset X$ and $W \subset X$. For covariates
+exclusive to the gating network, their marginal effects are:
+
+\begin{equation} \label{eq:ME_gating}
+  \frac{\partial f_{t}}{\partial Z} = \sum_{m=1}^{M} \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial Z}}f^{m}_{t}
+\end{equation}
+
+For covariates exclusive to the expert regressions, their marginal effects
+are:
+
+\begin{equation} \label{eq:ME_expert}
+  \frac{\partial f_{t}}{\partial X} = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial X}}
+\end{equation}
+
+And covariates in both:
+
+\begin{equation} \label{eq:ME_both}
+  \frac{\partial f_{t}}{\partial W} = \sum_{m=1}^{M} \left\{ \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial W}}f^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial W}} \right\}
+\end{equation}
+
+Just as for logistic and multinomial regressions, the
+marginal effect of the entire gating network has a closed form solution.
+Independently, looking at the network's marginal effects provides a sense
+of what gating variables play a decisive role in directing input patterns
+to the appropriate expert regressions. Starting with equation
+(\ref{eq:gpath}), we take the partial with respect to gating matrix $Z_{t}$.
 
 \begin{equation}
-  \delta^{m} \equiv \frac{\partial \gateprod{g^{0}}{P^{m}}}{\partial Z} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial Z}
+  \delta^{m} \equiv \frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial Z} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial Z}
 \end{equation}
 
 Applying the product rule gives us:
@@ -573,18 +609,22 @@ Applying the product rule gives us:
 and since:
 
 \begin{equation} \label{eq:gate_marginal_effect}
-  \frac{\partial g^{a, i}}{\partial Z} = g^{a, i}(\omega^{a, i} - \sum_{j} g^{a, j} \omega^{a, j}) = g^{a, i}(\omega^{a, i} - \mean{\omega}^{a})
+  \frac{\partial g^{a, i}}{\partial Z} = g^{a, i} \left( \boldsymbol{\omega}^{a, i} - \sum_{j} g^{a, j} \boldsymbol{\omega}^{a, j} \right) = g^{a, i} \left( \boldsymbol{\omega}^{a, i} - \mean{\boldsymbol{\omega}}^{a} \right)
 \end{equation}
 
 we can substitute equation (\ref{eq:gate_marginal_effect}) into
 (\ref{eq:hme_gate_marginal_effect}) to arrive at:
 
 \begin{equation} \label{eq:marginal_effects}
-  \delta^{m} = \gateprod{g^{0}}{P^{m}} (\omega^{0, i} + \omega^{i|0, j} + \cdots + \omega^{k|\cdots|j|i|0, m} - (\mean{\omega}^{0} + \mean{\omega}^{i|0} + \cdots + \mean{\omega}^{k|\cdots|j|i|0}))
+  \delta^{m} = \gateprod{g^{0}}{P^{m}} \left(\boldsymbol{\omega}^{0, i} + \boldsymbol{\omega}^{i|0, j} + \cdots + \boldsymbol{\omega}^{k|\cdots|j|i|0, m} - \left( \mean{\boldsymbol{\omega}}^{0} + \mean{\boldsymbol{\omega}}^{i|0} + \cdots + \mean{\boldsymbol{\omega}}^{k|\cdots|j|i|0} \right) \right)
 \end{equation}
 
+\bigskip 
+
 Standard errors for these marginal effects can be estimated using the
-delta method.
+delta method. \textit{(Edit: These are actually only for the gating network, not
+the entire mixture output. Also, this is only appropriate for MoE, not an
+HME)}
 
 \newcommand{\deltavar}{%
   \begin{bmatrix}
@@ -616,7 +656,35 @@ then:
 
 \section{Growing and Pruning the Gating Network} \label{sec:NetworkGrowth}
 
+
 \section{A simple example} \label{sec:SimpleExample}
+
+Using the iris data set we can test if the HME model able to capture
+structure of latent variables while maintaing accurate regression
+
+\begin{table}
+	\caption{Linear Regression vs HME}
+	\begin{threeparttable}
+		\begin{tabular}[l]{l c c c c l c c}
+	    \hline
+	& \multicolumn{2}{c}{Regression}  & \multicolumn{2}{c}{HME}  & \multicolumn{3}{c}{MoE} \\
+			                       & Const. & AR & MA & Model & ARCH & GARCH     \\
+	\hline
+  Setosa                   & 3.222  & -- & 3.217 & -- & Const. 1 & --    & --        \\
+  Virginica                & 1.695  & -- & 1.956 & -- & Slope 1 & --           \\ 
+  Versicolor               & 1.373  & -- & 1.148 & -- & Const. 2    & --           \\
+  Setosa x Petal.Width     & 0.837  & -- & 0.943 & -- & Slope 2    & --            \\
+  Virginica x Petal.Width  & 0.631  & -- & 0.497 & -- & Const. 3    & --           \\
+  Versicolor x Petal.Width & 1.054  & -- & 1.292 & -- & Slope 3    & --          \\
+  AME                      & 0.947  & -- & 0.574   &    &       &                \\
+	\hline
+		\end{tabular}
+		\begin{tablenotes}
+			\item[1]{\footnotesize This is a footnote.}
+		\end{tablenotes}
+	\end{threeparttable}
+\end{table}
+
 
 \begin{figure}[ht]
   \centering
@@ -627,6 +695,11 @@ then:
 
 
 \section{Miscellaneous}
+
+\subsection{Odd Facts}
+
+Variables that appear in the gating network but not in the expert regressions
+are sometimes called Concomitant Variables (see R FlixMix package).
 
 \subsection{Wald Test is Invalid}
 S+plus GLM section on problems with binomial GLMs
@@ -656,6 +729,4 @@ AIC/BIC/VOUNG test being prefered.
 
 
 \printbibliography
-
 \end{document}
-

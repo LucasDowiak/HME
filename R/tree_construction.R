@@ -25,10 +25,12 @@ grab_vitals <- function(obj, expert)
 {
   # gate product to expert to pass to root_posterior
   root_prior <- gate_path_product("0", expert, obj$list_priors)
+  # standard errors of expert parameters
+  stderrs <- sqrt(diag(obj$expert.info.matrix[[expert]][["sandwich"]]))
   # two new expert parameters (from fitted values) (gaussian deviations with std errors)
   pars <- obj[["expert.pars"]][[expert]]
-  newpars <- list(rnorm(length(pars), mean=pars, sd=.1),
-                  rnorm(length(pars), mean=pars, sd=.1))
+  newpars <- list(rnorm(length(pars), mean=pars, sd=stderrs),
+                  rnorm(length(pars), mean=pars, sd=stderrs))
   names(newpars) <- c("0.1", "0.2")
   return(list(root_prior=root_prior, init_expert_pars=newpars))
 }
@@ -36,12 +38,14 @@ grab_vitals <- function(obj, expert)
 
 grow_the_tree <- function(obj)
 {
+  oldtree <- obj[["tree"]]
   call_ <- obj[["call_"]]
+  call_[["tree"]] <- c("0", "0.1", "0.2")
   expnms <- obj[["expert.nms"]]
   buds <- vector("list", length(expnms))
   names(buds) <- expnms
   for (ee in expnms) {
-    newcall <- c(obj[["call_"]][-1], grab_vitals(obj, ee))
+    newcall <- c(call_[-1], grab_vitals(obj, ee))
     buds[[ee]] <- do.call(hme, newcall)
   }
   ll <- which.max(sapply(buds, logLik))
@@ -64,8 +68,7 @@ bootstrap_glm <- function(n=2, ...)
     est.disp <- TRUE
     if (any(object$weights == 0)) 
       warning("observations with zero weight not used for calculating dispersion")
-    sum((object$weights * object$residuals^2)[object$weights > 
-                                                0])/df.r
+    sum((object$weights * object$residuals^2)[object$weights > 0]) / df.r
   }
   else {
     est.disp <- TRUE

@@ -58,11 +58,11 @@ optimize_block <- function(node, treestr, par.list, Y=NULL, X, wts,
   Q <- Q(block_type)
   if (block_type == "binomial") {
     
-    out <- irls_logit(X, wts$branch[, 1], wts$joint_post, maxit=2)
+    out <- irls_logit(X, wts$branch[, 1], wts$joint_post, maxit=10)
     
   } else if (block_type == "multinomial") {
     # H is a matrix of posterior branches
-    out <- irls_multinomial(X, wts$branch, wts$joint_post, maxit=1, tol=1e-08)
+    out <- irls_multinomial(X, wts$branch, wts$joint_post, maxit=10, tol=1e-08)
     
   } else if (block_type == "gaussian") {
     exp.idx <- expert_index(hme_type, treestr)[node]

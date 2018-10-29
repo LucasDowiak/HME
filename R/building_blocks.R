@@ -415,10 +415,11 @@ log_likelihood <- function(treestr, ln, lp, ld, rp)
 init_gate_node_pars <- function(node, tree, n)
 {
   nchilds <- length(unlist(children(node, tree)))
+  limit <- 0.1
   if (nchilds == 2) {
-    return(runif(n, -2, 2))
+    return(runif(n, -limit, limit))
   } else {
-    return(lapply(seq_len(nchilds - 1), function(x) runif(n, -2, 2)))
+    return(lapply(seq_len(nchilds - 1), function(x) runif(n, -limit, limit)))
   }
 }
 

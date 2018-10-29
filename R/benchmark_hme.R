@@ -53,9 +53,10 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                                    data=data,
                                    family=gaussian,
                                    model=FALSE)
+      expert.pars <- napply(expert.pars, function(x) c(x, exp(var(Y))))
       names(expert.pars) <- expert.nodes
-      expert.pars <- napply(expert.nodes, function(x) c(runif(ncol(X) , -2, 2),
-                                                        runif(1, 1, 5)))
+      #expert.pars <- napply(expert.nodes, function(x) c(runif(ncol(X) , -2, 2),
+      #                                                  runif(1, 1, 5)))
     } else {
       expert.pars <- napply(expert.nodes, function(x) runif(ncol(X) , -2, 2))
     }
@@ -97,11 +98,13 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
       break
   }
   cat("\n")
+  logL <- logL[!is.na(logL), , drop=FALSE]
+  parM <- parM[apply(!is.na(parM), 1, FUN=all), ]
   
-  gate.margins <- margin_matrix(expert.nodes, gate.pars, mstep$list_priors)
   gate.info.matrix <- napply(gate.nodes, multinomial_info_matrix, tree, gate.pars,
                              mstep$list_priors, mstep$list_posteriors, Z,
                              root_prior)
+  
   expert.info.matrix <- napply(expert.nodes, expert_info_matrix, expert_type,
                                expert.pars, mstep$list_posteriors, X, Y)
   
@@ -125,7 +128,6 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                  Z=Z,
                  N=length(Y),
                  no.of.pars=NN,
-                 gate.margins=gate.margins,
                  gate.info.matrix=gate.info.matrix,
                  expert.info.matrix=expert.info.matrix,
                  call_=call_),
@@ -133,21 +135,10 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
 }
 
 
-data(iris)
-
-tree <- c("0",
-          "0.1", "0.2")
-treeL <- c("0",
-           "0.1", "0.2",
-           "0.1.1", "0.1.2")
-
-tree2 <- c("0",
-           "0.1", "0.2", "0.3")
-debugonce(hme)
-
+if (FALSE) {
 # -1 + Species + Petal.Length + Sepal.Length
 "Sepal.Width ~ Petal.Width | Petal.Width + Petal.Length + Sepal.Length + Species"
-tst <- hme(c("0", "0.1", "0.2"),
+tst <- hme(tree,
            "Sepal.Width ~ Petal.Width + Petal.Length + Sepal.Length | Petal.Width + Petal.Length + Sepal.Length",
            data=iris, maxiter=200, tolerance = 1e-6, trace=1)
 
@@ -160,7 +151,7 @@ tst2 <- do.call(hme, newcall)
 do.call(bootstrap_glm, newcall[names(newcall) %in% names(formals(glm))])
 
 cols <- c("blue", "orange", "green")
-with(iris, plot(Sepal.Length, Sepal.Width, col=cols[as.integer(iris$Species)]))
+with(iris, plot(Petal.Width, Sepal.Width, col=cols[as.integer(iris$Species)]))
 for (e in tst$expert.pars) {
   abline(e[1], e[2])
 }
@@ -185,4 +176,4 @@ tst <- hme(c("0", "0.1", "0.2"),
            expert_type="bernoulli",
            maxiter=200, tolerance = 1e-6, trace=1)
 
-
+}
