@@ -410,8 +410,6 @@ log_likelihood <- function(treestr, ln, lp, ld, rp)
 }
 
 
-# ----------------------------------------------------------------------------
-
 init_gate_node_pars <- function(node, tree, n)
 {
   nchilds <- length(unlist(children(node, tree)))

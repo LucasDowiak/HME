@@ -114,7 +114,7 @@ marginal_effects <- function(obj)
   # and the experts
   combine_margins <- function(gate, expert)
   {
-    nms <- setdiff(intersect(gate.nms, expt.nms), "(Intercept)")
+    nms <- intersect(gate.nms, expt.nms)
     return(gate[, nms, drop=FALSE] + expert[, nms, drop=FALSE])
   }
   full_margins <- mapply(combine_margins, gate_margins, expert_margins,
