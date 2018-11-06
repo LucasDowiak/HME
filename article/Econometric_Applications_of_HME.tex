@@ -4,7 +4,8 @@
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{mathbbol}
-%\usepackage{threeparttable}
+\usepackage{threeparttable}
+\usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{pdflscape}
 %\usepackage{algorithmic}
@@ -25,7 +26,7 @@
 \newcommand{\sumgateprod}[3]{\pi_{#1 \overset{#3}{\longleftrightarrow} #2}}
 \newcommand{\shortsum}[1]{\sum \nolimits_{#1}}
 \newcommand{\expmixwt}[0]{\mathbb{\Pi}}
-
+\newcommand{\h}[2]{h^{#1}_{#2}}
 
 \setlength{\parindent}{10pt}
 
@@ -49,9 +50,18 @@ New York, NY, 10016, \textit{Email: ldowiak@gc.cuny.edu}
 
 \qquad
 
-\begin{quotation}
-\textbf{Abstract:}
-\end{quotation}
+\begin{abstract}
+In this article, a novel mixture model is studied.
+Named the hierarchical mixture of experts (HME) in the machine learning literature,
+the mixture model utilizes a set of covariates and a tree-based architecture to
+efficiently allocate each observation to the appropriate local regression.
+The nature of the conditional weighting scheme provides the researcher a natural
+interpretation of how the local (and latent) sub-populations are formed. The model is
+demonstrated by estimating a Mincer earning function using census data. Marginal effects,
+robust standard errors, a tree-growing algorithm, and a modest extension are also
+discussed.
+
+\end{abstract}
 
 \vspace{1pt}
 
@@ -226,7 +236,7 @@ that their approach makes the HME model easier to estimate without overfitting.
 
 \section{Model} \label{sec:Model}
 
-We start by presenting the HME model as a standard mixture model.
+We start by presenting the HME as a standard mixture model.
 For a given input and output pair $(X_{t}, Y_{t})$, each expert
 provides a probablistic model relating input $X_{t}$ to output
 $Y_{t}$:
@@ -239,7 +249,7 @@ where $m$ is one of the $M$ component experts in the mixture. The experts
 are combined with associated weights into a mixture distribution
 
 \begin{equation} \label{eq:staticmixture}
-  P(Y_{t} | X_{t}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(Y_{t} | X_{t}, \boldsymbol{\beta}^{m})
+  P(Y_{t} | X_{t}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(Y_{t} | X_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 Here, $\expmixwt_{t}(m)$ is the probability that the input unit $t$ belongs
@@ -249,11 +259,11 @@ applies a particular functional form to model $\expmixwt(m|t)$, which includes a
 second set of covariates $Z_{t}$ and parameter vector $\boldsymbol{\omega}$:
 
 \begin{equation} \label{eq:mixture}
-  P(Y_{t} | X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \expmixwt(m | Z_{t}; \boldsymbol{\omega}) P^{m}(Y_{t} | X_{t}, \boldsymbol{\beta}^{m})
+  P(Y_{t} | X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \expmixwt(m | Z_{t}; \boldsymbol{\omega}) P^{m}(Y_{t} | X_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 
-\subsection{Gating Network and $\expmixwt(m | Z_{t}, \boldsymbol{\omega})$}
+\subsection{Gating Network and $\expmixwt(m | Z, \boldsymbol{\omega})$} \label{subsec:GatingNetwork}
 
 The gating network model is structured as a collection of nodes in a tree
 structure that branches out in successive layers. The location of these nodes will
@@ -265,7 +275,7 @@ rest of network is traversed. At its most general, each gating node can yield an
 arbitrary number of splits. While a fully generalized gating network is
 conceptually attractive, it presents practical challenges for implementation.
 In this paper we address several architectures for the gating network, each
-with its own set of structural restrictions on the shape of the newtork and
+with its own set of structural restrictions on the shape of the network and
 the number of splits each gating node can take. For arbitary node at address $a$,
 we use a multinomial logistic regression to model the split in direction $i$ to be:
 
@@ -282,18 +292,19 @@ from one node (say the root node $0$) to another (say $m|\ldots|j|i$)
 can be defined as
 
 \begin{equation} \label{eq:gpath}
-  \gateprod{g^{0}}{g^{\ldots|j|i|0, \, m}} =
+  \gateprod{g^{0}}{g^{k|\ldots|j|i|0}} =
     \begin{cases} 
-       g^{0, \, i} \ g^{i|0, \, j} \ldots g^{\dots|j|i|0, \, m} & \textrm{if path is feasible} \\
+       g^{0, \, i} \, g^{i|0, \, j} \ldots g^{\dots|j|i|0, \, k} & \textrm{if path is feasible} \\
        1 & \textrm{otherwise}
     \end{cases}
 \end{equation}
 
 If one of the nodes is an expert, then we can define the mixture weight
-of expert $m$ for input pattern $i$ to be:
+of expert $m$ for input pattern $i$ to be the product of the path taken
+from the root node to expert $m$:
 
-\begin{equation} \label{eq:pathsum}
-  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
+\begin{equation} \label{eq:gpath2}
+  \expmixwt(m | Z, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
 \end{equation}
 
 For network architectures with multiple paths from the root node to
@@ -347,7 +358,7 @@ Define the indicator set as:
 
 \begin{equation} \label{eq:indicator}
   I_{t}(m) = \begin{cases} 
-     1 & \textrm{if input vector $X_{t}$ is generated by expert $m$} \\
+     1 & \textrm{if observation $t$ is generated by expert $m$} \\
      0 & \textrm{otherwise}
              \end{cases}
 \end{equation}
@@ -355,19 +366,19 @@ Define the indicator set as:
 We can then reformulate the likelihood equation
 
 \begin{equation}  \label{eq:auglikelihood}
-  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t},\beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
+  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t}, \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
 \begin{equation}  \label{eq:augloglikelihood}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t}, \boldsymbol{\beta}^{m}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
 \end{equation}
 
 As mentioned previously, summing over multiple paths $l$ in equation
 (\ref{eq:augloglikelihood}) is only necessary in the HMRE case. For the ME
 and HME cases, $l = 1$, simplifying the second log in (\ref{eq:augloglikelihood})
-to $log(\gateprod{g^{0}}{P^{m}})$. Going forward, we will focus our analysis on
+to $\log(\gateprod{g^{0}}{P^{m}})$. Going forward, we will focus our analysis on
 the ME and HME specifications with work on the HMRE case arriving in subsequent
 iterations of the article.
 
@@ -387,39 +398,44 @@ iterations of the article.
 
 
 \subsection{E-Step}
-The E-step of the algorithm performs an expectation of over the log-likelhood
-equation (\ref{eq:loglikelihood}).
+The E-step of the algorithm performs an expectation over the complete
+log-likelhood equation (\ref{eq:augloglikelihood}), where the expectation
+includes the additional information contained in the expert regressions.
+One of the results of this expectation is the creation of second set of
+weights $h^{a}$ that parallel the weights from the gating network $g^{a}$
+discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
-  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}}{P^{m}} \right] \\ 
-   & = \sum_{t} \sum_{m} h^{0,m}_{t} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}}{P^{m}} \right]
+  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
+   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right]
  \end{split}
 \end{equation}
 
-Here $h^{0,m}_{t} \equiv \mathbb{E}\left[I_{t}(m)\right] = \mathbb{P}[I_{t}(m) = 1| y_{t}, x_{t}, z_{t}; \boldsymbol{\theta}]$
-is what we define as the posterior probability of oberserved value $y_{t}$ being
-produced by expert $m$, given our tree structure starts at the root node $n^{0}$.
-The posterior weight for any gating node $n^{a}$ can be calculated by
+Here $\gateprod{h^{0}}{h^{k,\dots|j|i|0}}$ is analagous to equation (\ref{eq:gpath})
+
+\begin{equation} \label{eq:hpath}
+  \gateprod{h^{0}}{h^{k|\ldots|j|i|0}} =
+    \begin{cases} 
+       h^{0, \, i} \ h^{i|0, \, j} \ldots h^{\dots|j|i|0, \, k} & \textrm{if path is feasible} \\
+       1 & \textrm{otherwise}
+    \end{cases}
+\end{equation}
+
+and the $h^{a, i}$ are arrived at using bayes' theoreom.
 
 \begin{equation} \label{eq:posteriornode}
-  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
+  \h{a,i}{t} = \frac{g^{a, i} \shortsum{k} P^{k}_{t} \gateprod{g^{i|a}_{t}}{P^{k}}}{\shortsum{j} g^{a, j} \shortsum{m} P^{m}_{t} \gateprod{g^{j|a}_{t}}{P^{m}}}
 \end{equation}
 
-\begin{equation} \label{eq:posteriornode2}
-  h^{a, i}_{t} = \frac{ g^{a, i}_{t} \shortsum{l} \sumgateprod{g^{i|a, \, j}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
-\end{equation}
 
-It's important to note a relationship between the posterior weights for consecutive
-nodes in a feasible path.
-
-\begin{equation} \label{eq:posteriorrelation}
-  \mathbb{E}\left[I_{t}(1)\right] = h^{0,1}_{t} h^{1|0,1}_{t} h^{1|1|0,1}_{t}
-\end{equation}
-
-The posterior specification for equation (\ref{eq:posteriornode}) is for the
-repeated expert HME only. A different notation is needed for the original HME
-design and it's adaptively grown counterpart.
+So, now we have two different forms of weights, $g$'s and $h$'s. The
+way the $g$'s are formed in equation (\ref{eq:softmax}), they are only
+functions of the nodes in the gating network, separate from the
+expert regressions and the information they contain. For this reason,
+the authors in Jacob et. al. 1993 refer to $g$'s as \textit{priors}.
+The $h$'s draw from both the gating network and the expert regressions and
+are referred to as \textit{posterior} weights.
 
 
 \subsection{M-Step}
@@ -427,6 +443,79 @@ design and it's adaptively grown counterpart.
 Note that the paramters governing the experts and the gating network in
 equation (\ref{eq:Estep}) are additively seperable. Taking each in turn, the
 Jacobian of the gating portion of equation (\ref{eq:Estep}) is:
+
+The expert regressions are weighted regressions 
+
+
+
+
+
+
+
+\section{Inference} \label{sec:Inference}
+
+The score vector:
+
+\begin{equation} \label{eq:gateScore}
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) \equiv \frac{\partial Q}{\partial \boldsymbol{\omega}^{a,i}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} \left[h^{a, i}_{t} - g^{a, i}_{t} \right] Z_{t}
+\end{equation}
+
+With
+
+\begin{equation}
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a}) = \left[\boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, 1}),
+                                                      \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, 2}),
+                                                      \hdots, 
+                                                      \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, J - 1})\right]
+\end{equation}
+
+And
+
+\begin{equation}
+  \boldsymbol{S}(\boldsymbol{\omega}^{a}) = \sum_{t}^{T} \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a})
+\end{equation}
+
+\bigskip
+
+
+
+
+The hessian:
+\newcommand{\bw}[1]{\boldsymbol{\omega}^{#1}}
+\newcommand{\Ht}[1]{\mathbf{H}_{t}(#1)}
+\newcommand{\HH}[1]{\boldsymbol{H}(#1)}
+\newcommand{\HI}[1]{\boldsymbol{H}^{-1}(#1)}
+
+\begin{equation} \label{eq:nodehessian}
+  \Ht{\bw{a}} \equiv \frac{\partial^{2} Q}{\partial \boldsymbol{\omega}^{a,i} \partial \boldsymbol{\omega}^{a,j}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} Z_{t} \boldsymbol{\Gamma}^{a}_{t}  Z_{t}^\top
+\end{equation}
+
+With
+
+\begin{equation}
+  \boldsymbol{\Gamma}^{a}_{t} = \begin{bmatrix}
+  g_{t}^{a,1}(1-g_{t}^{a,1}) & -g_{t}^{a,1}g_{t}^{a,2}    & \dots  & -g_{t}^{a,1}g_{t}^{a,J-1}       \\
+  -g_{t}^{a,1}g_{t}^{a,2}    & g_{t}^{a,2}(1-g_{t}^{a,2}) & \dots  & -g_{t}^{a,2}g_{t}^{a,J-1}       \\
+  \vdots                     &  \vdots                    & \ddots & \vdots                 \\
+  -g_{t}^{a,1}g_{t}^{a,J-1}  & -g_{t}^{a,2}g_{t}^{a,J-1}  & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
+    \end{bmatrix}
+\end{equation}
+
+And
+
+\begin{equation}
+  \HH{\boldsymbol{\omega}^{a}} = \sum_{t}^{T} \Ht{\boldsymbol{\omega}^{a}}
+\end{equation}
+
+Leading to the sandwich estimator:
+
+\begin{equation} \label{eq:robustgatevarcov}
+  \boldsymbol{V}(\boldsymbol{\omega}^{a}) = \HI{\boldsymbol{\omega}^{a}} \boldsymbol{S}(\boldsymbol{\omega}^{a}) \boldsymbol{S}(\boldsymbol{\omega}^{a})^\top \HI{\boldsymbol{\omega}^{a}}
+\end{equation}
+\section{HMRE}
+
+
+Score function for HMRE
 
 \begin{equation} \label{eq:gateJacobian}
   \begin{split}
@@ -449,106 +538,325 @@ $\omega^{a,i}_{p}$.
 
 
 
-
-
-\section{Inference} \label{sec:Inference}
-
-\begin{equation} \label{eq:gateScore}
-  \boldsymbol{S}_{i}(\omega^{a}) = h^{a}_{i} \left[h^{a, j}_{i} - g^{a, j}_{i} \right] Z_{i}
-\end{equation}
-
-
-\begin{equation} \label{eq:gateHessian}
+Hessian for HMRE
+\begin{equation}
   \begin{split}
     \frac{\partial^{2} Q}{\partial \omega^{a,i}_{p} \partial \omega^{a',j}_{q}} =& \sum_{t} \sum_{m} \left[  \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}} - \left( \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \right)^{2} \sum_{l} \sum_{l'} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}}  \frac{\partial \pi_{n^{0}_{t} \overset{l'}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a',j}_{q}} \right]
   \end{split}
 \end{equation}
 
--- Put his directly after the log-likelihood equation in the EM section
--- Reference \cite{MengRubinSEM1991}
--- Show how weights enter into the score and hessian
 
-\bigskip
-
-This isn't correct
-
-\begin{equation} \label{eq:gatinghessianQ}
-  \mathbf{A}^{a} = (\mathbf{I}_{s-1} \otimes \mathbf{Z})^{\prime} \mathbf{G}^{a} (\mathbf{I_{s-1}} \otimes \mathbf{Z})
+Posterior node for HMRE
+\begin{equation} 
+  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
 \end{equation}
-
-\begin{equation} \label{eq:nodehessian}
-  \mathbf{G}^{a} = h^{a} \begin{bmatrix}
-     g^{1|a}(1-g^{1|a}) & -g^{1|a}g^{2|a}    & \dots  & g^{1|a}g^{s-1|a}       \\
-     -g^{1|a}g^{2|a}    & g^{2|a}(1-g^{1|a}) & \dots  & g^{2|a}g^{s-1|a}       \\
-     \vdots             &                    & \ddots & \vdots                 \\
-     g^{1|a}g^{s-1|a}   &  \dots             &        & g^{s-1|a}(1-g^{s-1|a}) \\
-  \end{bmatrix}
-\end{equation}
-
-For multinomial regressions, each 
 
 
 
 \section{Marginal Effects} \label{sec:MarginalEffects}
-There is an issue of how to tie the variables in the gating network to the regression
-relationship described by experts. For logit/probit regression, there is the
-standard margins at the means (MEM) and the average marginal effect (AME). We should
-be able to extend this kind of analysis to the entire weighting network, chaining
-marginal effects from the root node down and determind/quantify/summarize the effect
-each gating factor has on directing which observation to which expert. These can
-then be tied with the marginal regression effect. Starting with \ref{eq:gpath},
-and summing over all the paths from the root node to expert $m$, we can re-arrange
-the products of the collected path as follows:  
 
-\begin{equation}
-  \begin{split}
-  w^{m} &= \sum_{l} \pi_{n_{0} \overset{l}{\longleftrightarrow} P^{m}} \\
-        &= \sum_{i} \sum_{j} \cdots \sum_{k} g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
-  \end{split}
+To explore what kind of marginal effects each variable has on the mixture's 
+output, we start with equation (\ref{eq:mixture}) but replace the
+expert distributions $P^{m}_{t}$ with the functional form of the 
+expert regression $f^{m}_{t}$ and use the relationship in equation
+(\ref{eq:gpath2}). 
+
+\begin{equation} \label{eq:mixture2}
+  f_{t} = f(Y_{t} | X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(Y_{t} | X_{t}, \boldsymbol{\beta}^{m})
 \end{equation}
 
-Applying the chain, we can calculate the marginal effect that variable $p$ has on
-the weight assinged to each observation being assinged to expert $m$.
+The functional form of the marginal effect depends if the variables are
+exclusive to the gating network, $Z$, exclusive to the expert
+regressions, $X$, or is present in both sets of covariates,
+$W \subset X$ and $W \subset X$. For covariates
+exclusive to the gating network, their marginal effects are:
 
-\begin{equation}
-  \begin{split}
-    \frac{\partial w^{m}}{\partial Z_{p}} &= \sum_{i} \frac{\partial g^{0, i}}{\partial Z_{p}} \sum_{j} g^{i|0, j} \cdots \sum_{k} g^{k|\cdots|j|i|0, m} \\
-    &+ \sum_{i} g^{0, i} \sum_{j} \frac{\partial g^{i|0, j}}{\partial Z_{p}} \cdots \sum_{k} g^{k|\cdots|j|i|0, m} \\
-    &+ \sum_{i} g^{0, i} \sum_{j} g^{i|0, j} \cdots \sum_{k} \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z_{p}} \\
-  \end{split}
+\begin{equation} \label{eq:ME_gating}
+  \frac{\partial f_{t}}{\partial Z} = \sum_{m=1}^{M} \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial Z}}f^{m}_{t}
 \end{equation}
 
-For the original hierarchical mixture of expert model, this simplifies to
+For covariates exclusive to the expert regressions, their marginal effects
+are:
+
+\begin{equation} \label{eq:ME_expert}
+  \frac{\partial f_{t}}{\partial X} = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial X}}
+\end{equation}
+
+And covariates in both:
+
+\begin{equation} \label{eq:ME_both}
+  \frac{\partial f_{t}}{\partial W} = \sum_{m=1}^{M} \left\{ \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial W}}f^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial W}} \right\}
+\end{equation}
+
+Just as for logistic and multinomial regressions, the
+marginal effect of the entire gating network has a closed form solution.
+Independently, looking at the network's marginal effects provides a sense
+of what gating variables play a decisive role in directing input patterns
+to the appropriate expert regressions. Starting with equation
+(\ref{eq:gpath}), we take the partial with respect to gating matrix $Z_{t}$.
+
+\begin{equation}
+  \delta^{m} \equiv \frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial Z} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial Z}
+\end{equation}
+
+Applying the product rule gives us:
 
 \begin{equation} \label{eq:hme_gate_marginal_effect}
   \begin{split}
-    \frac{\partial w^{m}}{\partial Z_{p}} &= \frac{\partial g^{0, i}}{\partial Z_{p}} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
-    &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial Z_{p}} \cdots g^{k|\cdots|j|i|0, m} \\
-    &+ g^{0, i} g^{i|0, j} \cdots \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z_{p}} \\
+    \delta^{m} &= \frac{\partial g^{0, i}}{\partial Z} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
+                                     &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial Z} \cdots g^{k|\cdots|j|i|0, m} + \dots \\
+                                     &+ g^{0, i} g^{i|0, j} \cdots \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z} \\
   \end{split}
 \end{equation}
 
 and since:
 
 \begin{equation} \label{eq:gate_marginal_effect}
-  \frac{\partial g^{a, i}}{\partial Z_{p}} = g^{a, i}(\omega^{a, i} - \sum_{j} g^{a, j} \omega^{a, j}) = g^{a, i}(\omega^{a, i} - \mean{\omega}^{a})
+  \frac{\partial g^{a, i}}{\partial Z} = g^{a, i} \left( \boldsymbol{\omega}^{a, i} - \sum_{j} g^{a, j} \boldsymbol{\omega}^{a, j} \right) = g^{a, i} \left( \boldsymbol{\omega}^{a, i} - \mean{\boldsymbol{\omega}}^{a} \right)
 \end{equation}
 
 we can substitute equation (\ref{eq:gate_marginal_effect}) into
 (\ref{eq:hme_gate_marginal_effect}) to arrive at:
 
-\begin{equation}
-  \frac{\partial w^{m}}{\partial Z_{p}} = \pi_{n_{0} {\longleftrightarrow} P^{m}} (\omega^{0, i} + \omega^{i|0, j} + \cdots + \omega^{k|\cdots|j|i|0, m} - (\mean{\omega}^{0} + \mean{\omega}^{i|0} + \cdots + \mean{\omega}^{k|\cdots|j|i|0}))
+\begin{equation} \label{eq:marginal_effects}
+  \delta^{m} = \gateprod{g^{0}}{P^{m}} \left(\boldsymbol{\omega}^{0, i} + \boldsymbol{\omega}^{i|0, j} + \cdots + \boldsymbol{\omega}^{k|\cdots|j|i|0, m} - \left( \mean{\boldsymbol{\omega}}^{0} + \mean{\boldsymbol{\omega}}^{i|0} + \cdots + \mean{\boldsymbol{\omega}}^{k|\cdots|j|i|0} \right) \right)
 \end{equation}
 
+\bigskip 
 
+Standard errors for these marginal effects can be estimated using the
+delta method. \textit{(Edit: These are actually only for the gating network, not
+the entire mixture output. Also, this is only appropriate for MoE, not an
+HME)}
+
+\newcommand{\deltavar}{%
+  \begin{bmatrix}
+    \boldsymbol{V}(\boldsymbol{\omega}^{0}) & \boldsymbol{0}                            & \boldsymbol{0}                            & \dots  \\ 
+    \boldsymbol{0}                          & \boldsymbol{V}(\boldsymbol{\omega}^{1|0}) & \boldsymbol{0}                            & \dots  \\
+    \boldsymbol{0}                          & \boldsymbol{0}                            & \boldsymbol{V}(\boldsymbol{\omega}^{2|0}) &        \\
+    \vdots                                  & \vdots                                    &                                           & \ddots \\
+  \end{bmatrix}
+}
+
+\begin{equation}
+    \boldsymbol{V}(\boldsymbol{\delta^{m}}) = \left(\frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}} \right) \deltavar  \left(\frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}} \right)^{\top}
+\end{equation}
+
+where $\boldsymbol{V}(\boldsymbol{\omega}^{a})$ is the sandwich estimator
+in equation (\ref{eq:robustgatevarcov}) and:
+
+\begin{equation}
+  \frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}^{a,p}} = [1 - g^{a, p}] (\delta^{m} Z + \gateprod{g^{0}}{P^{m}}) - g^{a,p} \gateprod{g^{0}}{P^{m}} [\omega^{a,p} - \mean{\omega}^{a}] Z
+\end{equation}
+
+if $\boldsymbol{\omega}^{a,p}$ appears in the path of $\gateprod{g^{0}}{P^{m}}$, or if not,
+then:
+
+\begin{equation}
+  \frac{\partial \boldsymbol{\delta}^{m}}{\partial \boldsymbol{\omega}^{a,p}} = -g^{a, p} (\delta^{m} Z + \gateprod{g^{0}}{P^{m}}) - g^{a,l} \gateprod{g^{0}}{P^{m}} [\omega^{a,p} - \mean{\omega}^{a}] Z
+\end{equation}
 
 
 \section{Growing and Pruning the Gating Network} \label{sec:NetworkGrowth}
 
 
+\section{A simple example} \label{sec:SimpleExample}
+
+Using the iris data set we can test if the HME model able to capture
+structure of latent variables while maintaing accurate regression
+
+\begin{landscape}
+\begin{table}
+	\caption{Linear Regression vs HME}
+	\begin{threeparttable}
+		\begin{tabular}[l]{l l l l l l l l l l l l}
+  \cmidrule{1-12}
+
+  & \multicolumn{4}{c}{2 Component Mixture} & \multicolumn{6}{c}{3 Component Mixture} \\
+  \cmidrule(r){2-5}  \cmidrule(r){7-12}
+  & \multicolumn{2}{c}{OLS}  & \multicolumn{2}{c}{MoE} & & \multicolumn{2}{c}{OLS}  & \multicolumn{2}{c}{HME}  & \multicolumn{2}{c}{MoE} \\
+  \cmidrule(r){2-3}  \cmidrule(r){4-5}  \cmidrule(r){7-8}  \cmidrule(r){9-10}  \cmidrule(r){11-12}
+  & Coef. & SE & Coef. & SE && Coef. & SE & Coef. & SE & Coef. & SE     \\
+  \cmidrule{1-12}
+  
+  Setosa \\
+  \cmidrule(r){1-1}
+  Const.             & 3.22 & 0.11** & 3.22 & 0.13** && 3.22  & 0.11** & 3.22 & 0.13** & 3.45 & 0.13**       \\
+  Petal.Width        & 0.84 & 0.42*  & 0.95 & 0.49** && 0.84  & 0.41*  & 0.94 & 0.49   & 0.39 & 0.46         \\[0.3cm]
+  
+  Virginica \\
+  \cmidrule(r){1-1}
+  Const.             & --   & --     & --   & --     && 1.70  & 0.32** & 1.96 & 0.12** & 3.02 & 0.05**       \\
+  Petal.Width        & --   & --     & --   & --     && 0.63  & 0.16** & 0.50 & 0.06** & 0.21 & 0.31         \\[0.3cm]
+  
+  Versicolor \\
+  \cmidrule(r){1-1}
+  Const.             & --   & --     & --   & --     && 1.37  & 0.29** & 1.15 & 0.12** & 2.13 & 0.09**       \\
+  Petal.Width        & --   & --     & --   & --     && 1.05  & 0.22** & 1.29 & 0.09** & 0.44 & 0.06**       \\[0.3cm]
+
+  Verg + Versi \\
+  \cmidrule(r){1-1}
+  Const.             & 2.13 & 0.13** & 2.13 & 0.09** && --   & --     & --   & --     & --   & --       \\
+  Petal.Width        & 0.44 & 0.07** & 0.44 & 0.06** && --   & --     & --   & --     & --   & --       \\[0.3cm]
+
+  AME \\
+  \cmidrule(r){1-1}
+  Petal.Width        & 0.57 & --     & 0.49 & --     && 0.84 & --     & 0.57 & --     & 0.62 & --         \\[0.3cm]
+
+
+  Log-Like           & -35.5 &       & -31.9 &       && -29.3  &      & -21.8&        & -27.8 & \\
+  N                  & 150   &       & 150   &       && 150    &      & 150  &        & 150   & \\
+
+	\hline
+		\end{tabular}
+		\begin{tablenotes}
+			\item[1]{\footnotesize This is a footnote.}
+		\end{tablenotes}
+	\end{threeparttable}
+\end{table}
+\end{landscape}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{Iris_fit_and_predict.jpeg}
+  \caption{Does it Work?}
+  \label{fig:Iris_fit_and_predict}
+\end{figure}
+
+
+
+
+
+\begin{table} \centering
+  \caption{Log Wage Equation}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l l r r r}
+      \cmidrule{1-5}
+
+                  & OLS      & Full    & Mid     & Min    \\
+      \cmidrule{1-5}
+
+      Const.      & 0.819    &  1.036  & 1.035   & 1.057  \\
+                  & 0.013**  &  --     & --      & --     \\[0.3cm]
+      
+      Yrs Edu     & 0.096    & 0.091   & 0.091   & 0.088  \\
+                  & 0.008**  & --      & --      & --     \\[0.3cm]
+
+      Age         & 0.044    & 0.044   & 0.041   & 0.041  \\
+                  & 0.001**  & --      & --      & --     \\[0.3cm]
+
+      Age Sq      & -0.0006  & -0.0007 & -0.0006 & -0.0006\\
+                  & 0.0000** & --      & --      & --     \\[0.3cm]
+
+      Afr Amer    & -0.175   & -0.166  & -0.120  & -0.155 \\
+                  & 0.007**  & --      & --      & --     \\[0.3cm]
+
+      Indian      & -0.118   & -0.091  & -0.098  & -0.116 \\
+                  & 0.019**  & --      & --      & --     \\[0.3cm]
+
+      Hispanic    & -0.165   & -0.174  & -0.117  & -0.132 \\
+                  & 0.006**  & --      & --      & --     \\[0.3cm]
+
+      Asian       & -0.070   & -0.049  & -0.043  & -0.070 \\
+                  & 0.010**  & --      & --      & --     \\[0.3cm]
+
+
+      \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item[1]{\footnotesize This is a footnote.}
+    \end{tablenotes}
+  \end{threeparttable}
+\end{table}
+
+
+
+\begin{table} \centering
+  \caption{Summary Statistics}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l r r r r}
+  \cmidrule{1-5}
+
+              & 25\%   & Mean & 50\% & 75\%   \\
+  \cmidrule{1-5}
+  Wage (hr)   & 9.00  & 15.44 & 12.87  & 19.23\\
+  Yrs Edu     & 12.0  & 13.72 & 14.0   & 16.0 \\
+  Age         & 30.0  & 38.96 & 39.0   & 48.0 \\
+  Age16       & 14.0  & 22.96 & 23.0   & 32.0 \\
+  Male        & --    & 100.0 & --     & --   \\
+  Af Amer     & --    & 0.078 & --     & --   \\
+  Indian      & --    & 0.011 & --     & --   \\
+  White       & --    & 0.764 & --     & --   \\
+  Hispanic    & --    & 0.110 & --     & --   \\
+  Asian       & --    & 0.037 & --     & --   \\
+
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize N = 54,829}
+    \end{tablenotes}
+  \end{threeparttable}
+\end{table}
+
+
+
+\begin{table} \centering
+  \caption{Model Information}
+  \begin{threeparttable}
+    \begin{tabular}[l]{r r r r r r r r}
+  \cmidrule{1-8}
+        &          & \multicolumn{3}{c}{Log-Lik} & \multicolumn{3}{c}{BIC} \\ 
+  \cmidrule(r){3-5}   \cmidrule(l){6-8}
+  Depth & Experts & Min    & Mid    & Full    & Min   & Mid   & Full       \\
+  \cmidrule{1-8}
+  1     & 2       & -0.638 & -0.611 & -0.603  & 1.275 & 1.223 & 1.208      \\
+  1     & 3       & -0.609 & -0.608 & -0.599  & 1.224 & 1.223 & 1.200      \\
+  2     & 3       & -0.604 & -0.595 & -0.591  & 1.208 & 1.191 & 1.183      \\
+  1     & 4       & -0.643 & -0.601 & --      & 1.294 & 1.212 & --         \\
+  2     & 4       & -0.592 & -0.589 & -0.586  & 1.184 & 1.179 & 1.176      \\
+  3     & 5       & -0.587 & -0.587 & -0.584  & 1.176 & 1.177 & 1.171      \\
+
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (54,829)}
+    \end{tablenotes}
+  \end{threeparttable}
+\end{table}
+
+
+\begin{table} \centering
+  \caption{Returns to Years of Education}
+  \begin{threeparttable}
+    \begin{tabular}[l]{r r r r r}
+  \cmidrule{1-5}
+  \multicolumn{2}{c}{OLS: 0.096}   & \multicolumn{3}{c}{Coefficient} \\ 
+  \cmidrule(r){3-5}
+  Depth & Experts & Min   & Mid   & Full       \\
+  \cmidrule{1-5}
+
+  1     & 2       & 0.065 & 0.095 & 0.092      \\
+  1     & 3       & 0.086 & 0.093 & 0.095     \\
+  2     & 3       & 0.083 & 0.096 & 0.093      \\
+  1     & 4       & --    & --    & --         \\
+  2     & 4       & 0.088 & 0.092 & 0.091      \\
+  3     & 5       & 0.088 & 0.091 & 0.091      \\
+
+  \hline
+    \end{tabular}
+    %\begin{tablenotes}
+    %  \item[1]{\footnotesize Log-Likelihood is divided by the sample size (54,829)}
+    %\end{tablenotes}
+  \end{threeparttable}
+\end{table}
+
 
 \section{Miscellaneous}
+
+\subsection{Odd Facts}
+
+Variables that appear in the gating network but not in the expert regressions
+are sometimes called Concomitant Variables (see R FlixMix package).
 
 \subsection{Wald Test is Invalid}
 S+plus GLM section on problems with binomial GLMs
@@ -578,6 +886,4 @@ AIC/BIC/VOUNG test being prefered.
 
 
 \printbibliography
-
 \end{document}
-

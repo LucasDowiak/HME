@@ -53,6 +53,11 @@ plot_network <- function(tree, hme_type=c("hme", "hmre"), title)
 }
 
 
+plot.hme <- function(obj)
+{
+  plot_network(obj[["tree"]], obj[["hme.type"]], "Needs a Title")
+}
+
 if (FALSE) {
   debugonce(plot_network)
   
@@ -77,12 +82,18 @@ if (FALSE) {
              "0.1.1", "0.1.2", "0.2.1", "0.2.2",
              "0.3.1", "0.3.2", "0.4.1", "0.4.2")
   
+  treeE <- c("0",
+             "0.1", "0.1.1", "0.1.2", 
+             "0.2",
+             "0.2.1", "0.2.2",
+             "0.2.1.1", "0.2.1.2", "0.2.2.1", "0.2.2.2")
+  
   
   par(mfrow=c(2,2), mai=c(0.5, 0.3, 0.5, 0.3))
-  plot_network(treeA, "hme", "A")
-  plot_network(treeB, "hme", "B")
-  plot_network(treeC, "hme", "C")
-  plot_network(treeD, "hmre", "D")
+  plot_network(treeA, "hme", "Mixture of Experts")
+  plot_network(treeB, "hme", "Sym. Hierarchical Mixture of Experts")
+  plot_network(treeC, "hme", "Asym. Hierarchical Mixture of Experts")
+  plot_network(treeD, "hmre", "Hierarchical Mixture of Repeated Experts")
 }
 
 

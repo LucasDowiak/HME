@@ -1,19 +1,18 @@
 "standard hme approach where each node is updated independently"
-m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
+m_step <- function(tree, hme_type, expert_type, Y, X, Z, exp.pars, gat.pars, root_prior)
 {
   gat.out <- lapply(gat.pars, function(x) list())
   exp.out <- lapply(exp.pars, function(x) list())
   
   list_priors <- napply(names(gat.pars), par_to_gate_paths, gat.pars, Z)
-  list_density <- napply(names(exp.pars), par_to_expert_dens, "gaussian",
+  list_density <- napply(names(exp.pars), par_to_expert_dens, expert_type,
                          exp.pars, Y, X)
   list_posteriors <- napply(names(gat.pars), posterior_weights,
                             tree, list_priors, list_density)
   
   for (e in names(exp.pars)) {
-    opt_blk <- optimize_block(e, tree, exp.pars, Y, X,
-                              joint_posterior_weight(e, tree, list_posteriors),
-                              "gaussian", hme_type)
+    jpw <- joint_posterior_weight(e, list_posteriors, root_prior)
+    opt_blk <- optimize_block(e, tree, exp.pars, Y, X, jpw, expert_type, hme_type)
     exp.out[[e]] <- opt_blk$par
   }
   
@@ -24,7 +23,7 @@ m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
     if (nchds == 2)
       node_type <- "binomial"
     # joint posterior weights
-    wt <- joint_posterior_weight(g, tree, list_posteriors)
+    wt <- joint_posterior_weight(g, list_posteriors, root_prior)
     # posterior branches
     target <- list_posteriors[[g]]
     wts=list(branch=target, joint_post=wt)
@@ -33,11 +32,12 @@ m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
   }
   
   list_priors <- napply(names(gat.pars), par_to_gate_paths, gat.pars, Z)
-  list_density <- napply(names(exp.pars), par_to_expert_dens, "gaussian",
+  list_density <- napply(names(exp.pars), par_to_expert_dens, expert_type,
                          exp.pars, Y, X)
   list_posteriors <- napply(names(gat.pars), posterior_weights,
                             tree, list_priors, list_density)
-  lik <- log_likelihood(tree, list_priors, list_posteriors, list_density)
+  lik <- log_likelihood(tree, list_priors, list_posteriors, list_density,
+                        root_prior)
   
   return(list(exp.pars=exp.out, gat.pars=gat.out, loglik=lik,
               list_priors=list_priors, list_posteriors=list_posteriors,
@@ -46,7 +46,8 @@ m_step <- function(tree, hme_type, Y, X, Z, exp.pars, gat.pars)
 
 
 optimize_block <- function(node, treestr, par.list, Y=NULL, X, wts,
-                           block_type=c("binomial", "multinomial", "gaussian"),
+                           block_type=c("binomial", "multinomial", "gaussian",
+                                        "bernoulli"),
                            hme_type=c("hme", "hmre"), ...)
 {
   block_type <- match.arg(block_type)
@@ -57,11 +58,11 @@ optimize_block <- function(node, treestr, par.list, Y=NULL, X, wts,
   Q <- Q(block_type)
   if (block_type == "binomial") {
     
-    out <- irls_logit(X, wts$branch[, 1], wts$joint_post, maxit=3)
+    out <- irls_logit(X, wts$branch[, 1], wts$joint_post, maxit=10)
     
   } else if (block_type == "multinomial") {
     # H is a matrix of posterior branches
-    out <- irls_multinomial(X, wts$branch, wts$joint_post, maxit=3, tol=1e-08)
+    out <- irls_multinomial(X, wts$branch, wts$joint_post, maxit=10, tol=1e-08)
     
   } else if (block_type == "gaussian") {
     exp.idx <- expert_index(hme_type, treestr)[node]
@@ -69,6 +70,8 @@ optimize_block <- function(node, treestr, par.list, Y=NULL, X, wts,
     out <- optim(theta, fn=Q, gr=D, Y=Y, X=X, wt=wts, method="Nelder-Mead", 
                  control=list(fnscale=-1), ...)
     
+  } else if (block_type == "bernoulli") {
+    out <- glm.fit(x=X, y=Y, weights=wts, family=binomial(link="logit"))
   }
   return(out)
 }
@@ -185,14 +188,14 @@ Q <- function(like_type)
 
 
 
-multinomial_info_matrix <- function(node, treestr, gate.pars, ln, lp, Z)
+multinomial_info_matrix <- function(node, treestr, gate.pars, ln, lp, Z, rp)
 {
   gate.par <- gate.pars[[node]]
   if (is.list(gate.par))
     m <- length(gate.pars) + 1
   else
     m <- 2
-  H <- joint_posterior_weight(node=node, treestr=treestr, lp=lp)
+  H <- joint_posterior_weight(node=node, lp=lp, rp=rp)
   h <- lp[[node]]
   g <- ln[[node]]
   
@@ -226,11 +229,44 @@ multinomial_info_matrix <- function(node, treestr, gate.pars, ln, lp, Z)
 }
 
 
-#debugonce(multinomial_info_matrix)
-#IJJ <- multinomial_info_matrix("0", tree, tst$gate.pars, tst$list_priors,
-#                               tst$list_posteriors, tst$Z)
+expert_info_matrix <- function(expert, expert_type=c("gaussian"), expert.pars,
+                               lp, X, Y)
+{
+  expert_type <- match.arg(expert_type)
+  if (expert_type == "gaussian") {
+    out <- gaussian_sandwich(expert, expert.pars, lp, X, Y)
+  }
+  return(out)
+}
 
-
-
+gaussian_sandwich <- function(expert, expert.pars, lp, X, Y)
+{
+  pars <- expert.pars[[expert]]
+  np <- length(pars)
+  variance <- pars[np]
+  
+  H <- joint_posterior_weight(expert, lp, 1)
+  yhat <- expert_pred(pars, X, "gaussian")
+  eps <- Y - yhat
+  Beta <- sweep(X, 1, H * (eps / variance), `*`)
+  Var <- -0.5 * H * ((1 / variance) - (eps / variance)**2)
+  G <- cbind(Beta, Var)
+  colnames(G) <- c(colnames(G)[1:(np-1)], "variance")
+  
+  HS <- matrix(0, nrow=np, ncol=np)
+  for (i in seq_len(nrow(X))) {
+    OX <- X[i, ] %o% X[i, ]
+    BB <- -(H[i] / variance) * OX
+    VB <- -H[i] * (eps[i] / variance**2) * X[i,]
+    VV <- -0.5 * H[i] * (-(1/variance**2) + 2 * (eps[i]**2 / variance**3))
+    tmp <- rbind(BB, VB)
+    tmp <- cbind(tmp, c(VB, VV))
+    HS <- HS + tmp
+  }
+  dimnames(HS) <- list(colnames(G), colnames(G))
+  OPG <- crossprod(G)
+  sandwich <- solve(HS) %*% OPG %*% solve(HS)
+  return(list(OPG=OPG, H=HS, sandwich=sandwich))
+}
 
 
