@@ -1,23 +1,23 @@
 # ----------------------------------------------------------------------------
-setwd("~/hme/R/")
-source("building_blocks.R")
-source("marginal_effects.R")
-source("optimization_functions.R")
-source("summary_method.R")
-source("plot_method.R")
-source("predict_method.R")
-source("tree_construction.R")
+source("R/building_blocks.R")
+source("R/marginal_effects.R")
+source("R/optimization_functions.R")
+source("R/summary_method.R")
+source("R/plot_method.R")
+source("R/predict_method.R")
+source("R/tree_construction.R")
 library(Formula)
 
 
 hme <- function(tree, formula, hme_type=c("hme", "hmre"),
-                expert_type=c("gaussian", "bernoulli"), data, root_prior=1,
-                init_gate_pars=NULL, init_expert_pars=NULL,
+                expert_type=c("gaussian", "bernoulli"), data, holdout=NULL,
+                root_prior=1, init_gate_pars=NULL, init_expert_pars=NULL,
                 maxiter=100, tolerance=1e-4, trace=0)
 {
   cl <- match.call()
   require(Formula)
   stopifnot(!missing(data))
+  nullholdout <- is.null(holdout)
   
   tree <- sort(tree)
   hme_type <- match.arg(hme_type)
@@ -32,6 +32,13 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   Y <- model.response(mf, "numeric")
   X <- model.matrix(terms(form, data = mf, rhs = 1), mf)
   Z <- model.matrix(terms(form, data = mf, rhs = 2), mf)
+  
+  if (!nullholdout) {
+    mfp <- model.frame(form, data = holdout)
+    Yp <- model.response(mfp, "numeric")
+    Xp <- model.matrix(terms(form, data = mfp, rhs = 1), mfp)
+    Zp <- model.matrix(terms(form, data = mfp, rhs = 2), mfp)
+  }
   
   tree <- sort(tree)
   expert.nodes <- tree[unlist(is_terminal(tree, tree))]
@@ -73,7 +80,7 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                           expert.pars, Y, X)
 
   
-  logL <- matrix(NA_real_, nrow=maxiter + 1)
+  logL <- errorR <- matrix(NA_real_, nrow=maxiter + 1)
   parM <- matrix(NA_real_, ncol=length(unlist(c(gate.pars, expert.pars))),
                  nrow=maxiter + 1)
   parM[1, ] <- unlist(c(gate.pars, expert.pars))
@@ -89,6 +96,11 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
     newLL <- mstep[["loglik"]]
     logL[ii + 1, ] <- newLL
     parM[ii + 1, ] <- unlist(c(gate.pars, expert.pars))
+    if (!nullholdout) {
+      yhat <- internal_predict(Xp, Zp, tree, expert.nodes, gate.nodes,
+                               gate.pars,expert.pars, expert_type)
+      errorR[ii + 1, ] <- mean((Yp - yhat)**2)
+    }
     if (trace > 0) {
       cat('\r', sprintf("Step: %d - Log-Likelihood: %f", ii, newLL))
     } else {
@@ -100,6 +112,7 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   cat("\n")
   logL <- logL[!is.na(logL), , drop=FALSE]
   parM <- parM[apply(!is.na(parM), 1, FUN=all), ]
+  errorR <- errorR[!is.na(errorR), , drop=FALSE]
   
   gate.info.matrix <- napply(gate.nodes, multinomial_info_matrix, tree, gate.pars,
                              mstep$list_priors, mstep$list_posteriors, Z,
@@ -118,6 +131,7 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                  expert.pars=expert.pars,
                  expert.pars.nms=c(colnames(X), "Dispersion"),
                  dependent.var.nme=all.vars(form)[1],
+                 MSE=errorR,
                  logL=logL,
                  parM=parM,
                  list_priors=mstep$list_priors,
@@ -132,4 +146,59 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                  expert.info.matrix=expert.info.matrix,
                  call_=call_),
             class="hme")
+}
+
+
+refactor_hme <- function(obj, how=c("loglik", "mse"), pars=NULL)
+{
+  stopifnot(inherits(obj, "hme"))
+  how <- match.arg(how)
+  
+  if (is.null(pars)) {
+    if (how == "mse") {
+      pars <- obj[["parM"]][which.min(obj[["MSE"]]), ]
+    } else {
+      pars <- obj[["parM"]][which.max(obj[["logL"]]), ]
+    }
+  }
+  lgpn <- length(obj[["gate.pars.nms"]])
+  lgp <- length(obj[["gate.pars"]])
+  
+  ngates <- lgp * lgpn
+  gate.pars <- pars[1:ngates]
+  gate.pars <- split(gate.pars, ((seq_along(gate.pars) - 1) %/% lgpn) + 1)
+  names(gate.pars) <- names(obj[["gate.pars"]])
+  
+  lep <- length(obj[["expert.pars"]])
+  lepn <- length(obj[["expert.pars.nms"]])
+  expert.pars <- pars[(ngates + 1):length(pars)]
+  expert.pars <- split(expert.pars, ((seq_along(expert.pars) - 1) %/% lepn))
+  names(expert.pars) <- names(obj[["expert.pars"]])
+  
+  list_priors <- napply(names(gate.pars), par_to_gate_paths, gate.pars, obj[["Z"]])
+  list_density <- napply(names(expert.pars), par_to_expert_dens, obj[["expert.type"]],
+                         expert.pars, obj[["Y"]], obj[["X"]])
+  list_posteriors <- napply(names(gate.pars), posterior_weights, obj[["tree"]],
+                            list_priors, list_density)
+  lik <- log_likelihood(obj[["tree"]], list_priors, list_posteriors, list_density,
+                        1)
+
+  gate.info.matrix <- napply(obj[["gate.nodes"]], multinomial_info_matrix,
+                             obj[["tree"]], gate.pars, list_priors,
+                             list_posteriors, obj[["Z"]], 1)
+  
+  expert.info.matrix <- napply(obj[["expert.nms"]], expert_info_matrix,
+                               obj[["expert.type"]], expert.pars,
+                               list_posteriors, obj[["X"]], obj[["Y"]])
+  
+  
+  obj[["expert.pars"]] <- expert.pars
+  obj[["gate.pars"]] <- gate.pars
+  obj[["list_posteriors"]] <- list_posteriors
+  obj[["list_density"]] <- list_density
+  obj[["list_priors"]] <- list_priors
+  obj[["gate.info.matrix"]] <- gate.info.matrix
+  obj[["expert.info.matrix"]] <- expert.info.matrix
+  obj[["logL"]] <- rbind(obj[["logL"]], lik)
+  return(obj)
 }

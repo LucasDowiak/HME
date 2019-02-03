@@ -22,7 +22,8 @@ children <- function(d, nodes)
   lapply(d, f_)
 }
 
-
+# given a node address, provide name of that node's parent
+# if `d` is the root node, return NULL
 parent <- function(d, nodes)
 {
   if (!is(d, "list"))
@@ -40,6 +41,7 @@ parent <- function(d, nodes)
 }
 
 
+# given a node address, provide ancestry of that node back to the root
 ancestors <- function(d)
 {
   if (!is(d, "list"))
@@ -61,6 +63,7 @@ ancestors <- function(d)
 }
 
 
+# given a node address, list all children, grand-children, ect of that node
 progeny <- function(d, nodes)
 {
   if (!is(d, "list"))
@@ -88,6 +91,7 @@ progeny <- function(d, nodes)
 }
 
 
+# given a node address, find all nodes that share the same parent
 siblings <- function(d, nodes)
 {
   if (!is(d, "list"))
@@ -102,18 +106,14 @@ siblings <- function(d, nodes)
 }
 
 
+# given a node address, find all nodes that share the same parent
 generation <- function(x, nodes)
 {
-  d <- tree_depth(nodes)
-  if (x > d) {
-    mssg <- "The generation [%d] must not be greater than the depth [%d]."
-    stop(sprintf(mssg, x, d))
-  }
-  
-  nodes[which(nchar(nodes) == 2 * x + 1)]
+  nodes[which(nchar(nodes) == nchar(x))]
 }
 
 
+# is `d` a terminal node of the tree (is it childless?)
 is_terminal <- function(d, nodes)
 {
   if(!is(d, "list"))
@@ -129,6 +129,7 @@ is_terminal <- function(d, nodes)
   lapply(d, f_)
   #Map(function(y, z) if (y) z, b, d)d[unlist(b)]
 }
+
 
 
 last_split <- function(d)
@@ -167,6 +168,7 @@ all_but_last_split <- function(d)
 }
 
 
+# how deep is the tree
 tree_depth <-function(nodes)
 {
   if(!is(nodes, "list"))

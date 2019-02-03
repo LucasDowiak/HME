@@ -1,18 +1,24 @@
-source("~/hme/R/benchmark_hme.R")
 setwd("~/hme/")
+source("R/benchmark_hme.R")
+source("R/wage_data_prep.R")
 
-library(data.table)
 
+all_vars <- c("lnwage", "age16", "age16sq", "black", "indian", "asian", "hisp",
+              "yreduc", "Creativity", "Design", "Analytics", "Perseptive")
 
-dtf <- fread("wage_equation.csv")
+boolcc <- complete.cases(dtf[, .SD, .SDcols=all_vars[-10]])
+booldd <- complete.cases(dtf[, .SD, .SDcols=all_vars])
+set.seed(433)
+booltest <- as.logical(rbinom(dtf[, .N], 1, 0.1))
+dtftest <- dtf[booltest & booldd & sex==0]
+dtftrain <- dtf[!booltest & booldd & sex==0]
+# seperate into test and validation set
 
-hme_wage_1D_2E <- readRDS("wage/hme_wage_1D_2E.RDS")
-hme_wage_2D_3E <- readRDS("wage/hme_wage_2D_3E.RDS")
-hme_wage_2D_4E <- readRDS("wage/hme_wage_2D_4E.RDS")
 
 lapply(list(hme_wage_1D_2E, hme_wage_2D_3E, hme_wage_2D_4E, hme3), criterion, "aic")
 saveRDS(hme3, file="wage/hme_1D_3E.RDS")
-form <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc"
+
+form <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
 c("0", "0.1", "0.2")
 c("0", "0.1", "0.2", "0.1.1", "0.1.2")
 c("0", "0.1", "0.2", "0.1.1", "0.1.2", "0.2.1", "0.2.2")
@@ -28,50 +34,66 @@ c("0",
 "lnwage ~ age16 + age16sq | age16 + age16sq + black + indian + asian + hisp + yreduc"
 
 lm_mod <- lm("lnwage ~ age16 + age16sq + yreduc + black + indian + asian + hisp",
-             data=dtf[sex==0])
+             data=dtftrain)
 
 
 debugonce(hme)
+
 hme1 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2", "0.1.2.1", "0.1.2.2"),
-            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc",
-            data=dtf[sex==0], maxiter=400, tolerance=1e-3, trace=1)
+              "0.1.1.1", "0.1.1.2"),
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             #init_gate_pars = hme1$gate.pars, init_expert_pars = hme1$expert.pars)
 ME1 <- marginal_effects(hme1)
+# saveRDS(hme1, file="models/*d.RDS")
 hme2 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2", "0.1.2.1", "0.1.2.2"),
-            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc",
-            data=dtf[sex==0], maxiter=400, tolerance=1e-3, trace=1)
+              "0.1.1.1", "0.1.1.2"),
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             #init_gate_pars = hme2$gate.pars, init_expert_pars = hme2$expert.pars)
 ME2 <- marginal_effects(hme2)
 hme3 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2", "0.1.2.1", "0.1.2.2"),
-            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc",
-            data=dtf[sex==0], maxiter=400, tolerance=1e-3, trace=1)
+              "0.1.1.1", "0.1.1.2"),
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             # init_gate_pars = hme3$gate.pars, init_expert_pars = hme3$expert.pars)
 ME3 <- marginal_effects(hme3)
 hme4 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2", "0.1.2.1", "0.1.2.2"),
-            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc",
-            data=dtf[sex==0], maxiter=400, tolerance=1e-3, trace=1)
+              "0.1.1.1", "0.1.1.2"),
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             # init_gate_pars = hme4$gate.pars, init_expert_pars = hme4$expert.pars)
 ME4 <- marginal_effects(hme4)
 hme5 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2", "0.1.2.1", "0.1.2.2"),
-            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc",
-            data=dtf[sex==0], maxiter=400, tolerance=1e-3, trace=1)
+              "0.1.1.1", "0.1.1.2"),
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             # init_gate_pars = hme5$gate.pars, init_expert_pars = hme5$expert.pars)
 ME5 <- marginal_effects(hme5)
+
+
+
+which.max(sapply(list(hme1, hme2, hme3, hme4, hme5), logLik))
+which.max(sapply(list(hme1, hme2, hme3, hme4, hme5), function(x) max(x$logL)))
+saveRDS(hme2, file="models/hme_3D_5E_Onet_mid.RDS")
+
+which.min(sapply(list(hme1, hme2, hme3, hme4, hme5), function(x) min(x$MSE)))
+hmer <- refactor_hme(hme4)
+saveRDS(hmer, file="models/hme_2D_4E_Onet_mid_r.RDS")
+
+
+rm(list=c(ls(pattern="^hme[1-9]")))
+
 
 
 hme2s <- readRDS("hme_wage_1D_2E.RDS")
