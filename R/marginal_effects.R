@@ -126,7 +126,7 @@ marginal_effects <- function(obj)
   return(list(gate_margins=colMeans(gate_margins[, gate.only.nms]),
               expert_margins=colMeans(expert_margins[, expt.only.nms]),
               full_margins=colMeans(full_margins),
-              gate_expert_margins=tree_expert_margin))
+              gate_expert_margins=t(tree_expert_margin)))
 }
 
 

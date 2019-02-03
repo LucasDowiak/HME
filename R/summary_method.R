@@ -1,4 +1,4 @@
-summary.hme <- function(obj, type=c("all", "gates", "experts"))
+summary.hme <- function(obj, type=c("experts", "gates", "all"))
 {
   type <- match.arg(type)
   gatebool <- expertbool <- FALSE
@@ -14,7 +14,12 @@ summary.hme <- function(obj, type=c("all", "gates", "experts"))
   if (expertbool) {
     info <- obj[["expert.info.matrix"]]
     for (e in names(obj[["expert.pars"]])) {
-      cat(sprintf("\n--------------------------\nexpert-%s\n\n", e))
+      
+      gpp <- gate_path_product("0", e, obj$list_priors)
+      share <- sum(gpp) / obj$N
+      
+      cat(sprintf("\n--------------------------\nexpert-%s \t share:  %.3f\n\n", e, share))
+      
       p <- obj[["expert.pars"]][[e]]
       se <- sqrt(diag(info[[e]][["sandwich"]]))
       zstat <- p / se

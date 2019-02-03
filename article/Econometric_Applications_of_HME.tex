@@ -125,7 +125,7 @@ provides detail on marginal effects of the gating network. Section
 \ref{sec:NetworkGrowth} develops a proceedure to grow the gating network
 in an objective manner. 
 
-\begin{figure}[ht]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=\textwidth]{network_types.jpeg}
   \caption{Networks \textbf{A} - \textbf{D} depict various network
@@ -592,7 +592,7 @@ Just as for logistic and multinomial regressions, the
 marginal effect of the entire gating network has a closed form solution.
 Independently, looking at the network's marginal effects provides a sense
 of what gating variables play a decisive role in directing input patterns
-to the appropriate expert regressions. Starting with equation
+to the appropriate local expert regressions. Starting with equation
 (\ref{eq:gpath}), we take the partial with respect to gating matrix $Z_{t}$.
 
 \begin{equation}
@@ -604,7 +604,8 @@ Applying the product rule gives us:
 \begin{equation} \label{eq:hme_gate_marginal_effect}
   \begin{split}
     \delta^{m} &= \frac{\partial g^{0, i}}{\partial Z} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m} \\
-                                     &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial Z} \cdots g^{k|\cdots|j|i|0, m} + \dots \\
+                                     &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial Z} \cdots g^{k|\cdots|j|i|0, m} \\
+                                     &+ \dots                                                                        \\
                                      &+ g^{0, i} g^{i|0, j} \cdots \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial Z} \\
   \end{split}
 \end{equation}
@@ -662,19 +663,68 @@ then:
 
 \section{A simple example} \label{sec:SimpleExample}
 
-Using the iris data set we can test if the HME model able to capture
-structure of latent variables while maintaing accurate regression
+In order to provide a concrete example of the concepts discussed previously,
+the ME and HME models are demonstrated on a small and well known dataset
+collected by Edgar Anderson (\cite{Anderson1936}) and popularized in the
+statistics literature by Ronald Fisher (\cite{Fisher1936}). Anderson collected
+50 measurements each from three different species of iris flowers; the width and
+length of both the petal and the sepal. Figure \ref{fig:Iris_dataset} provides a
+basic view of the species specific clustering inherent in the data.
+
+\begin{figure}[!ht]
+  \includegraphics[width=\textwidth]{basic_iris_plot.jpeg}
+  \caption{Three different Iris species are presented: Setosa
+  (blue circles), Versicolor (orange triangles), Virginia (green crosses).
+  Sepal width is on the vertical axis and petal width on the horizontal
+  axis.}
+  \label{fig:Iris_dataset}
+\end{figure}
+
+The work below uses the ME and HME architectures to estimate a flower's sepal
+width using only it's petal width as a predictor. The petal width will be used
+as the sole covariate in the local linear expert regressions ($X$) as well as
+in the gating network ($Z$). 
+
+\begin{equation} \label{eq:HME_iris}
+    sepal.width_{i} = \beta_{0} + \beta_{1} * petal.width_{i} + \varepsilon_{i} \enspace | \enspace \omega_{0} + \omega_{1} * petal.width_{i}
+\end{equation}
+
+The goal is to have the gating network of the 
+models identify the inherent species-specific clustering without explicit
+knowledge of each observation's species classification, and then fit an
+appropriate local regression to the self-identified clusters. As a benchmark,
+an OLS model is run where a flower's petal width is interacted with it's species,
+resulting in a species-specific estimation of sepal width.
+
+\begin{equation} \label{eq:OLS_iris}
+    sepal.width_{is} = \beta_{0,s} + \beta_{1, s} * petal.width_{is} + \varepsilon_{is}
+\end{equation}
+
+Two sets of regressions are run. Since the Versicolor and Virginica species
+can be viewed as one larger cluster, a two-expert ME model is run
+and compared to a benchmark OLS where Versicolor and Virginica are labelled
+as the same species. A second set of regressions are run with three mixture
+experts for ME and HME, as well as their corresponding three species OLS
+regression. Results are collected in table \ref{tbl:Iris}. Coefficients for
+local experts in the two expert ME regression match closely with the OLS
+benchmark. When moving to the three expert models, there is now a choice
+on what kind of gating scheme to employ. We can go deep (HME) by adding 
+a gating network with depth two, or we can go wide (ME) by keeping the
+depth of the gating network at one. When comparing the coefficients of the
+local regressions, the HME architecture clearly outperforms the ME
+architecture. The ME model fails to identify the three seperate
+species that are known to exist.  
 
 \begin{landscape}
-\begin{table}
-	\caption{Linear Regression vs HME}
+\begin{table} 
+	\caption{Iris Dataset - OLS vs ME vs HME}
 	\begin{threeparttable}
 		\begin{tabular}[l]{l l l l l l l l l l l l}
   \cmidrule{1-12}
 
-  & \multicolumn{4}{c}{2 Component Mixture} & \multicolumn{6}{c}{3 Component Mixture} \\
+  & \multicolumn{4}{c}{2 Expert Mixture} & & \multicolumn{6}{c}{3 Expert Mixture} \\
   \cmidrule(r){2-5}  \cmidrule(r){7-12}
-  & \multicolumn{2}{c}{OLS}  & \multicolumn{2}{c}{MoE} & & \multicolumn{2}{c}{OLS}  & \multicolumn{2}{c}{HME}  & \multicolumn{2}{c}{MoE} \\
+  & \multicolumn{2}{c}{OLS}  & \multicolumn{2}{c}{ME} & & \multicolumn{2}{c}{OLS}  & \multicolumn{2}{c}{HME}  & \multicolumn{2}{c}{ME} \\
   \cmidrule(r){2-3}  \cmidrule(r){4-5}  \cmidrule(r){7-8}  \cmidrule(r){9-10}  \cmidrule(r){11-12}
   & Coef. & SE & Coef. & SE && Coef. & SE & Coef. & SE & Coef. & SE     \\
   \cmidrule{1-12}
@@ -694,41 +744,250 @@ structure of latent variables while maintaing accurate regression
   Const.             & --   & --     & --   & --     && 1.37  & 0.29** & 1.15 & 0.12** & 2.13 & 0.09**       \\
   Petal.Width        & --   & --     & --   & --     && 1.05  & 0.22** & 1.29 & 0.09** & 0.44 & 0.06**       \\[0.3cm]
 
-  Verg + Versi \\
+  Virg + Versi \\
   \cmidrule(r){1-1}
-  Const.             & 2.13 & 0.13** & 2.13 & 0.09** && --   & --     & --   & --     & --   & --       \\
-  Petal.Width        & 0.44 & 0.07** & 0.44 & 0.06** && --   & --     & --   & --     & --   & --       \\[0.3cm]
+  Const.             & 2.13 & 0.13** & 2.13 & 0.09** && --    & --     & --   & --     & --   & --       \\
+  Petal.Width        & 0.44 & 0.07** & 0.44 & 0.06** && --    & --     & --   & --     & --   & --       \\[0.3cm]
 
   AME \\
   \cmidrule(r){1-1}
-  Petal.Width        & 0.57 & --     & 0.49 & --     && 0.84 & --     & 0.57 & --     & 0.62 & --         \\[0.3cm]
+  Petal.Width        & 0.57 & --     & 0.49 & --     && 0.84  & --     & 0.57 & --     & 0.62 & --         \\[0.3cm]
 
 
-  Log-Like           & -35.5 &       & -31.9 &       && -29.3  &      & -21.8&        & -27.8 & \\
-  N                  & 150   &       & 150   &       && 150    &      & 150  &        & 150   & \\
+  Log-Like           & -35.5 & --    & -31.9 & --    && -29.3  & --    & -21.8& --     & -27.8 & -- \\
+  N                  & 150   & --    & 150   & --    && 150    & --    & 150  & --     & 150   & -- \\
 
 	\hline
 		\end{tabular}
 		\begin{tablenotes}
-			\item[1]{\footnotesize This is a footnote.}
-		\end{tablenotes}
+			\item{\footnotesize ** $p < 0.01$, * $p < 0.05$}
+			\item{\footnotesize OLS regressions are modeled using equation (\ref{eq:OLS_iris})}
+			\item{\footnotesize ME regressions are modeled using equation (\ref{eq:HME_iris}) and architecture $\boldsymbol{A}$ from figure \ref{fig:network_comparison}}
+			\item{\footnotesize HME regressions are modeled using equation (\ref{eq:HME_iris}) and architecture $\boldsymbol{C}$ from figure \ref{fig:network_comparison}}
+		\end{tablenotes} \label{tbl:Iris}
 	\end{threeparttable}
 \end{table}
 \end{landscape}
 
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{Iris_fit_and_predict.jpeg}
-  \caption{Does it Work?}
-  \label{fig:Iris_fit_and_predict}
-\end{figure}
 
 
 
+\section{A Mincer Wage Equation}
+
+For a more economically relevant example, we turn our attention to a common
+topic in labor economics: the income return on an additional year of
+education. At times called the "Mincer wage equation", our version of it
+will be:
+
+\begin{equation} \label{eq:mincer_equ}
+  \log (wage) = \beta_{0} + \beta_{1} * \textnormal{Age} + \beta_{2} * \textnormal{Age}^{2} + \beta_{3} * \textnormal{YrsEdu} + \boldsymbol{\beta_{4}}\boldsymbol{X} + \varepsilon
+\end{equation}
 
 
 \begin{table} \centering
-  \caption{Log Wage Equation}
+  \caption{Summary Statistics}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l r r r r}
+  \cmidrule{1-5}
+
+              & 25\%   & Mean & 50\% & 75\%   \\
+  \cmidrule{1-5}
+  Wage (hr)   & 9.00  & 15.44 & 12.87  & 19.23\\
+  Yrs Edu     & 12.0  & 13.72 & 14.0   & 16.0 \\
+  Age         & 30.0  & 38.96 & 39.0   & 48.0 \\
+  Age16       & 14.0  & 22.96 & 23.0   & 32.0 \\
+  Male        & --    & 100.0 & --     & --   \\
+  Af Amer     & --    & 0.078 & --     & --   \\
+  Indian      & --    & 0.011 & --     & --   \\
+  White       & --    & 0.764 & --     & --   \\
+  Hispanic    & --    & 0.110 & --     & --   \\
+  Asian       & --    & 0.037 & --     & --   \\
+
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize N = 54,829}
+    \end{tablenotes} \label{tbl:census_cov_summary}
+  \end{threeparttable}
+\end{table}
+
+with $\boldsymbol{X}$ containing a set of individual-specific 
+variables as well as a set of occupation-specific attributes. 
+Our data will come from two sources. First, from the 2000 Census,
+we devise a measure of hourly wages in addition to age,
+years of education (YrsEdu), job occupations codes, 
+and a set of demographic identifiers indicating the race of each observation.
+Second, we pull from the Occupation Information Netowrk (ONet) a set of 
+
+
+The Occupational Information Network (ONet) is a federally sponsered source
+of occupational information. It details, on a per occupation basis, "the
+knowledge, skills, and abilities required as well as how the work is
+performed in terms of tasks, work activities, and other descriptors."
+\cite{ONET} It grades the relevance of these skills, knowledge, and
+abilities on a 100 point scale. In this study we have chosen the
+following four attributes to include in the covariates $\boldsymbol{X}$
+of our wage equations:
+
+1) Social Perceptiveness
+   Skills > Social Skills > Social Perceptiveness
+   
+2) Analyzing Data or Information
+   Work Activities > Mental Processes > Analyzing Data or Information
+
+3) Design Importance
+    Knowledge > Design
+
+4) Thinking Creatively
+   Work Activities > Mental Processes > Thinking Creatively
+
+Each attribute contains two of scales, an "importance" scale and a
+"level" scale. The importance scale denotes how critical the attribute
+is to the occupation while the level indicates how much the skill is
+required or needed to perform the occupation. To unify the two
+measures, we follow the paper Prof Wijverberg gave me and take a
+cobb-douglass style average with a 2/3's weight for importance and a 1/3
+weight for the level scale.
+
+To link the occupational codes in the census data to the soc codes used
+by ONet, we use the cross walk provided by Sarah Porter. This matching
+is not one-to-one. When more than one soc code points a single census
+code, we take the average of the soc codes.
+
+A summary descriptions of the covariates are provided in table
+\ref{tbl:census_cov_summary}. For comparative purposes, we estimate equation
+(\ref{eq:mincer_equ}) for both the HME and ME architectures, testing whether
+there is any inherent advantage to allowing the gating network to go deep
+(HME), as opposed to staying shallow with a depth of one. For both
+architectures, we start with two experts, and then continue to add them until
+a minimal information criterion is found. In particular, we choose to minimize
+the Bayesian information criterion (BIC). Compared to the Akaike information
+criterion (AIC), the BIC places a higher penalty on the number of parameters
+in a model. We find this feature preferable since the growth in the number
+of paramaters can be considerable in both models as the number of experts
+increase.
+
+A natural question to consider as a researcher is where to put the variable(s)
+of interest while performing an HME estimation. \cite{JiangTanner2000}
+provide their proof of model consistency for HME of GLM's for the case where
+all covariates appear in the gating network as well as the experts. We will
+call this the \textit{full} specifications:
+
+\begin{equation}
+  log(wage) = Age + YrsEdu + Race \; | \; Age + YrsEdu + Race
+\end{equation}
+
+We will compare this \textit{full} specification to two others. A
+\textit{mid} specification where the local experts contain age and
+years of education while removing demographic indicators:
+
+\begin{equation}
+  log(wage) = Age + YrsEdu \; | \; Age + YrsEdu + Race
+\end{equation}
+
+And finally a \textit{minimal} specification where our core variable
+of interest, years of education, appears solely in the gating network.
+
+\begin{equation}
+  log(wage) = Age \; | \; Age + YrsEdu + Race
+\end{equation}
+
+Results for these regressions are collected in table \ref{tbl:HME_spec_BIC}.
+There are a few points worth noting. First, for this dataset, increasing the
+number of experts yields increasingly better log-likelihood and BIC values.
+Second, there is a clear advantage to using the HME architecture. In table
+\ref{tbl:HME_spec_BIC}, compare the rows with different gating types (col 1)
+but with the same number of experts (col 3).The HME approach outperforms the
+ME across the board. Third, for both ME and HME types, models with more
+covariates in the local expert regressions lead to higher log-likeihood
+values. 
+
+\begin{figure}[!ht]
+  \includegraphics[width=\textwidth]{Job_characteristic_density.jpeg}
+  \caption{Density estimates of ONet job characteristics broken down by
+  sex. The job characteristics have been mean centered and scaled to
+  have unit variance.}
+  \label{fig:JobChar_vs_sex}
+\end{figure}
+
+\begin{table} \centering
+  \caption{Model Information}
+  \begin{threeparttable}
+    \begin{tabular}[l]{r r r r r r r r r}
+  \cmidrule{1-9}
+       &       &         & \multicolumn{3}{c}{Log-Lik} & \multicolumn{3}{c}{BIC} \\ 
+  \cmidrule(r){4-6}   \cmidrule(l){7-9}
+  Type & Depth & Experts & Min    & Mid    & Full    & Min   & Mid   & Full       \\
+  \cmidrule{1-9}
+  ME   & 1     & 2       & -0.638 & -0.611 & -0.603  & 1.275 & 1.223 & 1.208      \\
+  ME   & 1     & 3       & -0.609 & -0.608 & -0.599  & 1.224 & 1.223 & 1.200      \\
+  HME  & 2     & 3       & -0.604 & -0.595 & -0.591  & 1.208 & 1.191 & 1.183      \\
+  ME   & 1     & 4       & -0.643 & -0.601 & --      & 1.294 & 1.212 & --         \\
+  HME  & 2     & 4       & -0.592 & -0.589 & -0.586  & 1.184 & 1.179 & 1.176      \\
+  HME  & 3     & 5       & -0.587 & -0.587 & -0.584  & 1.176 & 1.177 & 1.171      \\
+
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (54,829)}
+    \end{tablenotes} \label{tbl:HME_spec_BIC}
+  \end{threeparttable}
+\end{table}
+
+
+The coefficients on years of education (or variable of interests), which
+are summarized in table \ref{tbl:YrsEdu_coef}, are pretty
+stable across model specifications. With the exception of the two-expert
+\textit{minimal} model, coefficient values range from 0.083 to 0.092. 
+
+
+\begin{table} \centering
+  \caption{Returns to Years of Education}
+  \begin{threeparttable}
+    \begin{tabular}[l]{r r r r r}
+  \cmidrule{1-5}
+  \multicolumn{2}{c}{OLS: 0.096}   & \multicolumn{3}{c}{Coefficient} \\ 
+  \cmidrule(r){3-5}
+  Depth & Experts & Min   & Mid   & Full       \\
+  \cmidrule{1-5}
+
+  1     & 2       & 0.065 & 0.095 & 0.092      \\
+  1     & 3       & 0.086 & 0.093 & 0.095     \\
+  2     & 3       & 0.083 & 0.096 & 0.093      \\
+  1     & 4       & --    & --    & --         \\
+  2     & 4       & 0.088 & 0.092 & 0.091      \\
+  3     & 5       & 0.088 & 0.091 & 0.091      \\
+
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize OLS coef: 0.96}
+      \item{\footnotesize Log-Likelihood is divided by the sample size (54,829)}
+    \end{tablenotes} \label{tbl:YrsEdu_coef}
+  \end{threeparttable}
+\end{table}
+
+We also compare the marginal effects across specifications. According to table
+\ref{tbl:HME_spec_BIC}, the five-expert HME model performs the best for each
+of the three specifications. Table \ref{tbl:model_marg_effects} summarizes
+the marginal effects across specifications and benchmarks them to an standard
+OLS regresssion.
+
+The marginal effects for the constant term in the HME are not comparable
+to the OLS model. These marginal effects include the constant terms in the
+gating network, invalidating them as an intercept term. The return to
+education does appear to be materially lower for the HME models as
+compared to the standard OLS while the quadratic wage curve is similar
+in the \textit{full} specification but somewhat different in the
+\textit{mid} and \textit{minimal} specifications. When it comes to
+the coefficients for race, a bit of variations starts to appear
+across specifications. Interestingly, the \textit{mid} specification
+seems to deviate the most from the OLS benchmark while the
+\textit{minimal} specification maintains comparable marginal effects.
+There doesn't seem to be an obvious explanation for this discrepency. 
+
+\begin{table} \centering
+  \caption{Full Marginal Effects}
   \begin{threeparttable}
     \begin{tabular}[l]{l l r r r}
       \cmidrule{1-5}
@@ -764,91 +1023,99 @@ structure of latent variables while maintaing accurate regression
       \hline
     \end{tabular}
     \begin{tablenotes}
-      \item[1]{\footnotesize This is a footnote.}
-    \end{tablenotes}
+      \item[1]{\footnotesize Each non-OLS model is a five-expert HME.}
+    \end{tablenotes} \label{tbl:model_marg_effects}
   \end{threeparttable}
 \end{table}
 
 
 
 \begin{table} \centering
-  \caption{Summary Statistics}
+  \caption{Log Wage Expert Equations - Full Specification}
   \begin{threeparttable}
-    \begin{tabular}[l]{l r r r r}
-  \cmidrule{1-5}
+    \begin{tabular}[l]{l l l l l l l}
+      \cmidrule{1-7}
 
-              & 25\%   & Mean & 50\% & 75\%   \\
-  \cmidrule{1-5}
-  Wage (hr)   & 9.00  & 15.44 & 12.87  & 19.23\\
-  Yrs Edu     & 12.0  & 13.72 & 14.0   & 16.0 \\
-  Age         & 30.0  & 38.96 & 39.0   & 48.0 \\
-  Age16       & 14.0  & 22.96 & 23.0   & 32.0 \\
-  Male        & --    & 100.0 & --     & --   \\
-  Af Amer     & --    & 0.078 & --     & --   \\
-  Indian      & --    & 0.011 & --     & --   \\
-  White       & --    & 0.764 & --     & --   \\
-  Hispanic    & --    & 0.110 & --     & --   \\
-  Asian       & --    & 0.037 & --     & --   \\
+                  & OLS      & 1       & 2 &3 &4 & 5  \\
+      \cmidrule{1-7}
 
-  \hline
+      Share       & --       & 0.625   & 0.193   & 0.117   & 0.046   & 0.018    \\[0.3cm]
+
+      Const.      & 0.819    & 1.048   & 1.493   & 1.687   & 1.341   & 1.643    \\
+                  & 0.013**  & 0.014** & 0.010** & 0.014** & 0.084** & 0.013**  \\[0.3cm]
+      
+      Yrs Edu     & 0.096    & 0.105   & 0.032   & 0.034   & 0.040   & 0.0126   \\
+                  & 0.008**  & 0.001** & 0.001** & 0.001** & 0.005** & 0.0011** \\[0.3cm]
+
+      Age         & 0.044    & 0.024   & 0.0616  & 0.003   & 0.044   & 0.011    \\
+                  & 0.001**  & 0.001** & 0.001** & 0.0006**& 0.004** & 0.0008** \\[0.3cm]
+
+      Age Sq      & -0.0006  & -0.0003 & -0.001  & 0.00008 & -0.0006 & -0.0005  \\
+                  & 0.0000** &0.00001**&0.00001**&0.00001**&0.00008**& 0.0000** \\[0.3cm]
+
+      Afr Amer    & -0.175   & -0.209  & -0.135  & -0.036  & -0.022  & -0.078   \\
+                  & 0.007**  & 0.007** & 0.006** & 0.006** & 0.045   &  0.007** \\[0.3cm]
+
+      Indian      & -0.118   & -0.131  & -0.181  & -0.122  & 0.654  & 0.432     \\
+                  & 0.019**  & 0.018** & 0.016** & 0.014** & 0.138**& 0.014**   \\[0.3cm]
+
+      Hispanic    & -0.165   & -0.108  & 1.590   & -0.032  & -1.037 & -0.041    \\
+                  & 0.006**  & 0.006** & 0.041** & 0.004** & 0.072**& 0.005**   \\[0.3cm]
+
+      Asian       & -0.070   & -0.051  & 0.059  & -0.068   & -0.468 & 0.145     \\
+                  & 0.010**  & 0.010** & 0.008**& 0.009**  & 0.076**& 0.013**   \\[0.3cm]
+      
+      log Var    & --       & -1.824   & -2.512 & -2.776   & -0.409 & -4.586    \\
+                 & --       & 0.008**  & 0.015**& 0.022**  & 0.005**& 0.095**   \\[0.3cm]
+
+
+      \hline
     \end{tabular}
     \begin{tablenotes}
-      \item{\footnotesize N = 54,829}
-    \end{tablenotes}
+      \item[1]{\footnotesize Five-expert \textit{full} HME.}
+    \end{tablenotes} \label{tbl:model_local_experts}
   \end{threeparttable}
 \end{table}
 
 
 
-\begin{table} \centering
-  \caption{Model Information}
-  \begin{threeparttable}
-    \begin{tabular}[l]{r r r r r r r r}
-  \cmidrule{1-8}
-        &          & \multicolumn{3}{c}{Log-Lik} & \multicolumn{3}{c}{BIC} \\ 
-  \cmidrule(r){3-5}   \cmidrule(l){6-8}
-  Depth & Experts & Min    & Mid    & Full    & Min   & Mid   & Full       \\
-  \cmidrule{1-8}
-  1     & 2       & -0.638 & -0.611 & -0.603  & 1.275 & 1.223 & 1.208      \\
-  1     & 3       & -0.609 & -0.608 & -0.599  & 1.224 & 1.223 & 1.200      \\
-  2     & 3       & -0.604 & -0.595 & -0.591  & 1.208 & 1.191 & 1.183      \\
-  1     & 4       & -0.643 & -0.601 & --      & 1.294 & 1.212 & --         \\
-  2     & 4       & -0.592 & -0.589 & -0.586  & 1.184 & 1.179 & 1.176      \\
-  3     & 5       & -0.587 & -0.587 & -0.584  & 1.176 & 1.177 & 1.171      \\
 
-  \hline
+\begin{table} \centering
+  \caption{Log Wage Expert Equations - Mid specification}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l l l l l l l}
+      \cmidrule{1-7}
+
+                  & OLS & 1       & 2       &3 &4 & 5  \\
+      \cmidrule{1-7}
+
+      Share       & --  & 0.632   & 0.168   & 0.126   & 0.056   & 0.017     \\[0.3cm]
+
+      Const.      &     & 1.021   & 1.291   & 1.676   & 1.449   & 1.684    \\
+                  &     & 0.013** & 0.013** & 0.011** & 0.073** & 0.011**   \\[0.3cm]
+      
+      Yrs Edu     &     & 0.102   & 0.059   & 0.014   & 0.040   & 0.012    \\
+                  &     & 0.001** & 0.001** & 0.001** & 0.005** & 0.001**  \\[0.3cm]
+
+      Age         &     & 0.029   & 0.010   & 0.072   & 0.036   & -0.032    \\
+                  &     & 0.001** & 0.001** & 0.001** & 0.004** & 0.001**  \\[0.3cm]
+
+      Age Sq      &     & -0.0004 & -0.0002 & -0.001  & -0.0005 & 0.005   \\
+                  &     & 0.0001**& 0.0000**& 0.0000**& 0.0001**& 0.000**  \\[0.3cm]
+      
+      log Var     & --   & -1.886 & -2.493  & -2.772  & -0.435  & -4.571     \\
+                  & --   & 0.008**& 0.017** & 0.021** & 0.005** & 0.085**    \\[0.3cm]
+
+
+      \hline
     \end{tabular}
     \begin{tablenotes}
-      \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (54,829)}
-    \end{tablenotes}
+      \item[1]{\footnotesize Five-expert \textit{mid} HME.}
+    \end{tablenotes} \label{tbl:model_local_expert_regressions}
   \end{threeparttable}
 \end{table}
 
 
-\begin{table} \centering
-  \caption{Returns to Years of Education}
-  \begin{threeparttable}
-    \begin{tabular}[l]{r r r r r}
-  \cmidrule{1-5}
-  \multicolumn{2}{c}{OLS: 0.096}   & \multicolumn{3}{c}{Coefficient} \\ 
-  \cmidrule(r){3-5}
-  Depth & Experts & Min   & Mid   & Full       \\
-  \cmidrule{1-5}
-
-  1     & 2       & 0.065 & 0.095 & 0.092      \\
-  1     & 3       & 0.086 & 0.093 & 0.095     \\
-  2     & 3       & 0.083 & 0.096 & 0.093      \\
-  1     & 4       & --    & --    & --         \\
-  2     & 4       & 0.088 & 0.092 & 0.091      \\
-  3     & 5       & 0.088 & 0.091 & 0.091      \\
-
-  \hline
-    \end{tabular}
-    %\begin{tablenotes}
-    %  \item[1]{\footnotesize Log-Likelihood is divided by the sample size (54,829)}
-    %\end{tablenotes}
-  \end{threeparttable}
-\end{table}
 
 
 \section{Miscellaneous}
@@ -886,4 +1153,5 @@ AIC/BIC/VOUNG test being prefered.
 
 
 \printbibliography
+
 \end{document}
