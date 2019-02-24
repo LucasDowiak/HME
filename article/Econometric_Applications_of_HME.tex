@@ -783,75 +783,44 @@ will be:
   \log (wage) = \beta_{0} + \beta_{1} * \textnormal{Age} + \beta_{2} * \textnormal{Age}^{2} + \beta_{3} * \textnormal{YrsEdu} + \boldsymbol{\beta_{4}}\boldsymbol{X} + \varepsilon
 \end{equation}
 
-
-\begin{table} \centering
-  \caption{Summary Statistics}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l r r r r}
-  \cmidrule{1-5}
-
-              & 25\%   & Mean & 50\% & 75\%   \\
-  \cmidrule{1-5}
-  Wage (hr)   & 9.00  & 15.44 & 12.87  & 19.23\\
-  Yrs Edu     & 12.0  & 13.72 & 14.0   & 16.0 \\
-  Age         & 30.0  & 38.96 & 39.0   & 48.0 \\
-  Age16       & 14.0  & 22.96 & 23.0   & 32.0 \\
-  Male        & --    & 100.0 & --     & --   \\
-  Af Amer     & --    & 0.078 & --     & --   \\
-  Indian      & --    & 0.011 & --     & --   \\
-  White       & --    & 0.764 & --     & --   \\
-  Hispanic    & --    & 0.110 & --     & --   \\
-  Asian       & --    & 0.037 & --     & --   \\
-
-  \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item{\footnotesize N = 54,829}
-    \end{tablenotes} \label{tbl:census_cov_summary}
-  \end{threeparttable}
-\end{table}
-
 with $\boldsymbol{X}$ containing a set of individual-specific 
 variables as well as a set of occupation-specific attributes. 
 Our data will come from two sources. First, from the 2000 Census,
 we devise a measure of hourly wages in addition to age,
 years of education (YrsEdu), job occupations codes, 
-and a set of demographic identifiers indicating the race of each observation.
-Second, we pull from the Occupation Information Netowrk (ONet) a set of 
+and a set of demographic identifiers indicating the race of the
+indivduals contained in census sample. Second, we pull from the
+Occupation Information Network (ONet) a set of knowledge and skill-based
+attributes describing what qualities are necessary to perform each
+job suitably. ONet is a federally sponsered source of occupational
+information. It details, on a per occupation basis, "the knowledge,
+skills, and abilities required as well as how the work is
+performed in terms of tasks, work activities, and other descriptors"
+(\cite{ONET}). 
 
+To provide an interesting space to classify occupational codes from
+the census data, we've chosen the following four attributes to
+include in the covariates $\boldsymbol{X}$ of our wage equations:
 
-The Occupational Information Network (ONet) is a federally sponsered source
-of occupational information. It details, on a per occupation basis, "the
-knowledge, skills, and abilities required as well as how the work is
-performed in terms of tasks, work activities, and other descriptors."
-\cite{ONET} It grades the relevance of these skills, knowledge, and
-abilities on a 100 point scale. In this study we have chosen the
-following four attributes to include in the covariates $\boldsymbol{X}$
-of our wage equations:
+\begin{enumerate}
+  \item Social Perceptiveness \footnote{Skills - Social Skills - Social Perceptiveness}
+  \item Design \footnote{Work Activities - Mental Processes - Analyzing Data or Information}
+  \item Data Analytics \footnote{Knowledge - Design}
+  \item Creative Thinking \footnote{Work Activities - Mental Processes - Thinking Creatively}
+\end{enumerate}
 
-1) Social Perceptiveness
-   Skills > Social Skills > Social Perceptiveness
-   
-2) Analyzing Data or Information
-   Work Activities > Mental Processes > Analyzing Data or Information
-
-3) Design Importance
-    Knowledge > Design
-
-4) Thinking Creatively
-   Work Activities > Mental Processes > Thinking Creatively
-
-Each attribute contains two of scales, an "importance" scale and a
-"level" scale. The importance scale denotes how critical the attribute
-is to the occupation while the level indicates how much the skill is
-required or needed to perform the occupation. To unify the two
+For these selected attributes, ONet grades their relevance on a
+100 point scale. Each attribute contains two of scales, an "importance"
+scale and a "level" scale. The importance scale denotes how critical the
+attribute is to the occupation while the level indicates how much the
+skill is required or needed to perform the occupation. To unify the two
 measures, we follow the paper Prof Wijverberg gave me and take a
 cobb-douglass style average with a 2/3's weight for importance and a 1/3
 weight for the level scale.
 
 To link the occupational codes in the census data to the soc codes used
 by ONet, we use the cross walk provided by Sarah Porter. This matching
-is not one-to-one. When more than one soc code points a single census
+is not one-to-one. When more than one soc code points to a single census
 code, we take the average of the soc codes.
 
 A summary descriptions of the covariates are provided in table
@@ -867,6 +836,37 @@ in a model. We find this feature preferable since the growth in the number
 of paramaters can be considerable in both models as the number of experts
 increase.
 
+\begin{table} \centering
+  \caption{Summary Statistics}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l r r r r}
+  \cmidrule{1-5}
+
+              & 25\%   & Mean & 50\% & 75\%   \\
+  \cmidrule{1-5}
+  Wage (hr)   & 9.20  & 15.82 & 13.32  & 19.44\\
+  Yrs Edu     & 12.00 & 13.78 & 14.00  & 16.00\\
+  Age         & 30.00 & 39.15 & 39.00  & 48.00 \\
+  Age16       & 14.00 & 23.15 & 23.00  & 32.00 \\
+  Female      & --    & 40.47 & --     & --   \\
+  Af Amer     & --    &  8.62 & --     & --   \\
+  Indian      & --    &  1.05 & --     & --   \\
+  White       & --    & 77.00 & --     & --   \\
+  Hispanic    & --    & 10.00 & --     & --   \\
+  Asian       & --    &  3.36 & --     & --   \\
+  Creative    & 46.65 & 53.30 & 53.82  & 58.94 \\
+  Design      & 15.00 & 30.58 & 26.33  & 38.97 \\
+  Analytic    & 44.01 & 52.63 & 52.68  & 62.18 \\
+  Perseptive  & 41.15 & 50.49 & 46.03  & 59.84 \\
+
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize N = 68,642}
+    \end{tablenotes} \label{tbl:census_cov_summary}
+  \end{threeparttable}
+\end{table}
+
 A natural question to consider as a researcher is where to put the variable(s)
 of interest while performing an HME estimation. \cite{JiangTanner2000}
 provide their proof of model consistency for HME of GLM's for the case where
@@ -874,7 +874,7 @@ all covariates appear in the gating network as well as the experts. We will
 call this the \textit{full} specifications:
 
 \begin{equation}
-  log(wage) = Age + YrsEdu + Race \; | \; Age + YrsEdu + Race
+  log(wage) = Age + YrsEdu + Sex +  Race + Occ \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
 We will compare this \textit{full} specification to two others. A
@@ -882,14 +882,14 @@ We will compare this \textit{full} specification to two others. A
 years of education while removing demographic indicators:
 
 \begin{equation}
-  log(wage) = Age + YrsEdu \; | \; Age + YrsEdu + Race
+  log(wage) = Age + YrsEdu \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
 And finally a \textit{minimal} specification where our core variable
 of interest, years of education, appears solely in the gating network.
 
 \begin{equation}
-  log(wage) = Age \; | \; Age + YrsEdu + Race
+  log(wage) = Age \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
 Results for these regressions are collected in table \ref{tbl:HME_spec_BIC}.
@@ -910,24 +910,59 @@ values.
   \label{fig:JobChar_vs_sex}
 \end{figure}
 
+\newcommand\ti{\textit}
+\newcommand{\iu}[1]{\underline{\textit{#1}}}
+\newcommand{\ibu}[1]{\textbf{\underline{\textit{#1}}}}
+\newcommand\T{\rule{0pt}{2.5ex}}       % Top strut
+\newcommand\B{\rule[-1.2ex]{0pt}{0pt}} % Bottom strut
 \begin{table} \centering
   \caption{Model Information}
   \begin{threeparttable}
-    \begin{tabular}[l]{r r r r r r r r r}
-  \cmidrule{1-9}
-       &       &         & \multicolumn{3}{c}{Log-Lik} & \multicolumn{3}{c}{BIC} \\ 
-  \cmidrule(r){4-6}   \cmidrule(l){7-9}
-  Type & Depth & Experts & Min    & Mid    & Full    & Min   & Mid   & Full       \\
-  \cmidrule{1-9}
-  ME   & 1     & 2       & -0.638 & -0.611 & -0.603  & 1.275 & 1.223 & 1.208      \\
-  ME   & 1     & 3       & -0.609 & -0.608 & -0.599  & 1.224 & 1.223 & 1.200      \\
-  HME  & 2     & 3       & -0.604 & -0.595 & -0.591  & 1.208 & 1.191 & 1.183      \\
-  ME   & 1     & 4       & -0.643 & -0.601 & --      & 1.294 & 1.212 & --         \\
-  HME  & 2     & 4       & -0.592 & -0.589 & -0.586  & 1.184 & 1.179 & 1.176      \\
-  HME  & 3     & 5       & -0.587 & -0.587 & -0.584  & 1.176 & 1.177 & 1.171      \\
+    \begin{tabular}[r]{l l l l r r r r}
+  \cmidrule{1-8}
+        &            &        &         &  \multicolumn{4}{c}{Model Comparison} \\ 
+   \cmidrule(l){5-8}
+Model   & Stop Criterion  &  Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
+  \cmidrule{1-8}
 
-  \hline
-    \end{tabular}
+
+Full    &  Log-Lik   &   1    &    2    & -0.540  & 1.081  & 1.086  & 0.182 \\
+        &            &   2    &    3    & -0.524  & 1.050  & 1.059  & 0.181 \\
+        &            &   2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
+        &            &   3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
+        &            &   3    &    6    & \ibu{-0.503}  & \ibu{1.011}  & \ibu{1.031}  & \ibu{0.178} \\ \T 
+        &  MSE       &   1    &    2    & -0.540  & 1.081  & 1.086  & 0.182 \\
+        &            &   2    &    3    & -0.524  & 1.050  & 1.059  & 0.181 \\
+        &            &   2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
+        &            &   3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
+        &            &   3    &    6    & \ti{-0.503}  & \ti{1.011}  & \ti{1.031}  & \ibu{0.178} \\ \T \\
+        \cmidrule(l){1-8}
+Mid     &  Log-Lik   &   1    &    2    & -0.559  & 1.119  & 1.122  & 0.185 \\
+        &            &   2    &    3    & -0.540  & 1.082  & 1.088  & 0.184 \\
+        &            &   2    &    4    & -0.527  & 1.056  & 1.064  & 0.183 \\
+        &            &   3    &    5    & \iu{-0.518}  & \iu{1.039}  & \iu{1.049}  & 0.182 \\
+        &            &   3    &    6    & -0.519  & 1.041  & 1.053  & \iu{0.181} \\ \T
+        &  MSE       &   1    &    2    & -0.559  & 1.119  & 1.122  & 0.185 \\
+        &            &   2    &    3    & -0.540  & 1.082  & 1.088  & 0.184 \\
+        &            &   2    &    4    & -0.529  & 1.060  & 1.067  & 0.183 \\
+        &            &   3    &    5    & \ti{-0.518}  & \ti{1.039}  & \ti{1.050}  & 0.182 \\
+        &            &   3    &    6    & -0.519  & 1.041  & 1.053  & \iu{0.181} \\ \T \\
+        \cmidrule(l){1-8}
+ Min    &  Log-Lik   &   1    &    2    & -0.595  & 1.192  & 1.195  & 0.192 \\
+        &            &   1    &    3    & -0.552  & 1.106  & 1.111  & 0.183 \\
+        &            &   2    &    3    & -0.580  & 1.162  & 1.168  & 0.190 \\
+        &            &   2    &    4    & -0.546  & 1.093  & 1.101  & 0.182 \\
+        &            &   3    &    5    & -0.523  & 1.049  & 1.058  & 0.182 \\
+        &            &   3    &    6    & \iu{-0.521}  & \iu{1.045}  & \iu{1.057}  & \iu{0.181} \\ \T
+        &  MSE       &   1    &    2    & -0.596  & 1.192  & 1.195  & 0.192 \\
+        &            &   2    &    3    & -0.580  & 1.162  & 1.168  & 0.190 \\
+        &            &   2    &    4    & -0.546  & 1.094  & 1.101  & 0.182 \\
+        &            &   3    &    5    & \ti{-0.523}  & \ti{1.049}  & \ti{1.059}  & 0.182 \\
+        &            &   3    &    6    & -0.531  & 1.064  & 1.076  & \iu{0.181} \\
+
+ 
+\hline
+\end{tabular}
     \begin{tablenotes}
       \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (54,829)}
     \end{tablenotes} \label{tbl:HME_spec_BIC}
@@ -951,12 +986,15 @@ stable across model specifications. With the exception of the two-expert
   Depth & Experts & Min   & Mid   & Full       \\
   \cmidrule{1-5}
 
-  1     & 2       & 0.065 & 0.095 & 0.092      \\
-  1     & 3       & 0.086 & 0.093 & 0.095     \\
-  2     & 3       & 0.083 & 0.096 & 0.093      \\
+  1     & 2       & 0.051 & 0.083 & 0.072      \\
+  1     & 3       & --    & --    & --         \\
   1     & 4       & --    & --    & --         \\
-  2     & 4       & 0.088 & 0.092 & 0.091      \\
-  3     & 5       & 0.088 & 0.091 & 0.091      \\
+  1     & 5       & --    & --    & --         \\
+  1     & 6       & --    & --    & --         \\
+  2     & 3       & 0.048 & 0.082 & 0.072      \\
+  2     & 4       & 0.063 & 0.078 & 0.073      \\
+  3     & 5       & 0.068 & 0.076 & 0.070      \\
+  3     & 6       & 0.067 & 0.075 & 0.070      \\
 
   \hline
     \end{tabular}

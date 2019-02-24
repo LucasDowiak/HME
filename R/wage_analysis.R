@@ -10,8 +10,8 @@ boolcc <- complete.cases(dtf[, .SD, .SDcols=all_vars[-10]])
 booldd <- complete.cases(dtf[, .SD, .SDcols=all_vars])
 set.seed(433)
 booltest <- as.logical(rbinom(dtf[, .N], 1, 0.1))
-dtftest <- dtf[booltest & booldd & sex==0]
-dtftrain <- dtf[!booltest & booldd & sex==0]
+dtftest <- dtf[booltest & booldd]
+dtftrain <- dtf[!booltest & booldd]
 # seperate into test and validation set
 
 
