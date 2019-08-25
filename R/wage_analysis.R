@@ -10,13 +10,15 @@ boolcc <- complete.cases(dtf[, .SD, .SDcols=all_vars[-10]])
 booldd <- complete.cases(dtf[, .SD, .SDcols=all_vars])
 set.seed(433)
 booltest <- as.logical(rbinom(dtf[, .N], 1, 0.1))
-dtftest <- dtf[booltest & booldd & sex==0]
-dtftrain <- dtf[!booltest & booldd & sex==0]
+dtftest <- dtf[booltest & booldd]
+dtftrain <- dtf[!booltest & booldd]
 # seperate into test and validation set
 
 
 lapply(list(hme_wage_1D_2E, hme_wage_2D_3E, hme_wage_2D_4E, hme3), criterion, "aic")
 saveRDS(hme3, file="wage/hme_1D_3E.RDS")
+
+form_ols <- "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
 
 form <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
 c("0", "0.1", "0.2")

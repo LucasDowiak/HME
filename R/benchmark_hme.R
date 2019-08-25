@@ -161,14 +161,20 @@ refactor_hme <- function(obj, how=c("loglik", "mse"), pars=NULL)
       pars <- obj[["parM"]][which.max(obj[["logL"]]), ]
     }
   }
+  depth <- max(sapply(strsplit(obj[["expert.nms"]], "\\."), length))
   lgpn <- length(obj[["gate.pars.nms"]])
-  lgp <- length(obj[["gate.pars"]])
-  
-  ngates <- lgp * lgpn
-  gate.pars <- pars[1:ngates]
-  gate.pars <- split(gate.pars, ((seq_along(gate.pars) - 1) %/% lgpn) + 1)
+  if (depth == 2 && length(obj[["expert.nms"]]) > 2) {
+    lgp <- length(mod[["gate.pars"]][[1]])
+    ngates <- lgp * lgpn
+    gate.pars <- pars[1:ngates]
+    gate.pars <- list(split(gate.pars, ((seq_along(gate.pars) - 1) %/% lgpn) + 1))
+  } else {
+    lgp <- length(obj[["gate.pars"]])
+    ngates <- lgp * lgpn
+    gate.pars <- pars[1:ngates]
+    gate.pars <- split(gate.pars, ((seq_along(gate.pars) - 1) %/% lgpn) + 1)
+  }
   names(gate.pars) <- names(obj[["gate.pars"]])
-  
   lep <- length(obj[["expert.pars"]])
   lepn <- length(obj[["expert.pars.nms"]])
   expert.pars <- pars[(ngates + 1):length(pars)]
