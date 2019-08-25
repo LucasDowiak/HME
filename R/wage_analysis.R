@@ -18,6 +18,8 @@ dtftrain <- dtf[!booltest & booldd]
 lapply(list(hme_wage_1D_2E, hme_wage_2D_3E, hme_wage_2D_4E, hme3), criterion, "aic")
 saveRDS(hme3, file="wage/hme_1D_3E.RDS")
 
+form_ols <- "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
+
 form <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
 c("0", "0.1", "0.2")
 c("0", "0.1", "0.2", "0.1.1", "0.1.2")
