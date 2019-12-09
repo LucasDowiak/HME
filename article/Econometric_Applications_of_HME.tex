@@ -59,10 +59,10 @@
 \maketitle{}
 
 
-Department of Economics, City University of New York\smallskip, Graduate
+PhD Program in Economics, City University of New York\smallskip, Graduate
 Center,
 
-New York, NY, 10016, \textit{Email: ldowiak@gc.cuny.edu}
+New York, NY, 10016, \textit{Email: ldowiak@gradcenter.cuny.edu}
 
 \qquad
 
@@ -417,11 +417,12 @@ discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 \begin{equation} \label{eq:Estep}
   \begin{split}
   Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
-   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right]
+   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\
+   & = \sum_{t} Q_{t}(\boldsymbol{\theta})
  \end{split}
 \end{equation}
 
-Here $\gateprod{h^{0}}{h^{k,\dots|j|i|0}}$ is analagous to equation (\ref{eq:gpath})
+Here $\gateprod{h^{0}}{h^{k,\dots|j|i|0}}$ is analogous to equation (\ref{eq:gpath})
 
 \begin{equation} \label{eq:hpath}
   \gateprod{h^{0}}{h^{k|\ldots|j|i|0}} =
@@ -431,7 +432,7 @@ Here $\gateprod{h^{0}}{h^{k,\dots|j|i|0}}$ is analagous to equation (\ref{eq:gpa
     \end{cases}
 \end{equation}
 
-and the $h^{a, i}$ are arrived at using bayes' theoreom.
+and the $h^{a, i}$ are arrived at using Bayes' theorem.
 
 \begin{equation} \label{eq:posteriornode}
   \h{a,i}{t} = \frac{g^{a, i} \shortsum{k} P^{k}_{t} \gateprod{g^{i|a}_{t}}{P^{k}}}{\shortsum{j} g^{a, j} \shortsum{m} P^{m}_{t} \gateprod{g^{j|a}_{t}}{P^{m}}}
@@ -442,7 +443,7 @@ So, now we have two different forms of weights, $g$'s and $h$'s. The
 way the $g$'s are formed in equation (\ref{eq:softmax}), they are only
 functions of the nodes in the gating network, separate from the
 expert regressions and the information they contain. For this reason,
-the authors in Jacob et. al. 1993 refer to $g$'s as \textit{priors}.
+\cite{JordanJacobs1993} refer to $g$'s as \textit{priors}.
 The $h$'s draw from both the gating network and the expert regressions and
 are referred to as \textit{posterior} weights.
 
@@ -457,7 +458,7 @@ parameters governing each expert and each gating network can be grouped
 together and optmized on their own. For the experts we have:
 
 \begin{equation}
-  \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{f^{m}_{t}} \log f (Y_{t}|X_{t}, \boldsymbol{\beta}^{m})
+  \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{P^{m}_{t}} \log P^{m} (Y_{t}|X_{t}, \boldsymbol{\beta}^{m})
 \end{equation}
 
 And for the gating node:
@@ -468,17 +469,46 @@ And for the gating node:
 
 
 
-
-
-
 \section{Inference} \label{sec:Inference}
 
-When considering inference with respect to an HME model, it's worth thinking
-about what would motivate a researcher to turn to a mixture model in the
-first place. Frequently, it's a belief that a latent structure exists in 
+When considering inference, it's worth thinking about what would motivate
+a researcher to turn to an HME model in the first place. At times,
+a researcher may suspect that a latent structure exists within the data
+and that a single regression $Y_{i} = X_{i} \boldsymbol{\beta}$
+may mask a critical change in relationship depending on membership to
+some unknown sub-group $j$ of the data $Y_{ij} = X_{ij} \boldsymbol{\beta}_{j}$.
+A wide variety of time series, especially those with longer histories,
+experience changes in behaviour over time. They can be subjected to sharp one-off
+changes in value or more gradual changes of behavior over time. Regardless of
+the context, a researcher may suspect the presence of some hidden heterogeneity. 
+Rather than taking a firm stance on any concealed structure,
+an HME setup ideally limits the work the researcher needs to do to specifying
+a set of well-chosen conditioning variables $Z$ to feed through the gating
+network.
+
+multi-modal distributions
+sections \ref{sec:SimpleExample} and \ref{sec:MincerWageEx}.
+
+
+What pulls these different threads together is the uncertainty of the true
+model specification. To guard against the maleffects of a misspecified
+model on the estimated standard erros, we use a sandwich estimator for the
+variance-covariance matrix.
+
+
+
+
+latent structure is the Iris. A linear relationship exists within subgroups
+of the data, but the researcher is unsure how the subgroups are delineated.
+
+\cite{HuertaJiangTanner2003} use it the HME structure to test for correct 
+model specifications.
+
+
+Frequently, it's a belief that a latent structure exists in 
 the data or some form of heteroskedasticity is present, both of which would complicate 
 effort to obtain valid inference estimates. To guard against biased variance 
-estimates, we use a sandwich estimator for the variance-covariance matrix.
+estimates, 
  
 \begin{equation} \label{eq:robustgatevarcov}
   \boldsymbol{V}(\boldsymbol{\theta}) = \HI{\boldsymbol{\theta}} \boldsymbol{S}(\boldsymbol{\theta}) \boldsymbol{S}(\boldsymbol{\theta})^\top \HI{\boldsymbol{\theta}}
@@ -512,7 +542,7 @@ For any generic gating node $a$ we can define the individual score for
 sample $t$ as:
 
 \begin{equation} \label{eq:gateScore}
-  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) = \frac{\partial Q_{t}}{\partial \boldsymbol{\omega}^{a,i}} = \gateprod{h^{0}_{t}}{h^{a,i}_{t}} (1 - g^{a, i}_{t}) \boldsymbol{Z}_{t} 
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) = \frac{\partial Q_{t}}{\partial \boldsymbol{\omega}^{a,i}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} (1 - g^{a, i}_{t}) \boldsymbol{Z}_{t} 
 \end{equation}
 
 
@@ -524,28 +554,39 @@ Summing across all the samples in the data set brings us full circle.
 
 
 Turning our attention to the expert regressions, the exact functional form
-of the score vector depends on the type of regression we have chosen to run.
-We employ a normal regression with gaussian errors. To aide with model optimization,
+of the score vector depends on the type of regression we wish to run. In most
+cases, all experts in an HME model are from the same family
+(\cite{HuertaJiangTanner2003} is a notable exception). When all experts share
+the same functional form, it's standard to accept the restriction that no experts
+in the HME model produce the same parameter vector
+$\boldsymbol{\beta}^{j} \neq \boldsymbol{\beta}^{k}$. Such an HME is defined by
+\cite{JiangTanner2000} as being \textit{irreducible}. The irreducibility of an HME
+plays a critical role in guaranteeing the convergence of the model.
+
+In this article, each HME discussed will employ set of experts running 
+a standard regression model with gaussian errors. To aide with model optimization,
 the specification of the parameter vector for each regression
  $\boldsymbol{\beta}^{m} = [\beta_{0}^{m} \,\, \ldots \,\, \beta_{k}^m \,\, \phi^{m}]$
 takes on a unique form where we model the log variance explicitly
 $\phi = \log \sigma^{2}$.
 
 \begin{equation}
-  P^{m}(Y_{t} | X_{t}; \, \boldsymbol{\beta}^{m}) = \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  ( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}  }{2 \exp (\phi^{m}) } \right) }
+  P^{m}(Y_{t} | X_{t}; \, \boldsymbol{\beta}^{m}, \phi^{m}) = \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  ( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}  }{2 \exp (\phi^{m}) } \right) }
 \end{equation}
 
 
 In this case the score vector for any particular
 regression expert is:
 
+\begin{equation} \label{eq:expertScore}
+  \boldsymbol{S}_{t}(\boldsymbol{\beta^{m}}) = \Big( \frac{\partial Q_{t}}{\partial \boldsymbol{\beta}^{m}} \,\,,\,\, \frac{\partial Q_{t}}{\partial \phi^{m}} \Big)^{\top}
+\end{equation}
+
 \begin{equation}
   \boldsymbol{S}(\boldsymbol{\beta}) = [ \boldsymbol{S}(\boldsymbol{\beta}^{1}) \,\, \ldots \,\, \boldsymbol{S}(\boldsymbol{\beta}^{M}) ]
 \end{equation}
 
-\begin{equation} \label{eq:expertScore}
-  \boldsymbol{S}_{t}(\boldsymbol{\beta^{m}}) = \Big[ \frac{\partial Q_{t}}{\partial \boldsymbol{\beta}^{m}} \,\,\, \frac{\partial Q_{t}}{\partial \phi^{m}} \Big]
-\end{equation}
+
 
 with:
 
@@ -556,7 +597,7 @@ with:
 and
 
 \begin{equation}
-  \frac{\partial Q_{t}}{\partial \phi^{m}} = -\frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{2} \Big( \frac{( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}}{\exp{(\phi^{m})}} - 1 \Big)
+  \frac{\partial Q_{t}}{\partial \phi^{m}} = \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{2} \Big( \frac{( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}}{\exp{(\phi^{m})}} - 1 \Big)
 \end{equation}
 
 Again, we sum the score vector across the observations in our sample. 
@@ -583,10 +624,10 @@ where $\otimes$ is the kronecker product and:
 
 \begin{equation}
   \boldsymbol{\Gamma}^{a}_{t} = \begin{bmatrix}
-  g_{t}^{a,1}(1-g_{t}^{a,1}) & -g_{t}^{a,1}g_{t}^{a,2}    & \dots  & -g_{t}^{a,1}g_{t}^{a,J-1}       \\
-  -g_{t}^{a,1}g_{t}^{a,2}    & g_{t}^{a,2}(1-g_{t}^{a,2}) & \dots  & -g_{t}^{a,2}g_{t}^{a,J-1}       \\
+  -g_{t}^{a,1}(1-g_{t}^{a,1}) & g_{t}^{a,1}g_{t}^{a,2}    & \dots  & g_{t}^{a,1}g_{t}^{a,J-1}       \\
+  g_{t}^{a,1}g_{t}^{a,2}    & -g_{t}^{a,2}(1-g_{t}^{a,2}) & \dots  & g_{t}^{a,2}g_{t}^{a,J-1}       \\
   \vdots                     &  \vdots                    & \ddots & \vdots                 \\
-  -g_{t}^{a,1}g_{t}^{a,J-1}  & -g_{t}^{a,2}g_{t}^{a,J-1}  & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
+  g_{t}^{a,1}g_{t}^{a,J-1}  & g_{t}^{a,2}g_{t}^{a,J-1}  & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
     \end{bmatrix}
 \end{equation}
 
@@ -594,13 +635,13 @@ For each expert regression:
 
 
 \begin{equation}
-  \Ht{\boldsymbol{\beta}^{m}} = - \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{\exp{(\phi^{m})}} \begin{bmatrix}
+  \Ht{\boldsymbol{\beta}^{m}} = \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{\exp{(\phi^{m})}} \begin{bmatrix}
   \boldsymbol{X}_{t} \boldsymbol{X}_{t}     &  \boldsymbol{X}_{t} \epsilon^{m}_{t}     \\
   \boldsymbol{X}_{t} \epsilon^{m}_{t}       &  \frac{1}{2} (\epsilon^{m}_{t})^{2}
     \end{bmatrix}
 \end{equation}
 
-where we have set $\epsilon^{m} = Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m}$
+where we have set $\epsilon^{m}_{t} = Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m}$
 to ease the notational burden. Staying consistent with the score vector, we
 sum the hessian matrices across observations:
 
