@@ -302,10 +302,10 @@ sandwich_vcov <- function(gte.nms, exp.nms, lp, ln, exp.pars, Y, X, Z, N)
   scores <- rowSums(scores, dims=2)
   
   gate_hess <- napply(gte.nms, logistic_hessian, lp, ln, Z)
-  gate_hess <- napply(gate_hess, rowSums, dims=2)
+  gate_hess <- lapply(gate_hess, rowSums, dims=2)
   
   expt_hess <- napply(exp.nms, gaussian_hessian, exp.pars, lp, ln, Y, X)
-  expt_hess <- napply(expt_hess, rowSums, dims=2)
+  expt_hess <- lapply(expt_hess, rowSums, dims=2)
   
   H <- block_diag(c(gate_hess, expt_hess))
   
