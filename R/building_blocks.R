@@ -127,7 +127,6 @@ is_terminal <- function(d, nodes)
     return(bool)
   }
   lapply(d, f_)
-  #Map(function(y, z) if (y) z, b, d)d[unlist(b)]
 }
 
 

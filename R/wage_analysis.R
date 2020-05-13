@@ -41,10 +41,19 @@ lm_mod <- lm("lnwage ~ age16 + age16sq + yreduc + black + indian + asian + hisp"
 
 debugonce(hme)
 
-hme1 <- hme(c("0", "0.1", "0.2"),
+hme_2w <- hme(c("0", "0.1", "0.2"),
             "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive | sex + age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
             data=dtftrain, holdout=dtftest, maxiter=25, tolerance=1e-3, trace=1)
-            #init_gate_pars = hme1$gate.pars, init_expert_pars = hme1$expert.pars)
+
+hme_3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"),
+            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive | sex + age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=25, tolerance=1e-3, trace=1)
+
+hme_3w <- hme(c("0", "0.1", "0.2", "0.3"),
+            "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive | sex + age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            data=dtftrain, holdout=dtftest, maxiter=25, tolerance=1e-3, trace=1)
+
+
 ME1 <- marginal_effects(hme1)
 # saveRDS(hme1, file="models/*d.RDS")
 hme2 <- hme(c("0",

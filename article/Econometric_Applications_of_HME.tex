@@ -15,8 +15,8 @@
 % The hessian:
 \newcommand{\bw}[1]{\boldsymbol{\omega}^{#1}}
 \newcommand{\Ht}[1]{\mathbf{H}_{t}(#1)}
-\newcommand{\HH}[1]{\boldsymbol{\hat{H}}(#1)}
-\newcommand{\HI}[1]{\boldsymbol{\hat{H}}^{-1}(#1)}
+\newcommand{\HH}[1]{\boldsymbol{H}(#1)}
+\newcommand{\HI}[1]{\boldsymbol{H}^{-1}(#1)}
 
 \usepackage[
   backend=biber,
@@ -246,33 +246,33 @@ to generalized linear models and basic examples.
 \section{Model} \label{sec:Model}
 
 We start by presenting the HME as a standard mixture model.
-For a given input and output pair $(X_{t}, Y_{t})$, each expert
-provides a probablistic model relating input $X_{t}$ to output
+For a given input and output pair $(\boldsymbol{X_{t}}, Y_{t})$, each expert
+provides a probablistic model relating input $\boldsymbol{X_{t}}$ to output
 $Y_{t}$:
 
 \begin{equation} \label{eq:ConditionalDistribution}
-  P^{m}_{t} \equiv P^{m}(Y_{t}|X_{t}, \boldsymbol{\beta}^{m}), \quad m = 1,2,...,M
+  P^{m}_{t} \equiv P^{m}(Y_{t}|\boldsymbol{X_{t}}; \boldsymbol{\beta}^{m}), \quad m = 1,2,...,M
 \end{equation}
 
 where $m$ is one of the $M$ component experts in the mixture. The experts
 are combined with associated weights into a mixture distribution
 
 \begin{equation} \label{eq:staticmixture}
-  P(Y_{t} | X_{t}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(Y_{t} | X_{t}; \boldsymbol{\beta}^{m})
+  P(Y_{t} | \boldsymbol{X_{t}}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(Y_{t} | \boldsymbol{X_{t}}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 Here, $\expmixwt_{t}(m)$ is the probability that the input unit $t$ belongs
 to expert $m$ and has the usual restrictions: $0 \leq \expmixwt(m|t) \leq 1$
 for each $m$ and $\sum_{m} \expmixwt(m|t) = 1$. The gating network of the model
 applies a particular functional form to model $\expmixwt(m|t)$, which includes a
-second set of covariates $Z_{t}$ and parameter vector $\boldsymbol{\omega}$:
+second set of covariates $\boldsymbol{Z_{t}}$ and parameter vector $\boldsymbol{\omega}$:
 
 \begin{equation} \label{eq:mixture}
-  P(Y_{t} | X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \expmixwt(m | Z_{t}; \boldsymbol{\omega}) P^{m}(Y_{t} | X_{t}; \boldsymbol{\beta}^{m})
+  P(Y_{t} | \boldsymbol{X_{t}}, \boldsymbol{Z_{t}}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \expmixwt(m | \boldsymbol{Z_{t}}; \boldsymbol{\omega}) P^{m}(Y_{t} | \boldsymbol{X_{t}}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 
-\subsection{Gating Network and $\expmixwt(m | Z, \boldsymbol{\omega})$} \label{subsec:GatingNetwork}
+\subsection{Gating Network and $\expmixwt(m | \boldsymbol{Z}, \boldsymbol{\omega})$} \label{subsec:GatingNetwork}
 
 The gating network model is structured as a collection of nodes in a tree
 structure that branches out in successive layers. The location of these nodes will
@@ -289,7 +289,7 @@ the number of splits each gating node can take. For arbitary node at address $a$
 we use a multinomial logistic regression to model the split in direction $i$ to be:
 
 \begin{equation} \label{eq:softmax}
-  g^{a,i}_{t} \equiv g^{a,i}_{t}(Z_{t}, \boldsymbol{\omega}^{a}) = \frac{\exp(Z_{t} \ \boldsymbol{\omega}^{a,i})}{\sum^{J}_{j=1} {\exp(Z_{t} \ \boldsymbol{\omega}^{a,j})}}
+  g^{a,i}_{t} \equiv g^{a,i}_{t}(\boldsymbol{Z_{t}}, \boldsymbol{\omega}^{a}) = \frac{\exp(\boldsymbol{Z_{t}} \ \boldsymbol{\omega}^{a,i})}{\sum^{J}_{j=1} {\exp(\boldsymbol{Z_{t}} \ \boldsymbol{\omega}^{a,j})}}
 \end{equation}
 
 The parameters in equation (\ref{eq:softmax}) are subject to the usual
@@ -331,8 +331,8 @@ expanded and expressed as:
 
 \begin{equation} \label{eq:contribution}
   \begin{split}
-    P(Y_{t}|X_{t}, Z_{t}; \boldsymbol{\omega}, \boldsymbol{\beta}) =& \sum_{m} \expmixwt(m | Z_{t}, \boldsymbol{\omega}) P^{m}(Y_{t}|X_{t},\beta^{m}) \\ 
-      =& \sum_{m} P^{m}(Y_{t}|X_{t}, \beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
+    P(Y_{t}|X_{t}, Z_{t}; \boldsymbol{\omega}, \boldsymbol{\beta}) =& \sum_{m} \expmixwt(m | Z_{t}, \boldsymbol{\omega}) P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \\ 
+      =& \sum_{m} P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
   \end{split}
 \end{equation}
 
@@ -340,13 +340,13 @@ The product of these individual probabilities across the full sample size $T$ yi
 the likelihood function.
 
 \begin{equation} \label{eq:likelihood}
-  \mathcal{L}(\boldsymbol{\theta}| Y, X, Z) = \prod_{t}\sum_{m}P^{m}(Y_{t}|X_{t}, \beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
+  \mathcal{L}(\boldsymbol{\theta}| Y, X, Z) = \prod_{t}\sum_{m}P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
 \end{equation}
 
 And taking its log yields the log likelihood
 
 \begin{equation} \label{eq:loglikelihood}
-  \boldsymbol{l}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t}\log\sum_{m}P^{m}(Y_{t}|X_{t},\beta^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
+  \boldsymbol{l}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t}\log\sum_{m}P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta^{m}}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
 \end{equation}
 
 The functional form of the log likelihood (\ref{eq:loglikelihood}) does not
@@ -375,13 +375,13 @@ Define the indicator set as:
 We can then reformulate the likelihood equation
 
 \begin{equation}  \label{eq:auglikelihood}
-  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t}, \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
+  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
 \begin{equation}  \label{eq:augloglikelihood}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t}, \boldsymbol{\beta}^{m}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
 \end{equation}
 
 As mentioned previously, summing over multiple paths $l$ in equation
@@ -416,7 +416,7 @@ discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
-  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}, \beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
+  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
    & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\
    & = \sum_{t} Q_{t}(\boldsymbol{\theta})
  \end{split}
@@ -458,7 +458,7 @@ parameters governing each expert and each gating network can be grouped
 together and optmized on their own. For the experts we have:
 
 \begin{equation}
-  \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{P^{m}_{t}} \log P^{m} (Y_{t}|X_{t}, \boldsymbol{\beta}^{m})
+  \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{P^{m}_{t}} \log P^{m} (Y_{t}|X_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 And for the gating node:
@@ -491,16 +491,16 @@ mispecified model becomes a concern. To guard against this, we use a sandwich
 estimator for the variance-covariance matrix:
 
 \begin{equation} \label{eq:robustgatevarcov}
-  \boldsymbol{\hat{V}}(\boldsymbol{\theta}) = \HI{\boldsymbol{\theta}} \boldsymbol{\hat{G}}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}
+  \boldsymbol{V}(\boldsymbol{\theta}) = \HI{\boldsymbol{\theta}} \boldsymbol{G}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}
 \end{equation}
 
 
 
-where $\boldsymbol{\hat{G}}(\boldsymbol{\theta})$ is the sum of the outer products of the score 
+where $\boldsymbol{G}(\boldsymbol{\theta})$ is the sum of the outer products of the score 
 vectors
 
 \begin{equation}
-  \boldsymbol{\hat{G}}(\boldsymbol{\theta}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\theta})^\top
+  \boldsymbol{G}(\boldsymbol{\theta}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\theta})^\top
 \end{equation}
 
 and $\HH{\boldsymbol{\theta}}$ is the empirical Hessian:
@@ -519,7 +519,7 @@ For the score vector, we concatenate the scores of each gating node and those of
 local expert regressions.
 
 \begin{equation}
-  \boldsymbol{S}(\boldsymbol{\theta}) = [ \boldsymbol{S}(\boldsymbol{\Omega}) \,\, \boldsymbol{S}(\boldsymbol{\beta}) ]
+  \boldsymbol{S}_{t}(\boldsymbol{\theta}) = [ \boldsymbol{S}_{t}(\boldsymbol{\Omega}) \,\, \boldsymbol{S}_{t}(\boldsymbol{\beta}) ]
 \end{equation}
 
 Starting with parameters of the gating network, the full vector can be partitioned 
@@ -527,11 +527,11 @@ in some logical order into the sub-vectors of each node's individual
 score.
 
 \begin{equation}
-  \boldsymbol{S}(\boldsymbol{\Omega}) = [ \boldsymbol{S}(\boldsymbol{\omega}^{0}) \,\, \boldsymbol{S}(\boldsymbol{\omega}^{1 | 0}) \,\, \boldsymbol{S}(\boldsymbol{\omega}^{2 | 0}) \,\, \ldots \, ]
+  \boldsymbol{S}_{t}(\boldsymbol{\Omega}) = [ \boldsymbol{S}_{t}(\boldsymbol{\omega}^{0}) \,\, \boldsymbol{S}_{t}(\boldsymbol{\omega}^{1 | 0}) \,\, \boldsymbol{S}_{t}(\boldsymbol{\omega}^{2 | 0}) \,\, \ldots \, ]
 \end{equation}
 
 \begin{equation}
-  \boldsymbol{S}(\boldsymbol{\omega}^{a}) = [ \boldsymbol{S}(\boldsymbol{\omega}^{a, 1}) \,\, \ldots \,\, \boldsymbol{S}(\boldsymbol{\omega}^{a, J - 1}) ]
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a}) = [ \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, 1}) \,\, \ldots \,\, \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, J - 1}) ]
 \end{equation}
 
 For a generic gating node $a$ we can define the individual score for 
@@ -542,11 +542,6 @@ sample $t$ as:
 \end{equation}
 
 
-Summing across all the samples in the data set brings us full circle.
-
-\begin{equation}
-  \boldsymbol{S}(\boldsymbol{\omega}^{a, i}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i})
-\end{equation}
 
 
 Turning our attention to the expert regressions, the exact functional form
@@ -579,7 +574,7 @@ regression expert is:
 \end{equation}
 
 \begin{equation}
-  \boldsymbol{S}(\boldsymbol{\beta}) = [ \boldsymbol{S}(\boldsymbol{\beta}^{1}) \,\, \ldots \,\, \boldsymbol{S}(\boldsymbol{\beta}^{M}) ]
+  \boldsymbol{S}_{t}(\boldsymbol{\beta}) = [ \boldsymbol{S}_{t}(\boldsymbol{\beta}^{1}) \,\, \ldots \,\, \boldsymbol{S}_{t}(\boldsymbol{\beta}^{M}) ]
 \end{equation}
 
 
@@ -596,13 +591,6 @@ and
   \frac{\partial Q_{t}}{\partial \phi^{m}} = \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{2} \Big( \frac{( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}}{\exp{(\phi^{m})}} - 1 \Big)
 \end{equation}
 
-Again, we sum the score vector across the observations in our sample. 
-
-\begin{equation}
-  \boldsymbol{S}(\boldsymbol{\beta^{m}}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\beta}^{m})
-\end{equation}
-
-\bigskip
 
 
 
@@ -620,10 +608,10 @@ where $\otimes$ is the kronecker product and:
 
 \begin{equation}
   \boldsymbol{\Gamma}^{a}_{t} = \begin{bmatrix}
-  -g_{t}^{a,1}(1-g_{t}^{a,1}) & g_{t}^{a,1}g_{t}^{a,2}    & \dots  & g_{t}^{a,1}g_{t}^{a,J-1}       \\
-  g_{t}^{a,1}g_{t}^{a,2}    & -g_{t}^{a,2}(1-g_{t}^{a,2}) & \dots  & g_{t}^{a,2}g_{t}^{a,J-1}       \\
-  \vdots                     &  \vdots                    & \ddots & \vdots                 \\
-  g_{t}^{a,1}g_{t}^{a,J-1}  & g_{t}^{a,2}g_{t}^{a,J-1}  & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
+  -g_{t}^{a,1}(1-g_{t}^{a,1}) & g_{t}^{a,1}g_{t}^{a,2}      & \dots  & g_{t}^{a,1}g_{t}^{a,J-1}        \\
+  g_{t}^{a,1}g_{t}^{a,2}      & -g_{t}^{a,2}(1-g_{t}^{a,2}) & \dots  & g_{t}^{a,2}g_{t}^{a,J-1}        \\
+  \vdots                      &  \vdots                     & \ddots & \vdots                          \\
+  g_{t}^{a,1}g_{t}^{a,J-1}    & g_{t}^{a,2}g_{t}^{a,J-1}    & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
     \end{bmatrix}
 \end{equation}
 
@@ -650,18 +638,6 @@ sum the hessian matrices across observations:
   \HH{\boldsymbol{\beta}^{m}} = \sum_{t}^{T} \Ht{\boldsymbol{\beta}^{m}}
 \end{equation}
 
-For HME models that do not share parameters across expert regressions, the full
-hessian is block diagonal with respect to the parameters of each gating node and
-each expert regression
-$diag \{ \HH{\boldsymbol{\omega}^{0}}, \HH{\boldsymbol{\omega}^{1|0}}, \ldots, \HH{\boldsymbol{\beta}^{1}}, \ldots, \HH{\boldsymbol{\beta}^{M}} \}$.
-This block diagonal property implies that sandwich estimators for the expert
-regressions are only a function of that expert's parameters:
-
-\begin{equation}
-  \boldsymbol{V}(\boldsymbol{\beta}^{m}) = \HI{\boldsymbol{\beta}^{m}} \boldsymbol{S}(\boldsymbol{\beta}^{m}) \boldsymbol{S}(\boldsymbol{\beta}^{m})^\top \HI{\boldsymbol{\beta}^{m}}
-\end{equation}
-
-
 
 
 \section{Marginal Effects} \label{sec:MarginalEffects}
@@ -671,13 +647,13 @@ place covariates in either the gating network, the expert regressions,
 or both, viewing the relationship between the covariates and the dependent
 variable through their marginal effects may provide a simplifying lens of the 
 model's governing principles. Just as for logistic and multinomial regression,
-the marginal effects of an HME model has a closed form solution. Starting
+the marginal effects of an HME model have a closed form solution. Starting
 with equation (\ref{eq:mixture}) we replace the expert distributions
 $P^{m}_{t}$ with the regression's functional form $f^{m}_{t}$ and use
 the relationship in equation (\ref{eq:gpath2}) to arrive at: 
 
 \begin{equation} \label{eq:mixture2}
-  f_{t} = f(X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(X_{t}; \boldsymbol{\beta}^{m})
+  f_{t} = f(X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(X_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 The functional form of the marginal effect depends on where the variables
@@ -697,38 +673,50 @@ all the cases:
 \end{itemize}
 
 
-With this notation, we can define the marginal effects for covariates exclusive
-to the gating network as:
+The full list of variables considered in the model is labeled $\boldsymbol{T}$.
+Covariates that appear in both the gating network and the expert regressions
+are collect in $\boldsymbol{W}$. $\boldsymbol{U}_{Z}$ and $\boldsymbol{U}_{X}$ are
+used to label variables that appear only in the gating network or only in the expert
+regressions, respectively. With this notation, we can express the full marginal effects
+of the HME by where the explanatory variables appear in the model.
+
+\begin{equation} \label{eq:hme_marginal_effect_def}
+  \frac{\partial f_{t}}{\partial \boldsymbol{T}} = \sum_{m=1}^{M} \boldsymbol{\Delta}^{m} = \sum_{m=1}^{M} \left[ \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{Z}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{W}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{X}}   \right]
+\end{equation}
+
+with the functional form of the each covariate group in (\ref{eq:hme_marginal_effect_def})
+defined as:
+
 
 \begin{equation} \label{eq:ME_gating}
-  \frac{\partial f_{t}}{\partial \boldsymbol{U}_{Z}} = \sum_{m=1}^{M} \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{U}_{Z}}}f^{m}_{t}
+  \frac{\partial f_{t}^{m}}{\partial \boldsymbol{U}_{Z}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{U}_{Z}}}f^{m}_{t}
 \end{equation}
 
-For covariates exclusive to the expert regressions, we have:
 
 \begin{equation} \label{eq:ME_expert}
-  \frac{\partial f_{t}}{\partial \boldsymbol{U}_{X}} = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{U}_{X}}}
+  \frac{\partial f_{t}^{m}}{\partial \boldsymbol{U}_{X}} = \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{U}_{X}}}
 \end{equation}
 
-And for covariates in the network and the regressions:
 
 \begin{equation} \label{eq:ME_both}
-  \frac{\partial f_{t}}{\partial \boldsymbol{W}} = \sum_{m=1}^{M} \left\{ \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{W}}}f^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}} \right\}
+  \frac{\partial f_{t}^{m}}{\partial \boldsymbol{W}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{W}}}f^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}}
 \end{equation}
+
+Not matter how complex the model becomes, the researcher can always interpret
+the estimated HME through a single vector of marginal effects of $\boldsymbol{T}$.
 
 Of the four components in equations (\ref{eq:ME_gating}) - (\ref{eq:ME_both}),
 three have already been established: $f_{t}^{m}$ is the output from local
 expert $m$, $\gateprod{g^{0}_{t}}{f^{m}_{t}}$ is the prior weight for
-input $t$ for local expert $m$, and $\frac{\partial f^{m}_{t}}{{\partial X}}$
+input $t$ for local expert $m$, and $\frac{\partial f^{m}_{t}}{{\partial \boldsymbol{X}}}$
 is the marginal effect of the local expert $m$. What is left is the
 partial derivative of the gating network with respect to a variables
 in that network $\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial Z}$.
 Starting with equation (\ref{eq:gpath}), we take the partial with
-respect to gating matrix $\boldsymbol{Z}$. Using equation (\ref{eq:gpath})
-to expand the prior weight:
+respect to gating matrix $\boldsymbol{Z}$:
 
 \begin{equation}
-  \delta^{m} \equiv \frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \boldsymbol{Z}} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial \boldsymbol{Z}}
+  \boldsymbol{\delta}^{m} \equiv \frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \boldsymbol{Z}} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial \boldsymbol{Z}}
 \end{equation}
 
 and applying the product rule gives us:
@@ -752,12 +740,7 @@ we can substitute equation (\ref{eq:gate_marginal_effect}) into
 (\ref{eq:hme_gate_marginal_effect}) to arrive at:
 
 \begin{equation} \label{eq:marginal_effects}
-  \delta^{m} = \gateprod{g^{0}}{P^{m}} \left(\boldsymbol{\omega}^{0, i} + \boldsymbol{\omega}^{i|0, j} + \cdots + \boldsymbol{\omega}^{k|\cdots|j|i|0, m} - \left( \mean{\boldsymbol{\omega}}^{0} + \mean{\boldsymbol{\omega}}^{i|0} + \cdots + \mean{\boldsymbol{\omega}}^{k|\cdots|j|i|0} \right) \right)
-\end{equation}
-
-
-\begin{equation} \label{eq:ME_both2}
-  \boldsymbol{\Delta_{t}} \equiv \frac{\partial f_{t}}{\partial W} = \sum_{m=1}^{M} \left\{ \delta^{m}_{t} f^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial X}} \right\}
+  \boldsymbol{\delta^{m}} = \gateprod{g^{0}}{P^{m}} \left(\boldsymbol{\omega}^{0, i} + \boldsymbol{\omega}^{i|0, j} + \cdots + \boldsymbol{\omega}^{k|\cdots|j|i|0, m} - \left( \mean{\boldsymbol{\omega}}^{0} + \mean{\boldsymbol{\omega}}^{i|0} + \cdots + \mean{\boldsymbol{\omega}}^{k|\cdots|j|i|0} \right) \right)
 \end{equation}
 
 
@@ -765,50 +748,91 @@ we can substitute equation (\ref{eq:gate_marginal_effect}) into
 
 Using the delta method, we can approximate standard
 errors for the marginal effects of the HME model. Starting with equation
-(\ref{eq:ME_both2}) from the previous section and applying the product rule with
-respect to the full suite of model parameters $\boldsymbol{\theta}$, the
-gradient can be expressed as:
+(\ref{eq:hme_marginal_effect_def}) from the previous section, we break down
+the gradient of the marginal effects with respect to the parameters by those 
+in the gating network, $\boldsymbol{\Omega}$, and the parameters in the
+expert regression, $\boldsymbol{\beta}$. These results are collected in table
+ \ref{tbl:delta_method_gradients}.
 
-\begin{equation} \label{eq:delta_grad_full}
-  \frac{\partial \boldsymbol{\Delta_{t}}}{\partial \boldsymbol{\theta}} = \sum_{m=1}^{M} \left\{   \frac{\partial \delta^{m}_{t}}{\partial \boldsymbol{\Omega}} f^{m}_{t}   +   \delta^{m} \frac{\partial f^{m}_{t}}{\partial \boldsymbol{\beta}^{m}}   +   \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{\partial \boldsymbol{\Omega}} \frac{\partial f^{m}_{t}}{\partial \boldsymbol{X}}    +   \gateprod{g^{0}_{t}}{f^{m}_{t}}  \frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}   \right\}
-\end{equation}
+\begin{table}
+  \begin{center}
+    \begin{tabular}{| l | c c c |}
+    \hline
+                                                                                    & \underline{$\boldsymbol{U}_{Z}$}                                                            & \underline{$\boldsymbol{W}$}                                                                                                                                                                                           & \underline{$\boldsymbol{U}_{X}$}   \\ [2ex]
+    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\omega}^{a}}$ & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} f^{m}_{t}$   & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} f^{m}_{t} + \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{\partial \boldsymbol{\omega}^{a}}  \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}}$                                           & $\boldsymbol{0}$                   \\ [2ex]
+    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\beta}^{m}}$  & $\boldsymbol{0}$                                                                            & $\boldsymbol{\delta}^{m}_{t} \frac{\partial f^{m}_{t}}{\partial \boldsymbol{\beta}^{m}} + \gateprod{g^{0}_{t}}{f^{m}_{t}}   \frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{W} \partial \boldsymbol{\beta}^{m}}$    & $\gateprod{g^{0}_{t}}{f^{m}_{t}}  \frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{U}_{X} \partial \boldsymbol{\beta}^{m}}$  \\ [1ex]
+    \hline
+    \end{tabular}
+  \caption{\label{tbl:delta_method_gradients} Delta Method Gradient Cases}
+  \end{center}
+\end{table}
 
-Grouping together the partials of the gating network and the expert regressions,
-we can seperate the gradient equation (\ref{eq:delta_grad_full}) for
-variables exclusive to the gating network:
 
-\begin{equation} \label{eq:delta_grad_gate}
-  \frac{\partial \boldsymbol{\Delta_{t}}}{\partial \boldsymbol{\Omega}} = \sum_{m=1}^{M} \left\{   \frac{\partial \delta^{m}_{t}}{\partial \boldsymbol{\Omega}} f^{m}_{t}   +   \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{\partial \boldsymbol{\Omega}} \frac{\partial f^{m}_{t}}{\partial \boldsymbol{X}}  \right\}
-\end{equation}
+Again, many of the expressions in table \ref{tbl:delta_method_gradients}
+have already been defined in previous sections. The two experssions new to this
+section are $\frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}$
+and  $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$.
+For the standard OLS regressions that are considered in this paper,
+$\frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}} = \boldsymbol{1}$.
+Conceptually, $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$
+describes how the marginal effects of the gating network change in response
+to small changes in the parameters of $\boldsymbol{\Omega}$. The value of
+$\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$
+depends on what role $\boldsymbol{\omega}^{a,i}$ plays in navigating an input
+pattern from the root node to the expert $m$. For instance, say that we're
+at the root node, and it's our mission is to traverse the gating network down
+to expert $m$. When we arrive at node $a$, if the direction we need to take to
+reach expert $m$ is along path $i$, then we'll call $\boldsymbol{\omega}^{a,i}$
+an \textit{explicit} parameter set with respect to expert $m$. If taking path $i$ leads to a different expert,
+then $\boldsymbol{\omega}^{a,i}$ will be refered to as an \textit{implicit}
+parameter set.
 
-and those exclusive to the expert regressions:
+For an explict path
 
-\begin{equation} \label{eq:delta_grad_experts}
-  \frac{\partial \boldsymbol{\Delta_{t}}}{\partial \boldsymbol{\beta}} = \sum_{m=1}^{M} \left\{  \delta^{m} \frac{\partial f^{m}_{t}}{\partial \boldsymbol{\beta}^{m}}   +   \gateprod{g^{0}_{t}}{f^{m}_{t}}  \frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}   \right\}
-\end{equation}
+\begin{subequations} \label{eq:delta_definitions_exp}
+  \begin{alignat}{3}
+  &\frac{\partial \delta^{m}_{t}}{\partial \omega^{a,i}_{p}}            &&=&\quad& \gateprod{g^{0}}{f^{m}} \left[ (1 - g^{a,i})  +  \left[ W^{m}_{p}  (1 - g^{a,i}) - G^{a,i}_{p}  \right] Z_{p} \right] \label{eq:delta_gate_partial_exp}  \\
+  &\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \omega^{a,i}_{p}}   &&=&\quad& \gateprod{g^{0}}{f^{m}} (1 - g^{a,i}) Z_{p}
+  \end{alignat}
+  \end{subequations}
 
-For the standard OLS regression we consider in this paper the partials in
-equation (\ref{eq:delta_grad_full}) can be expressed as:
+and for an implicit path
 
-\begin{subequations} \label{eq:delta_definitions}
+\begin{subequations} \label{eq:delta_definitions_imp}
 \begin{alignat}{3}
-&\frac{\partial \delta^{m}_{t}}{\partial \omega^{a,i}_{p}}            &&=&\quad& \gateprod{g^{0}}{f^{m}} (1 - g^{a,i})  +  \gateprod{g^{0}}{f^{m}} \left[ \left[\cdot \right]^{m}_p  (1 - g^{a,i}) - \left\{ \cdot \right\}^{a,i}  \right] Z_{p} \label{eq:delta_gate_partial}\\
-&\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \omega^{a,i}_{p}}   &&=&\quad& \gateprod{g^{0}}{f^{m}} (1 - g^{a,i}) Z_{p} \\
-&\frac{\partial f^{m}}{\partial \beta^{m}_{p}}                        &&=&\quad& X_{p} \\
-&\frac{\partial^{2} f^{m}_{t}}{\partial X_{p} \partial \beta^{m}_{p}} &&=&\quad& 1
+&\frac{\partial \delta^{m}_{t}}{\partial \omega^{a,j}_{p}}            &&=&\quad& \gateprod{g^{0}}{f^{m}} \left[ - g^{a,j}  +  \left[ - W^{m}_{p}  (1 - g^{a,j}) - G^{a,j}_{p}  \right] Z_{p} \right] \label{eq:delta_gate_partial_imp}  \\
+&\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \omega^{a,i}_{p}}   &&=&\quad& - \gateprod{g^{0}}{f^{m}} g^{a,j} Z_{p}
 \end{alignat}
 \end{subequations}
 
+where
+
+\begin{align}
+    W^{m}_{p}     &= \left[ \omega^{0, i}_{p} + \cdots + \omega^{k|\cdots|j|i|0, m}_{p} - \left( \mean{\omega}^{0}_{p} + \cdots + \mean{\omega}^{k|\cdots|j|i|0}_{p} \right) \right] \\
+    G^{a,i}_{p} &= \left\{ g^{a,i} (1 - g^{a,i}) \omega^{a,i}_{p} - \sum_{j \neq i} g^{a,i} g^{a,j} \omega^{a,j}_{p} \right\}
+\end{align}
+
+The intermediate step for equation \ref{eq:delta_gate_partial_exp}
+
+\begin{equation}
+  \begin{split} \notag
+    \frac{\partial \delta^{m}_{t}}{\partial \omega^{a,i}_{p}} =& (1 - g^{a,i})  \gateprod{g^{0}}{f^{m}}  \left[ \omega^{0, i} + \cdots + \omega^{k|\cdots|j|i|0, m} - \left( \mean{\omega}^{0} + \cdots + \mean{\omega}^{k|\cdots|j|i|0} \right) \right] Z_{p} \,\,\,\,\, + \\ 
+    &\gateprod{g^{0}}{f^{m}} \left[ (1 - g^{a,i})  - \left\{ g^{a,i} (1 - g^{a,i}) \omega^{a,i}_{p} - \sum_{j \neq i} g^{a,i} g^{a,j} \omega^{a,j}_{p} \right\}  Z_{p}  \right]
+  \end{split} 
+\end{equation}
 
 Standard errors for the marginal effects for the HME models can then be
 constructed with the robust variance-covariance matrix from equation
 (\ref{eq:robustgatevarcov}) and the collection of equations from
-(\ref{eq:delta_grad_full}) to (\ref{eq:delta_definitions}).
+(\ref{eq:hme_marginal_effect_def}) to (\ref{eq:delta_definitions_imp}).
 
 
 \begin{equation}
-    \boldsymbol{V}_{t}(\boldsymbol{\Delta}) = \left(\frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}} \right) \boldsymbol{V}(\boldsymbol{\theta})  \left(\frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}} \right)^{\top}
+  Asy.Var \left[ \boldsymbol{ \hat{ \Delta } }^{m} \right] = \sum^{M}_{n=1} \sum^{M}_{k=1} \sum^{T}_{t=1}     \left(\frac{\partial \boldsymbol{\Delta}^{m}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)     \boldsymbol{V}(\boldsymbol{\hat{\theta}})      \left(\frac{\partial \boldsymbol{\Delta}^{m}_{t}}{\partial \boldsymbol{\theta}_{k}} \right)
 \end{equation}
+
+
+
 
 
 \section{A simple example} \label{sec:SimpleExample}
@@ -1660,13 +1684,7 @@ Posterior node for HMRE
 Variables that appear in the gating network but not in the expert regressions
 are sometimes called Concomitant Variables (see R FlixMix package).
 
-The intermediate step for equation \ref{eq:delta_gate_partial}
-\begin{equation}
-  \begin{split} \notag
-    \frac{\partial \delta^{m}_{t}}{\partial \omega^{a,i}_{p}} =& (1 - g^{a,i})  \gateprod{g^{0}}{f^{m}}  \left[ \omega^{0, i} + \cdots + \omega^{k|\cdots|j|i|0, m} - \left( \mean{\omega}^{0} + \cdots + \mean{\omega}^{k|\cdots|j|i|0} \right) \right] Z_{p} \,\,\,\,\, + \\ 
-    &\gateprod{g^{0}}{f^{m}} \left[ (1 - g^{a,i})  - \left\{ g^{a,i} (1 - g^{a,i}) \omega^{a,i}_{p} - \sum_{j \neq i} g^{a,i} g^{a,j} \omega^{a,j}_{p} \right\}  Z_{p}  \right]
-  \end{split} 
-\end{equation}
+
 
 
 \subsection{Wald Test is Invalid}
