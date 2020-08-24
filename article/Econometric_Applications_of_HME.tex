@@ -20,7 +20,6 @@
 
 \usepackage[
   backend=biber,
-  style=alphabetic,
   url=true,
   doi=true,
   style=authoryear
@@ -801,7 +800,7 @@ and for an implicit path
 \begin{subequations} \label{eq:delta_definitions_imp}
 \begin{alignat}{3}
 &\frac{\partial \delta^{m}_{t}}{\partial \omega^{a,j}_{p}}            &&=&\quad& \gateprod{g^{0}}{f^{m}} \left[ - g^{a,j}  +  \left[ - W^{m}_{p}  (1 - g^{a,j}) - G^{a,j}_{p}  \right] Z_{p} \right] \label{eq:delta_gate_partial_imp}  \\
-&\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \omega^{a,i}_{p}}   &&=&\quad& - \gateprod{g^{0}}{f^{m}} g^{a,j} Z_{p}
+&\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \omega^{a,j}_{p}}   &&=&\quad& - \gateprod{g^{0}}{f^{m}} g^{a,j} Z_{p}
 \end{alignat}
 \end{subequations}
 
@@ -828,7 +827,7 @@ constructed with the robust variance-covariance matrix from equation
 
 
 \begin{equation}
-  Asy.Var \left[ \boldsymbol{ \hat{ \Delta } }^{m} \right] = \sum^{M}_{n=1} \sum^{M}_{k=1} \sum^{T}_{t=1}     \left(\frac{\partial \boldsymbol{\Delta}^{m}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)     \boldsymbol{V}(\boldsymbol{\hat{\theta}})      \left(\frac{\partial \boldsymbol{\Delta}^{m}_{t}}{\partial \boldsymbol{\theta}_{k}} \right)
+  Asy.Var \left[ \boldsymbol{ \hat{ \Delta } } \right] = \sum^{M}_{n=1}  \left( \frac{1}{T} \sum^{T}_{t=1} \frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)     \boldsymbol{V}(\boldsymbol{\hat{\theta}})      \left( \frac{1}{T} \sum^{T}_{t=1} \frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)^\top
 \end{equation}
 
 
@@ -960,21 +959,24 @@ will be:
 with $\boldsymbol{X}$ containing a set of individual-specific 
 variables as well as a set of occupation-specific attributes. 
 Our data will come from two sources. First, from the 2000 Census,
-we devise a measure of hourly wages in addition to age,
+we devise a measure of the hourly (log) wage. In addition to income, we also collect information on age,
 years of education (YrsEdu), job occupations codes, 
 and a set of demographic identifiers indicating the race of the
-indivduals contained in census sample. Second, we pull from the
+indivduals contained in census sample. We pull from the
 Occupation Information Network (ONet) a set of knowledge and skill-based
 attributes describing what qualities are necessary to perform each
 job suitably. ONet is a federally sponsered source of occupational
 information. It details, on a per occupation basis, "the knowledge,
 skills, and abilities required as well as how the work is
 performed in terms of tasks, work activities, and other descriptors"
-(\cite{ONET}). 
+(\cite{ONET}).
 
-To provide an interesting space to classify occupational codes from
-the census data, we've chosen the following four attributes to
-include in the covariates $\boldsymbol{X}$ of our wage equations:
+To link the occupational codes in the census data to the soc codes used
+by ONet, we use the cross walk provided by Sarah Porter
+"cite{Crosswalk}". This mapping is not one-to-one. When more than one soc code points to a single census
+code, we take the average of the soc codes. After a quick but careful scan of the job attributes
+available on ONet, the following four were selected. The footnootes
+provide the full classification hierarchy listed on the website. 
 
 \begin{enumerate}
   \item Social Perceptiveness \footnote{Skills - Social Skills - Social Perceptiveness}
@@ -983,8 +985,11 @@ include in the covariates $\boldsymbol{X}$ of our wage equations:
   \item Creative Thinking \footnote{Work Activities - Mental Processes - Thinking Creatively}
 \end{enumerate}
 
-For these selected attributes, ONet grades their relevance on a
-100 point scale. Each attribute contains two of scales, an "importance"
+The guiding principle for attribute selection was to choose a small but
+diverse set of attributes that contrast well, with each attribute embodying
+a human skill valued across industry, culture, and society. For these selected
+attributes, ONet grades their relevance on a
+100 point scale. Each attribute contains two scales, an "importance"
 scale and a "level" scale. The importance scale denotes how critical the
 attribute is to the occupation while the level indicates how much the
 skill is required or needed to perform the occupation. To unify the two
@@ -992,23 +997,41 @@ measures, we follow the paper Prof Wijverberg gave me and take a
 cobb-douglass style average with a 2/3's weight for importance and a 1/3
 weight for the level scale.
 
-To link the occupational codes in the census data to the soc codes used
-by ONet, we use the cross walk provided by Sarah Porter. This matching
-is not one-to-one. When more than one soc code points to a single census
-code, we take the average of the soc codes.
+\begin{figure}[t!]
+  \includegraphics[width=\textwidth]{Job_characteristic_density.jpeg}
+  \caption{Density estimates of ONet job characteristics broken down by
+  sex. The job characteristics have been mean centered and scaled to
+  have unit variance.}
+  \label{fig:JobChar_vs_sex}
+\end{figure}
+% There was a hope that the added variables would provided a much needed boost of
+% density to the set of identifying features. Many of the Census 
+% variables are discrete -- all of them except the wage, actually,
+% if one thinks age and years of education lean more towards
+% categorical variables than continuous ones. So in addition to their intrinsic value
+% as points of economic and social interest, the job characteristics 
 
-A summary descriptions of the covariates are provided in table
-\ref{tbl:census_cov_summary}. For comparative purposes, we estimate equation
-(\ref{eq:mincer_equ}) for both the HME and ME architectures, testing whether
-there is any inherent advantage to allowing the gating network to go deep
-(HME), as opposed to staying shallow with a depth of one. For both
-architectures, we start with two experts, and then continue to add them until
-a minimal information criterion is found. In particular, we choose to minimize
-the Bayesian information criterion (BIC). Compared to the Akaike information
-criterion (AIC), the BIC places a higher penalty on the number of parameters
-in a model. We find this feature preferable since the growth in the number
-of paramaters can be considerable in both models as the number of experts
-increase.
+% From a practical
+% optimization perspective, we will be using a gradient based approach to optimization, 
+
+
+The total number of individuals in the Census data numbers 105,796.
+After applying our crosswalk, only 75,957 cases remain with complete
+information across both datasets. Of those 75,957, roughly ten percent
+(7,315) are randomly held-out and used as a test set to gauge
+out-of-sample forecast model performance. This leaves 68,642 individuals left
+as a training set. A summary descriptions of the covariates is provided
+in table \ref{tbl:census_cov_summary}.
+
+For comparative purposes, we first estimate equation (\ref{eq:mincer_equ}) 
+for a two expert model. At this specification, there is no distinction
+between the HME and ME. A three expert model is then estimated for these two
+respective architectures to test whether there is an advantage to allowing 
+the gating network to go deep, as opposed to staying shallow with a depth of one.
+A detail summary for these models will be explored further in this section.
+To provide context on these models' behaviour has they grow in complexity, each
+architecture is estimated up to six experts. References for these results also
+appear below but in less detail.
 
 \begin{table} \centering
   \caption{Summary Statistics}
@@ -1031,7 +1054,7 @@ increase.
   Creative    & 46.65 & 53.30 & 53.82  & 58.94 \\
   Design      & 15.00 & 30.58 & 26.33  & 38.97 \\
   Analytic    & 44.01 & 52.63 & 52.68  & 62.18 \\
-  Perseptive  & 41.15 & 50.49 & 46.03  & 59.84 \\
+  Perceptive  & 41.15 & 50.49 & 46.03  & 59.84 \\
 
   \hline
     \end{tabular}
@@ -1041,13 +1064,6 @@ increase.
   \end{threeparttable}
 \end{table}
 
-\begin{figure}[ht]
-  \includegraphics[width=\textwidth]{Job_characteristic_density.jpeg}
-  \caption{Density estimates of ONet job characteristics broken down by
-  sex. The job characteristics have been mean centered and scaled to
-  have unit variance.}
-  \label{fig:JobChar_vs_sex}
-\end{figure}
 
 A natural question to consider as a researcher is where to put the variable(s)
 of interest while performing an HME estimation. \cite{JiangTanner2000}
@@ -1074,7 +1090,8 @@ of interest, years of education, appears solely in the gating network.
   log(wage) = Age \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
-Results for these regressions are collected in table ().
+Results for these regressions are collected in tables \ref{tbl:2E_full_regressions_results},
+\ref{tbl:3E_D_full_regressions_results}, and \ref{tbl:3E_W_full_regressions_results}.
 There are a few points worth noting. First, for this dataset, increasing the
 number of experts yields increasingly better log-likelihood and BIC values.
 Second, there is a clear advantage to using the HME architecture. In table (), compare the rows with different gating types (col 1)
@@ -1090,30 +1107,22 @@ values.
   \caption{Full Model Information}
   \begin{threeparttable}
     {\footnotesize
-    \begin{tabular}[r]{l l l l r r r r}
-  \cmidrule{1-8}
-        &            &        &         &  \multicolumn{4}{c}{Model Comparison} \\ 
-   \cmidrule(l){5-8}
-Model   & Stop Criterion  &  Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
-  \cmidrule{1-8}
+    \begin{tabular}[r]{l l r r r r}
+  \cmidrule{1-6}
+        &         &  \multicolumn{4}{c}{Model Comparison} \\ 
+   \cmidrule(l){3-6}
+Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
+  \cmidrule{1-6}
 
-Full    &  Log-Lik   &   1    &    2    & -0.540  & 1.081  & 1.086  & 0.182 \\
-        &            &   1    &    3    & -0.525  & 1.052  & 1.061  & 0.181 \\
-        &            &   1    &    4    & -0.537  & 1.078  & 1.091  & 0.181 \\
-        &            &   1    &    5    & -0.535  & 1.073  & 1.089  & 0.182 \\
-        &            &   2    &    3    & -0.524  & 1.050  & 1.059  & 0.181 \\
-        &            &   2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
-        &            &   3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
-        &            &   3    &    6    & \ibu{-0.503}  & \ibu{1.011}  & \ibu{1.031}  & \ibu{0.178} \\ \T 
-        &  MSE       &   1    &    2    & -0.540  & 1.081  & 1.086  & 0.182 \\
-        &            &   1    &    3    & -0.525  & 1.052  & 1.061  & 0.181 \\
-        &            &   1    &    4    & -0.540  & 1.084  & 1.096  & 0.181 \\
-        &            &   1    &    5    & -0.535  & 1.075  & 1.091  & 0.182 \\
-        &            &   2    &    3    & -0.524  & 1.050  & 1.059  & 0.181 \\
-        &            &   2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
-        &            &   3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
-        &            &   3    &    6    & \ti{-0.503}  & \ti{1.011}  & \ti{1.031}  & \ibu{0.178} \\
-        \cmidrule(l){1-8}
+1    &    2    & -0.541  & 1.082  & 1.088  & 0.182 \\
+1    &    3    & -0.524  & 1.051  & 1.060  & 0.182 \\
+1    &    4    & -0.537  & 1.078  & 1.091  & 0.181 \\
+1    &    5    & -0.535  & 1.073  & 1.089  & 0.182 \\
+2    &    3    &   &   &   &  \\
+2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
+3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
+3    &    6    & \ibu{-0.503}  & \ibu{1.011}  & \ibu{1.031}  & \ibu{0.178} \\
+        \cmidrule(l){1-6}
     \end{tabular}
     }
     \begin{tablenotes}
@@ -1121,83 +1130,6 @@ Full    &  Log-Lik   &   1    &    2    & -0.540  & 1.081  & 1.086  & 0.182 \\
     \end{tablenotes} \label{tbl:HME_spec_full}
   \end{threeparttable}
 \end{table}
-
-
-
-\begin{table} \centering
-  \caption{Mid Model Information}
-  \begin{threeparttable}
-    {\footnotesize
-    \begin{tabular}[r]{l l l l r r r r}
-  \cmidrule{1-8}
-        &            &        &         &  \multicolumn{4}{c}{Model Comparison} \\ 
-   \cmidrule(l){5-8}
-Model   & Stop Criterion  &  Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
-  \cmidrule{1-8}
-
-  Mid     &  Log-Lik   &   1    &    2    & -0.559  & 1.119  & 1.122  & 0.185 \\
-  &            &   1    &    3    & -0.558  & 1.117  & 1.122  & 0.186 \\
-  &            &   1    &    4    & -0.580  & 1.162  & 1.170  & 0.192 \\
-  &            &   1    &    5    & -0.589  & 1.181  & 1.192  & 0.199 \\
-  &            &   2    &    3    & -0.540  & 1.082  & 1.088  & 0.184 \\
-  &            &   2    &    4    & -0.527  & 1.056  & 1.064  & 0.183 \\
-  &            &   3    &    5    & \iu{-0.518}  & \iu{1.039}  & \iu{1.049}  & 0.182 \\
-  &            &   3    &    6    & -0.519  & 1.041  & 1.053  & \iu{0.181} \\ \T
-  &  MSE       &   1    &    2    & -0.559  & 1.119  & 1.122  & 0.185 \\
-  &            &   1    &    3    & -0.563  & 1.128  & 1.133  & 0.186 \\
-  &            &   1    &    4    & -0.580  & 1.162  & 1.170  & 0.192 \\
-  &            &   1    &    5    & -0.587  & 1.177  & 1.187  & 0.199 \\
-  &            &   2    &    3    & -0.540  & 1.082  & 1.088  & 0.184 \\
-  &            &   2    &    4    & -0.529  & 1.060  & 1.067  & 0.183 \\
-  &            &   3    &    5    & \ti{-0.518}  & \ti{1.039}  & \ti{1.050}  & 0.182 \\
-  &            &   3    &    6    & -0.519  & 1.041  & 1.053  & \iu{0.181} \\
-  \cmidrule(l){1-8}
-    \end{tabular}
-    }
-    \begin{tablenotes}
-      \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (68,642)}
-    \end{tablenotes} \label{tbl:HME_spec_mid}
-  \end{threeparttable}
-\end{table}
-      
-
-
-\begin{table} \centering
-  \caption{Minimum Model Information}
-  \begin{threeparttable}
-    {\footnotesize
-    \begin{tabular}[r]{l l l l r r r r}
-  \cmidrule{1-8}
-        &            &        &         &  \multicolumn{4}{c}{Model Comparison} \\ 
-   \cmidrule(l){5-8}
-Model   & Stop Criterion  &  Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
-  \cmidrule{1-8}
-  
-Min     &  Log-Lik   &   1    &    2    & -0.595  & 1.192  & 1.195  & 0.192 \\
-        &            &   1    &    3    & -0.587  & 1.175  & 1.180  & 0.191 \\
-        &            &   1    &    4    & -0.629  & 1.260  & 1.267  & 0.210 \\
-        &            &   1    &    5    & -0.564  & 1.130  & 1.140  & 0.188 \\
-        &            &   2    &    3    & -0.580  & 1.162  & 1.168  & 0.190 \\
-        &            &   2    &    4    & -0.546  & 1.093  & 1.101  & 0.182 \\
-        &            &   3    &    5    & -0.523  & 1.049  & 1.058  & 0.182 \\
-        &            &   3    &    6    & \iu{-0.521}  & \iu{1.045}  & \iu{1.057}  & \iu{0.181} \\ \T
-        &  MSE       &   1    &    2    & -0.596  & 1.192  & 1.195  & 0.192 \\
-        &            &   1    &    3    & -0.589  & 1.179  & 1.184  & 0.191 \\
-        &            &   1    &    4    & -0.628  & 1.258  & 1.265  & 0.210 \\
-        &            &   1    &    5    & -0.565  & 1.132  & 1.142  & 0.188 \\
-        &            &   2    &    3    & -0.580  & 1.162  & 1.168  & 0.190 \\
-        &            &   2    &    4    & -0.546  & 1.094  & 1.101  & 0.182 \\
-        &            &   3    &    5    & \ti{-0.523}  & \ti{1.049}  & \ti{1.059}  & 0.182 \\
-        &            &   3    &    6    & -0.531  & 1.064  & 1.076  & \iu{0.181} \\
-  \cmidrule(l){1-8}
-    \end{tabular}
-    }
-    \begin{tablenotes}
-      \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (68,642)}
-    \end{tablenotes} \label{tbl:HME_spec_min}
-  \end{threeparttable}
-\end{table}
-
 
 
 \begin{table} \centering
@@ -1210,11 +1142,11 @@ Min     &  Log-Lik   &   1    &    2    & -0.595  & 1.192  & 1.195  & 0.192 \\
   Depth & Experts & Min   & Mid   & Full       \\
   \cmidrule{1-5}
 
-  1     & 2       & 0.050 & 0.082 & 0.072      \\
-  1     & 3       & 0.050 & 0.083 & 0.072      \\
+  1     & 2       & 0.051 & 0.082 & 0.075     \\
+  1     & 3       & 0.063 & 0.080 & 0.074     \\
   1     & 4       & 0.039 & 0.085 & 0.075      \\
   1     & 5       & 0.063 & 0.095 & 0.076      \\
-  2     & 3       & 0.047 & 0.082 & 0.072      \\
+  2     & 3       &  &  &      \\
   2     & 4       & 0.063 & 0.078 & 0.073      \\
   3     & 5       & 0.068 & 0.075 & 0.069      \\
   3     & 6       & 0.067 & 0.074 & 0.069      \\
@@ -1255,27 +1187,27 @@ There doesn't seem to be an obvious explanation for this discrepency.
 \cmidrule{1-5}
                 & Coef.  &  SE   &  Coef.   & SE  \\
 \cmidrule(l){2-3}  \cmidrule(l){4-5}
-(Intercept)     &    1.350  &    0.018   &     1.530   &   0.013  \\
-age16           &    0.026  &    0.001   &     0.061   &   0.001  \\
-age16sq         &   -0.000  &    0.000   &    -0.002   &   0.000  \\
-yreduc          &    0.079  &    0.001   &     0.036   &   0.001  \\
-sex             &   -0.248  &    0.004   &    -0.037   &   0.003  \\
-black           &   -0.078  &    0.007   &    -0.056   &   0.005  \\
-indian          &   -0.100  &    0.019   &    -0.082   &   0.015  \\
-asian           &   -0.053  &    0.010   &     0.030   &   0.009  \\
-hisp            &   -0.130  &    0.006   &    -0.086   &   0.005  \\
-Creativity      &   -0.055  &    0.003   &    -0.011   &   0.003  \\
-Design          &    0.080  &    0.002   &     0.084   &   0.002  \\
-Analytics       &    0.137  &    0.003   &     0.117   &   0.003  \\
-Perseptive      &    0.067  &    0.002   &    -0.012   &   0.002  \\
-variance        &   -1.650  &    0.006   &    -2.660   &   0.017  \\
+(Intercept)     &  1.259   &  0.017     &    1.494   & 0.014  \\
+Age16           &  0.031   &  0.001     &    0.068   & 0.001  \\
+Age16sq         & -0.000   &  0.000     &   -0.002   & 0.000  \\
+YrsEduc         &  0.081   &  0.001     &    0.036   & 0.001  \\
+Sex             & -0.243   &  0.004     &   -0.032   & 0.004  \\
+Black           & -0.078   &  0.006     &   -0.045   & 0.006  \\
+Indian          & -0.106   &  0.016     &    1.390   & 0.108  \\
+Asian           & -0.045   &  0.010     &    0.036   & 0.009  \\
+Hisp            & -0.121   &  0.006     &   -0.082   & 0.005  \\
+Creativity      & -0.054   &  0.003     &   -0.008   & 0.003  \\
+Design          &  0.081   &  0.002     &    0.078   & 0.002  \\
+Analytics       &  0.134   &  0.003     &    0.112   & 0.003  \\
+Perceptive      &  0.064   &  0.002     &   -0.013   & 0.002  \\
+Variance        & -1.653   &  0.007     &   -2.682   & 0.008  \\
 \cmidrule(l){2-3}  \cmidrule(l){4-5}
-Share:          &           &    0.809   &             &   0.191  \\
+Share:          &          &  0.830     &            & 0.170  \\
 \cmidrule{1-5}
       \end{tabular}
 
       \begin{tablenotes}
-        \item Log-Likelihood: 
+        \item Log-Likelihood: 0.541
 
       \end{tablenotes} \label{tbl:2E_full_regressions_results}
 
@@ -1287,35 +1219,35 @@ Share:          &           &    0.809   &             &   0.191  \\
 
 
 \begin{table} \centering
-  \caption{Three Expert Full Specification Regression Results}
+  \caption{Three Expert Deep Full Specification Regression Results}
     \begin{threeparttable}
       \begin{tabular}[l]{l r r r r r r}
 \cmidrule{1-7}                                                                           
                 &  Coef.   &   SE   &   Coef.  & SE   &   Coef.  &  SE    \\
 \cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}
-(Intercept)     &     1.580   &     0.014   &      1.320  &   0.013   &      0.828  &    0.048    \\
-age16           &     0.012   &     0.001   &      0.047  &   0.001   &      0.043  &    0.002    \\
-age16sq         &    -0.000   &     0.000   &     -0.001  &   0.000   &     -0.001  &    0.000    \\
-yreduc          &     0.079   &     0.001   &      0.055  &   0.001   &      0.084  &    0.003    \\
-sex             &    -0.287   &     0.003   &     -0.056  &   0.003   &     -0.101  &    0.011    \\
-black           &    -0.088   &     0.005   &     -0.039  &   0.005   &     -0.021  &    0.017    \\
-indian          &    -0.123   &     0.016   &     -0.069  &   0.015   &      0.027  &    0.043    \\
-asian           &    -0.042   &     0.008   &      0.071  &   0.008   &     -0.040  &    0.021    \\
-hisp            &    -0.171   &     0.005   &     -0.044  &   0.005   &      0.050  &    0.018    \\
-Creativity      &    -0.037   &     0.003   &     -0.032  &   0.003   &     -0.136  &    0.009    \\
-Design          &     0.078   &     0.002   &      0.055  &   0.002   &     -0.009  &    0.008    \\
-Analytics       &     0.121   &     0.003   &      0.125  &   0.003   &      0.191  &    0.009    \\
-Perseptive      &     0.068   &     0.002   &      0.008  &   0.002   &      0.109  &    0.006    \\
-variance        &    -1.950   &     0.008   &     -2.680  &   0.017   &     -0.887  &    0.006    \\
+(Intercept)     &  1.430   &  0.014   &  0.951  &  0.072   &   1.506  &  0.015    \\
+age16           &  0.018   &  0.001   &  0.037  &  0.003   &   0.051  &  0.001    \\
+age16sq         & -0.000   &  0.000   & -0.001  &  0.000   &  -0.001  &  0.000    \\
+yreduc          &  0.082   &  0.001   &  0.074  &  0.004   &   0.038  &  0.001    \\
+sex             & -0.260   &  0.003   & -0.122  &  0.017   &  -0.039  &  0.004    \\
+black           & -0.089   &  0.006   & -0.017  &  0.029   &  -0.047  &  0.006    \\
+indian          & -0.118   &  0.016   &  0.103  &  0.055   &  -0.059  &  0.016    \\
+asian           & -0.037   &  0.008   & -0.042  &  0.029   &   0.055  &  0.010    \\
+hisp            & -0.145   &  0.005   &  0.101  &  0.031   &  -0.066  &  0.005    \\
+Creativity      & -0.045   &  0.003   & -0.121  &  0.013   &  -0.022  &  0.003    \\
+Design          &  0.081   &  0.002   & -0.058  &  0.013   &   0.070  &  0.003    \\
+Analytics       &  0.127   &  0.003   &  0.180  &  0.014   &   0.116  &  0.003    \\
+Perceptive      &  0.065   &  0.002   &  0.125  &  0.010   &  -0.003  &  0.002    \\
+variance        & -1.884   &  0.005   & -0.594  &  0.018   &  -2.729  &  0.009    \\
 \cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}
-share:          &             &     0.656   &             &   0.196   &             &   0.148     \\
+share:          &             &     0.771   &             &   0.078   &             &   0.151     \\
 \cmidrule{1-7} 
       \end{tabular}
 
       \begin{tablenotes}
-        \item Log-Likelihood:
+        \item Log-Likelihood:-0.525
 
-      \end{tablenotes} \label{tbl:3E_full_regressions_results}
+      \end{tablenotes} \label{tbl:3E_D_full_regressions_results}
 
 
     \end{threeparttable}
@@ -1326,36 +1258,36 @@ share:          &             &     0.656   &             &   0.196   &         
 
 \begin{landscape}
 \begin{table} \centering
-  \caption{Four Expert Full Specification Regression Results}
+  \caption{Three Expert Wide Full Specification Regression Results}
     \begin{threeparttable}
       {\small
-      \begin{tabular}[l]{l r r r r r r r r}
-\cmidrule{1-9}    
-                 & Coef.  &  SE   &  Coef.  &  SE   &  Coef.  &  SE   &  Coef.  &  SE  \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}   \cmidrule(l){8-9}   
-(Intercept)      &    1.500  &    0.014   &     1.820  &    0.012   &     1.240  &    0.013   &     0.911  &    0.071  \\
-age16            &    0.030  &    0.001   &     0.014  &    0.000   &     0.043  &    0.001   &     0.038  &    0.003  \\
-age16sq          &   -0.000  &    0.000   &    -0.000  &    0.000   &    -0.001  &    0.000   &    -0.001  &    0.000  \\
-yreduc           &    0.068  &    0.001   &     0.030  &    0.001   &     0.051  &    0.001   &     0.081  &    0.004  \\
-sex              &   -0.177  &    0.003   &    -0.141  &    0.003   &    -0.003  &    0.003   &    -0.167  &    0.016  \\
-black            &   -0.122  &    0.006   &    -0.108  &    0.005   &    -0.020  &    0.005   &    -0.035  &    0.028  \\
-indian           &   -0.066  &    0.018   &    -0.062  &    0.012   &    -0.040  &    0.016   &     0.049  &    0.057  \\
-asian            &    0.013  &    0.008   &    -0.060  &    0.008   &     0.087  &    0.008   &    -0.114  &    0.031  \\
-hisp             &   -0.064  &    0.006   &    -0.145  &    0.004   &     0.029  &    0.006   &     0.043  &    0.032  \\
-Creativity       &   -0.040  &    0.003   &    -0.058  &    0.003   &    -0.046  &    0.003   &    -0.111  &    0.014  \\
-Design           &    0.049  &    0.002   &     0.113  &    0.002   &    -0.030  &    0.003   &    -0.063  &    0.013  \\
-Analytics        &    0.080  &    0.003   &     0.113  &    0.003   &     0.121  &    0.003   &     0.188  &    0.014  \\
-Perseptive       &    0.075  &    0.002   &     0.007  &    0.002   &     0.004  &    0.002   &     0.101  &    0.009  \\
-variance         &   -2.030  &    0.009   &    -2.740  &    0.016   &    -2.540  &    0.015   &    -0.595  &    0.005  \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}   \cmidrule(l){8-9}        
-share:           &           &    0.518   &            &    0.200   &            &    0.199   &            &    0.082  \\ 
-\cmidrule{1-9}     
+      \begin{tabular}[l]{l r r r r r r}
+\cmidrule{1-7}    
+                 & Coef.  &  SE   &  Coef.  &  SE   &  Coef.  &  SE   \\
+\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}    
+(Intercept)      &     &      &      &     &      &    \\
+age16            &     &      &      &     &      &    \\
+age16sq          &     &      &      &     &      &    \\
+yreduc           &     &      &      &     &      &    \\
+sex              &     &      &      &     &      &    \\
+black            &     &      &      &     &      &    \\
+indian           &     &      &      &     &      &    \\
+asian            &     &      &      &     &      &    \\
+hisp             &     &      &      &     &      &    \\
+Creativity       &     &      &      &     &      &    \\
+Design           &     &      &      &     &      &    \\
+Analytics        &     &      &      &     &      &    \\
+Perceptive       &     &      &      &     &      &    \\
+variance         &     &      &      &     &      &    \\
+\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}          
+share:           &           &      &            &       &            &      \\ 
+\cmidrule{1-7}     
       \end{tabular}
       }
       \begin{tablenotes}
         \item Log-Likelihood:
 
-      \end{tablenotes} \label{tbl:4E_full_regressions_results}
+      \end{tablenotes} \label{tbl:3E_W_full_regressions_results}
 
 
     \end{threeparttable}
@@ -1363,83 +1295,6 @@ share:           &           &    0.518   &            &    0.200   &           
 \end{table}
 
 
-
-\begin{table} \centering
-  \caption{Five Expert Full Specification Regression Results}
-    \begin{threeparttable}
-      {\small
-      \begin{tabular}[l]{l r r r r r r r r r r}
-\cmidrule{1-11}
-                &   Coef.  &   SE   &  Coef.  &  SE    &  Coef.     &  SE    &   Coef.  &   SE  &    Coef.   &  SE   \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}   \cmidrule(l){8-9}  \cmidrule(l){10-11}
-(Intercept)     &      1.410	&    0.018	  &     1.520	 &    0.011	   &     1.630	   &    0.014	   &      1.440  &     0.021	&       1.550   &    0.083   \\
-age16           &      0.002	&    0.001	  &     0.047	 &    0.000	   &     0.013	   &    0.000	   &      0.028  &     0.001	&       0.036   &    0.004   \\
-age16sq         &      0.000	&    0.000	  &    -0.001	 &    0.000	   &    -0.000	   &    0.000	   &     -0.000  &     0.000	&      -0.001   &    0.000   \\
-yreduc          &      0.102	&    0.001	  &     0.046	 &    0.001	   &     0.029	   &    0.001	   &      0.031  &     0.001	&       0.044   &    0.005   \\
-sex             &     -0.347	&    0.004	  &    -0.105	 &    0.003	   &    -0.085	   &    0.004	   &      0.063  &     0.005	&      -0.157   &    0.020   \\
-black           &     -0.057	&    0.007	  &    -0.062	 &    0.005	   &    -0.036	   &    0.005	   &      0.016  &     0.007	&      -0.017   &    0.031   \\
-indian          &     -0.176	&    0.018	  &    -0.052	 &    0.015	   &    -0.027	   &    0.015	   &     -0.113  &     0.019	&       0.112   &    0.061   \\
-asian           &      0.011	&    0.010	  &     0.043	 &    0.008	   &     0.017	   &    0.008	   &      0.150  &     0.012	&      -0.028   &    0.036   \\
-hisp            &     -0.086	&    0.006	  &    -0.058	 &    0.005	   &    -0.087	   &    0.004	   &      0.008  &     0.008	&      -0.022   &    0.033   \\
-Creativity      &     -0.104	&    0.003	  &     0.012	 &    0.003	   &    -0.018	   &    0.003	   &     -0.070  &     0.004	&       0.096   &    0.015   \\
-Design          &      0.045	&    0.003	  &     0.069	 &    0.002	   &     0.143	   &    0.003	   &     -0.040  &     0.008	&       0.074   &    0.013   \\
-Analytics       &      0.154	&    0.003	  &     0.063	 &    0.002	   &    -0.007	   &    0.003	   &     -0.104  &     0.005	&       0.051   &    0.017   \\
-Perseptive      &      0.076	&    0.002	  &    -0.005	 &    0.002	   &     0.008	   &    0.002	   &      0.034  &     0.003	&       0.075   &    0.013   \\
-variance        &     -1.880	&    0.008	  &    -2.350	 &    0.011	   &    -2.930	   &    0.022	   &     -2.500  &     0.020	&      -0.487   &    0.005   \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}   \cmidrule(l){8-9}  \cmidrule(l){10-11}
-share:          &             &     0.368   &            &    0.340    &               &    0.142    &             &     0.087  &               &    0.062   \\
-\cmidrule{1-11}                                                                                             
-      \end{tabular}
-      }
-      \begin{tablenotes}
-        \item Boilerplate
-
-      \end{tablenotes} \label{tbl:5E_full_regressions_results}
-
-
-    \end{threeparttable}
-
-\end{table}
-
-
-
-
-\begin{table} \centering
-  \caption{Six Expert Full Specification Regression Results}
-    \begin{threeparttable}
-      {\footnotesize
-      \begin{tabular}[l]{l r r r r r r r r r r r r}
-\cmidrule{1-13}  
-                  &  Coef.  &  SE   &   Coef. &  SE  &   Coef.  &  SE   &    Coef. &   SE  &   Coef.  &  SE     &  Coef.   &   SE  \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}   \cmidrule(l){8-9}  \cmidrule(l){10-11}  \cmidrule(l){12-13}
-(Intercept)       &     1.220	 &    0.017	  &      1.970 &    0.019	 &      1.380	 &    0.014   &       1.720	&     0.016	 &      1.700	 &    0.020	    &     1.650	  &     0.089  \\
-age16             &     0.015	 &    0.001	  &      0.016 &    0.001	 &      0.072	 &    0.001   &       0.010	&     0.001	 &      0.028	 &    0.001	    &     0.033	  &     0.004  \\
-age16sq           &    -0.000	 &    0.000	  &     -0.000 &    0.000	 &     -0.002	 &    0.000   &      -0.000	&     0.000	 &     -0.000	 &    0.000	    &    -0.001	  &     0.000  \\
-yreduc            &     0.106	 &    0.001	  &      0.045 &    0.001	 &      0.043	 &    0.001   &       0.021	&     0.001	 &      0.010	 &    0.001	    &     0.037	  &     0.006  \\
-sex               &    -0.320	 &    0.004	  &     -0.096 &    0.007	 &     -0.056	 &    0.004   &      -0.079	&     0.004	 &      0.073	 &    0.005	    &    -0.187	  &     0.022  \\
-black             &    -0.031	 &    0.007	  &     -0.115 &    0.007	 &     -0.025	 &    0.006   &      -0.048	&     0.006	 &     -0.015	 &    0.007	    &    -0.044	  &     0.036  \\
-indian            &    -0.182	 &    0.018	  &     -0.032 &    0.028	 &     -0.129	 &    0.015   &       0.233	&     0.026	 &     -0.249	 &    0.016	    &     0.170	  &     0.065  \\
-asian             &     0.062	 &    0.011	  &      0.003 &    0.011	 &      0.131	 &    0.009   &       0.005	&     0.009	 &      0.045	 &    0.012	    &    -0.082	  &     0.045  \\
-hisp              &    -0.082	 &    0.006	  &     -0.104 &    0.010	 &      0.016	 &    0.005   &      -0.099	&     0.005	 &     -0.065	 &    0.008	    &    -0.014	  &     0.043  \\
-Creativity        &    -0.081	 &    0.003	  &      0.025 &    0.004	 &     -0.009	 &    0.003   &      -0.011	&     0.003	 &     -0.054	 &    0.004	    &     0.093	  &     0.017  \\
-Design            &     0.066	 &    0.003	  &      0.069 &    0.002	 &      0.050	 &    0.002   &       0.122	&     0.003	 &     -0.079	 &    0.005	    &     0.025	  &     0.015  \\
-Analytics         &     0.143	 &    0.003	  &      0.058 &    0.004	 &      0.075	 &    0.003   &      -0.011	&     0.004	 &     -0.082	 &    0.004	    &     0.083	  &     0.019  \\
-Perseptive        &     0.046	 &    0.002	  &      0.032 &    0.003	 &     -0.001	 &    0.002   &      -0.013	&     0.003	 &      0.045	 &    0.003	    &     0.066	  &     0.013  \\
-variance          &    -1.870	 &    0.008	  &     -2.230 &    0.014	 &     -2.710	 &    0.019   &      -2.960	&     0.025	 &     -2.400	 &    0.018	    &    -0.427	  &     0.005  \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}   \cmidrule(l){8-9}  \cmidrule(l){10-11}  \cmidrule(l){12-13}
-share:            &            &    0.400   &            &    0.210  &             &    0.133   &             &     0.114  &             &    0.089     &             &     0.054  \\
-\cmidrule{1-13} 
-      \end{tabular}
-      }
-      \begin{tablenotes}
-        \item Log-Likelihood
-
-      \end{tablenotes} \label{tbl:6E_full_regressions_results}
-
-
-    \end{threeparttable}
-
-\end{table}
 
 \end{landscape}
 
@@ -1534,7 +1389,7 @@ share:            &            &    0.400   &            &    0.210  &          
       Analytics   &   & 0.129  & 0.128  & 0.131  & 0.144  & 0.140       \\
                   &   &   &   &   &   &        \\[0.3cm]
        
-      Perseptive  &   & 0.055  & 0.058  & 0.057  & 0.051  & 0.052       \\
+      Perceptive  &   & 0.055  & 0.058  & 0.057  & 0.051  & 0.052       \\
                   &   &   &   &   &   &        \\[0.3cm]
 
 
@@ -1715,6 +1570,6 @@ AIC/BIC/VOUNG test being prefered.
 
 
 
-\printbibliography
+% \printbibliography
 
 \end{document}
