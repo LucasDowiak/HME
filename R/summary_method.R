@@ -18,11 +18,16 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   # Gate std_errs
   depth <- max(sapply(strsplit(obj[["expert.nms"]], "\\."), length))
   lgpn <- length(obj[["gate.pars.nms"]])
-  if (depth == 2 && length(obj[["expert.nms"]]) > 2) {
-    lgp <- length(mod[["gate.pars"]][[1]])
+  
+  # What kind of MoE is it
+  wide_hme <- depth == 2 && length(obj[["expert.nms"]]) > 2
+  
+  # Wide HME
+  if (wide_hme) {
+    lgp <- length(obj[["gate.pars"]][[1]])
     ngates <- lgp * lgpn
     gate.errs <- std_errs[1:ngates]
-    gate.pars <- list(split(gate.errs, ((seq_along(gate.errs) - 1) %/% lgpn) + 1))
+    gate.errs <- list(split(gate.errs, ((seq_along(gate.errs) - 1) %/% lgpn) + 1))
   } else {
     lgp <- length(obj[["gate.pars"]])
     ngates <- lgp * lgpn
@@ -41,12 +46,6 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   
   cat(sprintf("Log-Likelihood: %f", logLik(obj)))
   if (expertbool) {
-    #info <- obj[["expert.info.matrix"]]
-    
-    #lep <- length(obj[["expert.pars"]])
-    #lepn <- length(obj[["expert.pars.nms"]])
-    #expert.pars <- pars[(ngates + 1):length(pars)]
-    #expert.pars <- split(expert.pars, ((seq_along(expert.pars) - 1) %/% lepn))
     
     for (e in names(obj[["expert.pars"]])) {
       
@@ -68,17 +67,26 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   cat("\n\n----------------------------------------------------\n\n")
   
   if (gatebool) {
-    for (g in names(obj[["gate.pars"]])) {
-      
-      pars <- obj[["gate.pars"]][[g]]
-      if (!is(pars, "list"))
-        pars <- list(pars)
-      
-      nn <- length(pars)
-      cat(sprintf("\n--------------------------\ngate-%s\n", g))
-      for (i in seq_len(nn)) {
-        p <- pars[[i]]
-        se <- gate.errs[[i]]
+    
+    if (wide_hme) {
+      pars <- obj[["gate.pars"]][["0"]]
+      cat(sprintf("\n--------------------------\ngate-%s\n", "0"))
+      for (g in seq_along(pars)) {
+        p <- pars[[g]]
+        se <- gate.errs[["0"]][[g]]
+        zstat <- p / se
+        tbl <- cbind(p, se, zstat, 2 * pnorm(-abs(zstat)))
+        dimnames(tbl) <- list(obj[['gate.pars.nms']],
+                              c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)"))
+        printCoefmat(tbl, digits = 3)
+        cat("\n")
+      }
+    } else {
+      pars <- obj[["gate.pars"]]
+      for (g in names(pars)) {
+        cat(sprintf("\n--------------------------\ngate-%s\n", g))
+        p <- pars[[g]]
+        se <- gate.errs[[g]]
         zstat <- p / se
         tbl <- cbind(p, se, zstat, 2 * pnorm(-abs(zstat)))
         dimnames(tbl) <- list(obj[['gate.pars.nms']],
@@ -90,14 +98,4 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   }
   
   cat("\n\n----------------------------------------------------\n\n")
-  
-  # Seperate the calculation of the marginal effects outside the main function call
-  #if (margbool) {
-  #  for (e in names(obj[["expert.pars"]])) {
-  #    p <- as.matrix(round(obj[["gate.margins"]][[e]], 4))
-  #    dimnames(p) <- list(c(obj[["gate.pars.nms"]]), "")
-  #    cat(sprintf("\n--------------------------\nexpert-%s marginal effects\n", e))
-  #    print(p)
-  #  }
-  # }
 }

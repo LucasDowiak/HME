@@ -553,8 +553,8 @@ $\boldsymbol{\beta}^{j} \neq \boldsymbol{\beta}^{k}$. Such an HME is defined by
 \cite{JiangTanner2000} as being \textit{irreducible}. The irreducibility of an HME
 plays a critical role in guaranteeing the convergence of the model.
 
-In this article, each HME discussed will employ set of experts running 
-a standard regression model with gaussian errors. To aide with model optimization,
+In this article, each HME discussed will employ a set of experts running 
+a standard linear regression model with gaussian errors. To aide with model optimization,
 the specification of the parameter vector for each regression
  $\boldsymbol{\beta}^{m} = [\beta_{0}^{m} \,\, \ldots \,\, \beta_{k}^m \,\, \phi^{m}]$
 takes on a unique form where we model the log variance explicitly
@@ -652,7 +652,7 @@ $P^{m}_{t}$ with the regression's functional form $f^{m}_{t}$ and use
 the relationship in equation (\ref{eq:gpath2}) to arrive at: 
 
 \begin{equation} \label{eq:mixture2}
-  f_{t} = f(X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(X_{t}; \boldsymbol{\beta}^{m})
+  y_{t} = f(X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(X_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 The functional form of the marginal effect depends on where the variables
@@ -680,7 +680,7 @@ regressions, respectively. With this notation, we can express the full marginal 
 of the HME by where the explanatory variables appear in the model.
 
 \begin{equation} \label{eq:hme_marginal_effect_def}
-  \frac{\partial f_{t}}{\partial \boldsymbol{T}} = \sum_{m=1}^{M} \boldsymbol{\Delta}^{m} = \sum_{m=1}^{M} \left[ \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{Z}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{W}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{X}}   \right]
+  \frac{\partial y_{t}}{\partial \boldsymbol{T}} = \sum_{m=1}^{M} \boldsymbol{\Delta}^{m} = \sum_{m=1}^{M} \left[ \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{Z}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{W}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{X}}   \right]
 \end{equation}
 
 with the functional form of the each covariate group in (\ref{eq:hme_marginal_effect_def})
@@ -688,17 +688,17 @@ defined as:
 
 
 \begin{equation} \label{eq:ME_gating}
-  \frac{\partial f_{t}^{m}}{\partial \boldsymbol{U}_{Z}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{U}_{Z}}}f^{m}_{t}
+  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{U}_{Z}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{U}_{Z}}}f^{m}_{t}
 \end{equation}
 
 
 \begin{equation} \label{eq:ME_expert}
-  \frac{\partial f_{t}^{m}}{\partial \boldsymbol{U}_{X}} = \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{U}_{X}}}
+  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{U}_{X}} = \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{U}_{X}}}
 \end{equation}
 
 
 \begin{equation} \label{eq:ME_both}
-  \frac{\partial f_{t}^{m}}{\partial \boldsymbol{W}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{W}}}f^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}}
+  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{W}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{W}}}y^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}}
 \end{equation}
 
 Not matter how complex the model becomes, the researcher can always interpret

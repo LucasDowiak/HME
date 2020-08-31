@@ -67,15 +67,6 @@ margin_matrix <- function(experts, gate.pars, ln)
 }
 
 
-"the marginal effects for each expert should sum to zero"
-# colMeans(tree_expert_margin("0.1", tst2$gate.pars, tst2$list_priors))
-# colMeans(tree_expert_margin("0.2", tst2$gate.pars, tst2$list_priors))
-# colMeans(tree_expert_margin("0.3", tst2$gate.pars, tst2$list_priors))
-
-# colMeans(tree_expert_margin("0.1.1", tst$gate.pars, tst$list_priors))
-# colMeans(tree_expert_margin("0.1.2", tst$gate.pars, tst$list_priors))
-# colMeans(tree_expert_margin("0.2", tst$gate.pars, tst$list_priors))
-
 
 fitted_expert <- function(expert, X, expert.pars, expert_type)
 {
@@ -152,10 +143,6 @@ marginal_effects <- function(obj)
                          expert_margins,
                          SIMPLIFY=FALSE)
   
-  #expert_both_margins <- lapply(both_margins, colMeans)
-  #expert_expert_margins <- lapply(expert_margins, colMeans)
-  #expert_gate_margins <- lapply(gate_margins, colMeans)
-  
   both_margins   <- Reduce(`+`, both_margins)
   expert_margins <- Reduce(`+`, expert_margins)
   gate_margins   <- Reduce(`+`, gate_margins)
@@ -183,12 +170,9 @@ marginal_effects <- function(obj)
     asy.var <- asy.var + asymptotic_variance(Delta, VCV, gates, experts, gate.nms, expt.nms)
   }
   
-  # inference for weighted average of the expert regressions
-  
-  #asy.var <- asymptotic_variance(Delta, VCV, Delta, gates, experts, gate.nms, expt.nms)
   # Notes for Docs:
   #    *_margins are non-overlapping sets
-  #    gate_expert_margins - sums to zero vector
+  #    tree_expert_margins - sums to zero vector
   #                        - measures the "pull" of expert i on each variable j;
   #                          ignore intercept term; (or better yet what does it mean?)
   return(list(gate_margins          = colMeans(gate_margins),
@@ -196,9 +180,6 @@ marginal_effects <- function(obj)
               margins               = colMeans(margins),
               gate_expert_margins   = t(tree_expert_margins),
               asyvar                = asy.var
-              #expert_gate_margins   = expert_gate_margins,
-              #expert_expert_margins = expert_expert_margins,
-              #expert_both_margins   = expert_both_margins
               ))
 }
 
@@ -221,7 +202,6 @@ asymptotic_variance <- function(D1, VCV, gates, experts, gate.nms, expt.nms)
   
   D1 <- lapply(D1, col_means)
   
-  # TODO: this function needs to generalize to a multinomial node
   idx_to_gradient <- function(node)
   {
     if (node %in% gates) {
@@ -230,7 +210,7 @@ asymptotic_variance <- function(D1, VCV, gates, experts, gate.nms, expt.nms)
       nms <- expt.nms
     }
     nr <- length(nms)
-    G <- matrix(0, nr, nvrb)
+    G <- matrix(0, nr, nvrb, dimnames = list(NULL, allnms))
     if (node %in% experts) {
       # dispersion parameter doesn't effect the marginal effects for a normal distribution
       # add a zero row
@@ -249,7 +229,7 @@ asymptotic_variance <- function(D1, VCV, gates, experts, gate.nms, expt.nms)
         g <- D[[s]]
         for (v in seq_along(nms)) {
           i <- which(allnms==nms[v])
-          G[v, i] <- g[i]
+          G[v, i] <- g[nms[v]]
         }
         out[[s]] <- G
       }
@@ -317,27 +297,19 @@ Delta_m_partial_theta_k <- function(m, gate_vrb, expt_vrb, gates, experts, ln, Z
                                     gate.pars, expert.pars, delta_m, expert_hats)
 {
   
-  m_nodes <- unlist(ancestors(m))
+  m_anc <- unlist(ancestors(m))
   tree <- c(gates, experts)
   
-  #empty_matrix <- function(nms)
-  #{
-  #  a <- matrix(0, nrow(X), length(nms))
-  #  colnames(a) <- nms
-  #  a
-  #}
   # Q: How do we handle the intercept term between the two structures
   #    Currently handing it as a shared variable, which is probs wrong
   gate_grad <- find_marginal_gate_gradient(m, gate.pars, expert.pars,
                                            expt.nms, ln, Z, expert_hats,
                                            gate_vrb, expt_vrb, tree)
-  if (length(gate_grad) != length(m_nodes) - 1)
+  if (length(gate_grad) != length(m_anc) - 1)
     gate_grad <- list(gate_grad)
   
-  names(gate_grad) <- gates
+  names(gate_grad) <- intersect(m_anc, gates)
   
-  #expt_grad <- napply(experts, empty_matrix, expt_vrb)
-  #names(expt_grad) <- experts
   
   expt_grad <- find_marginal_expert_gradient(m, gate.pars, expert.pars,
                                              delta_m, ln, X, expert_hats,
@@ -355,12 +327,6 @@ find_marginal_gate_gradient <- function(expert, gate.pars, expert.pars, expt.nms
                                         tree)
 {
   
-  #gp <- gate.pars[[gate]]
-  #if (!is(gp, "list"))
-  #  gp <- list(gp)
-  #
-  #ngp <- length(gp)
-  
   shared_vrb <- intersect(gate_vrb, expt_vrb)
   all_vrb <- union(gate_vrb, expt_vrb)
   
@@ -377,20 +343,19 @@ find_marginal_gate_gradient <- function(expert, gate.pars, expert.pars, expt.nms
   gpp_partial <- gpp_m_partial_omega(expert, gate.pars, ln, Z, tree)
   
   # contribution to the Jocobian from the Beta (parameters in both parts of the HME)
-  gpp_beta <- lapply(gpp_partial, function(x) sweep(x, 2, beta, `*`)) # Multiply by Beta
+  gpp_beta <- lapply(gpp_partial, function(x) sweep(x[, shared_vrb], 2, beta[shared_vrb], `*`)) # Multiply by Beta
   
   # contribution to the Jocobian from the Beta (parameters in both parts of the HME)
-  #gpp_beta <- sweep(gpp_partial[, shared_vrb], 2, beta[shared_vrb], `*`)
   
   out <- vector("list", length(grd))
   
   for (nn in seq_along(out)) {
-    out[[nn]] <- grd[[nn]][, gate_vrb]
     
-    # contribution to the Jocobian from the Beta (parameters in both parts of the HME)
-    #gpp_beta <- sweep(gpp_partial[[nn]][, shared_vrb], 2, beta[shared_vrb], `*`)
+    tmp <- matrix(0, nrow=nrow(Z), ncol=length(all_vrb), dimnames=list(NULL, all_vrb))
+    tmp[, gate_vrb] <- grd[[nn]][, gate_vrb]
+    tmp[, shared_vrb]  <- tmp[, shared_vrb] + gpp_beta[[nn]][, shared_vrb]
     
-    out[[nn]][, shared_vrb] <- out[[nn]][, shared_vrb] + gpp_beta[[nn]][, shared_vrb]
+    out[[nn]] <- tmp
   }
 
   
@@ -422,16 +387,6 @@ find_marginal_expert_gradient <- function(expert, gate.pars, expert.pars, delta_
   return(out)
 }
 
-
-
-#debugonce(Delta_m_partial_theta_k)
-
-#aa <- Delta_m_partial_theta_k("0.1", "0.1", obj[["gate.pars.nms"]], obj[["expert.pars.nms"]],
-#                              obj[["gate.nodes"]], obj[["expert.nms"]], obj[["list_priors"]],
-#                              obj[["Z"]], obj[["X"]], obj[["gate.pars"]])
-
-#debugonce(marginal_effects)
-#aa <- marginal_effects(hme_2w)
 
 
 # For all gating nodes on the path from the root node to expert m,

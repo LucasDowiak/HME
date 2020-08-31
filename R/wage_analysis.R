@@ -70,13 +70,13 @@ lm_mod <- lm("lnwage ~ age16 + age16sq + yreduc + black + indian + asian + hisp"
 
 debugonce(hme)
 
-hme_3w_t <- hme(c("0", "0.1", "0.2", "0.3"),
-            form_full,
-            data=dtftrain, holdout=dtftest, maxiter=20, tolerance=1e-4, trace=0)
+hme_3w <- hme(c("0", "0.1", "0.2", "0.3"),
+              "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive | sex + age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
+            data=dtftrain, holdout=dtftest, maxiter=75, tolerance=1e-4, trace=0)
 
 hme_3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"),
             "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive | sex + age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
-            data=dtftrain, holdout=dtftest, maxiter=25, tolerance=1e-3, trace=1)
+            data=dtftrain, holdout=dtftest, maxiter=25, tolerance=1e-4, trace=0)
 
 hme_3w <- hme(c("0", "0.1", "0.2", "0.3"),
             "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive | sex + age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",

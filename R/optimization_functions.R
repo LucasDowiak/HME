@@ -194,23 +194,50 @@ logistic_score <- function(node, list_post, list_priors, Z)
   H <- joint_posterior_weight(node=node, lp=list_post, rp=1)
   # prior weight for gating node
   g <- list_priors[[node]]
+  
+  splits <- ncol(g) - 1L
+  omega_score <- vector("list", length(splits))
+  for (s in seq_len(splits)) {
+    # sweep out gating varibles Z in direction 1
+    omega_score[[s]]  <- sweep(Z, 1, as.array(H * (1 - g[, s])), `*`)
+  }
   # sweep out gating varibles Z in direction 1
-  omega_score <- sweep(Z, 1, as.array(H * (1 - g[, 1])), `*`)
-  return(omega_score)
+  # omega_score <- sweep(Z, 1, as.array(H * (1 - g[, 1])), `*`)
+  return(c(omega_score))
 }
 
 
 logistic_hessian <- function(node, list_post, list_priors, Z)
 {
+  
   # joint posterior
   H <- joint_posterior_weight(node=node, lp=list_post, rp=1)
   # prior weight for gating node
   g <- list_priors[[node]]
-  # sweep out gating varibles Z
-  outer_Z <- apply(Z, 1, function(x) x %*% t(x))
-  dim(outer_Z) <- c(ncol(Z), ncol(Z), nrow(Z))
   
-  return(sweep(outer_Z, 3, as.array(-H * g[,1] * (1 - g[,1])), `*`))
+  nrz <- nrow(Z)
+  ncz <- ncol(Z)
+  ncg <- ncol(g)
+  
+  # Outer hessian
+  ZZ <- apply(Z, 1, function(x) x %*% t(x))
+  dim(ZZ) <- c(ncz, ncz, nrz)
+  
+  gamma_t <- function(z)
+  {
+    o <- z %*% t(z)
+    diag(o) <- -z * (1 - z)
+    return(o)
+  }
+  Gamma <- apply(g[, -ncg, drop=FALSE], 1, gamma_t)
+  dim(Gamma) <- c(ncg - 1L, ncg - 1L, nrow(g))
+  
+  d <- (ncg - 1) * ncz
+  hess <- array(dim=c(d, d, nrow(Z)))
+  for (i in seq_len(nrz)) {
+    hess[,,i] <- H[i] * Gamma[,,i] %x% ZZ[,,i]
+  }
+  return(hess)
 }
 
 
@@ -292,7 +319,7 @@ sandwich_vcov <- function(gte.nms, exp.nms, lp, ln, exp.pars, Y, X, Z, N)
   expt_scores <- napply(exp.nms, gaussian_score, exp.pars, lp, ln, Y, X)
   
   # Create the full score vector of theta = (omega + beta)
-  scores <- do.call(cbind, c(gate_scores, expt_scores))
+  scores <- do.call(cbind, c(unlist(gate_scores, recursive=FALSE), expt_scores))
   nc <- ncol(scores)
   rm(gate_scores, expt_scores)
   
