@@ -613,7 +613,7 @@ where $\otimes$ is the kronecker product and:
   g_{t}^{a,1}g_{t}^{a,J-1}    & g_{t}^{a,2}g_{t}^{a,J-1}    & \dots  & -g_{t}^{a,J-1}(1-g_{t}^{a,J-1}) \\
     \end{bmatrix}
 \end{equation}
-
+ˇ
 For each expert regression:
 
 
@@ -1115,10 +1115,10 @@ Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\
   \cmidrule{1-6}
 
 1    &    2    & -0.541  & 1.082  & 1.088  & 0.182 \\
-1    &    3    & -0.524  & 1.051  & 1.060  & 0.182 \\
+1    &    3    & -0.541  & 1.084  & 1.094  & 0.182 \\
 1    &    4    & -0.537  & 1.078  & 1.091  & 0.181 \\
 1    &    5    & -0.535  & 1.073  & 1.089  & 0.182 \\
-2    &    3    &   &   &   &  \\
+2    &    3    & -0.524  & 1.052  & 1.061  & 0.182 \\
 2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
 3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
 3    &    6    & \ibu{-0.503}  & \ibu{1.011}  & \ibu{1.031}  & \ibu{0.178} \\
@@ -1139,17 +1139,17 @@ Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\
   \cmidrule{1-5}
         &         & \multicolumn{3}{c}{Coefficient} \\ 
   \cmidrule(r){3-5}
-  Depth & Experts & Min   & Mid   & Full       \\
+  Depth & Experts & Min   & Mid   & Full      \\
   \cmidrule{1-5}
 
   1     & 2       & 0.051 & 0.082 & 0.075     \\
-  1     & 3       & 0.063 & 0.080 & 0.074     \\
-  1     & 4       & 0.039 & 0.085 & 0.075      \\
-  1     & 5       & 0.063 & 0.095 & 0.076      \\
-  2     & 3       &  &  &      \\
-  2     & 4       & 0.063 & 0.078 & 0.073      \\
-  3     & 5       & 0.068 & 0.075 & 0.069      \\
-  3     & 6       & 0.067 & 0.074 & 0.069      \\
+  1     & 3       & 0.051 & 0.081 & 0.076     \\
+  1     & 4       & 0.039 & 0.085 & 0.075     \\
+  1     & 5       & 0.063 & 0.095 & 0.076     \\
+  2     & 3       & 0.063 & 0.080 & 0.074     \\
+  2     & 4       & 0.063 & 0.078 & 0.073     \\
+  3     & 5       & 0.068 & 0.075 & 0.069     \\
+  3     & 6       & 0.067 & 0.074 & 0.069     \\
 
   \hline
     \end{tabular}
@@ -1207,7 +1207,7 @@ Share:          &          &  0.830     &            & 0.170  \\
       \end{tabular}
 
       \begin{tablenotes}
-        \item Log-Likelihood: 0.541
+        \item Log-Likelihood: -0.541
 
       \end{tablenotes} \label{tbl:2E_full_regressions_results}
 
@@ -1245,7 +1245,7 @@ share:          &             &     0.771   &             &   0.078   &         
       \end{tabular}
 
       \begin{tablenotes}
-        \item Log-Likelihood:-0.525
+        \item Log-Likelihood: -0.525
 
       \end{tablenotes} \label{tbl:3E_D_full_regressions_results}
 
@@ -1256,7 +1256,6 @@ share:          &             &     0.771   &             &   0.078   &         
 
 
 
-\begin{landscape}
 \begin{table} \centering
   \caption{Three Expert Wide Full Specification Regression Results}
     \begin{threeparttable}
@@ -1265,27 +1264,27 @@ share:          &             &     0.771   &             &   0.078   &         
 \cmidrule{1-7}    
                  & Coef.  &  SE   &  Coef.  &  SE   &  Coef.  &  SE   \\
 \cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}    
-(Intercept)      &     &      &      &     &      &    \\
-age16            &     &      &      &     &      &    \\
-age16sq          &     &      &      &     &      &    \\
-yreduc           &     &      &      &     &      &    \\
-sex              &     &      &      &     &      &    \\
-black            &     &      &      &     &      &    \\
-indian           &     &      &      &     &      &    \\
-asian            &     &      &      &     &      &    \\
-hisp             &     &      &      &     &      &    \\
-Creativity       &     &      &      &     &      &    \\
-Design           &     &      &      &     &      &    \\
-Analytics        &     &      &      &     &      &    \\
-Perceptive       &     &      &      &     &      &    \\
-variance         &     &      &      &     &      &    \\
+(Intercept)      &  1.310   & 0.016    &  2.039    & 0.033    &  1.234     & 0.017   \\
+age16            &  0.046   & 0.002    &  0.150    & 0.004    &  0.031     & 0.001   \\
+age16sq          & -0.001   & 0.000    & -0.011    & 0.000    & -0.000     & 0.000   \\
+yreduc           &  0.055   & 0.001    & -0.028    & 0.003    &  0.081     & 0.001   \\
+sex              & -0.046   & 0.004    &  0.021    & 0.009    & -0.234     & 0.004   \\
+black            & -0.019   & 0.006    & -0.062    & 0.014    & -0.081     & 0.006   \\
+indian           & -0.075   & 0.016    &  0.117    & 0.031    & -0.088     & 0.018   \\
+asian            &  0.063   & 0.010    &  0.002    & 0.027    & -0.038     & 0.010   \\
+hisp             & -0.044   & 0.005    & -0.047    & 0.010    & -0.118     & 0.006   \\
+Creativity       & -0.003   & 0.003    & -0.039    & 0.007    & -0.049     & 0.003   \\
+Design           &  0.054   & 0.003    &  0.118    & 0.005    &  0.081     & 0.002   \\
+Analytics        &  0.131   & 0.003    &  0.005    & 0.007    &  0.128     & 0.003   \\
+Perceptive       & -0.014   & 0.002    & -0.010    & 0.005    &  0.061     & 0.002   \\
+variance         & -2.904   & 0.009    & -2.708    & 0.022    & -1.659     & 0.007   \\
 \cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}          
-share:           &           &      &            &       &            &      \\ 
+share:           &          & 0.088    &            & 0.030     &             & 0.881    \\ 
 \cmidrule{1-7}     
       \end{tabular}
       }
       \begin{tablenotes}
-        \item Log-Likelihood:
+        \item Log-Likelihood: -0.541
 
       \end{tablenotes} \label{tbl:3E_W_full_regressions_results}
 
@@ -1294,9 +1293,6 @@ share:           &           &      &            &       &            &      \\
 
 \end{table}
 
-
-
-\end{landscape}
 
 
 
