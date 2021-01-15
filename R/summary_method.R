@@ -10,9 +10,43 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
     expertbool <- TRUE
   }
   
+  # Grab the robust standard errors
+  std_errs <- sqrt(diag(obj$full.vcv$sandwich))
+  
+  # the std_errs vector is not broken up as a list of gate or expert nodes so we must do it
+  
+  # Gate std_errs
+  depth <- max(sapply(strsplit(obj[["expert.nms"]], "\\."), length))
+  lgpn <- length(obj[["gate.pars.nms"]])
+  
+  # What kind of MoE is it
+  wide_hme <- depth == 2 && length(obj[["expert.nms"]]) > 2
+  
+  # Wide HME
+  if (wide_hme) {
+    lgp <- length(obj[["gate.pars"]][[1]])
+    ngates <- lgp * lgpn
+    gate.errs <- std_errs[1:ngates]
+    gate.errs <- list(split(gate.errs, ((seq_along(gate.errs) - 1) %/% lgpn) + 1))
+  } else {
+    lgp <- length(obj[["gate.pars"]])
+    ngates <- lgp * lgpn
+    gate.errs <- std_errs[1:ngates]
+    gate.errs <- split(gate.errs, ((seq_along(gate.errs) - 1) %/% lgpn) + 1)
+  }
+  names(gate.errs) <- names(obj[["gate.pars"]])
+  
+  # Expert std_errs
+  lep <- length(obj[["expert.pars"]])
+  lepn <- length(obj[["expert.pars.nms"]])
+  expert.errs <- std_errs[(ngates + 1):length(std_errs)]
+  expert.errs <- split(expert.errs, ((seq_along(expert.errs) - 1) %/% lepn))
+  names(expert.errs) <- names(obj[["expert.pars"]])
+  
+  
   cat(sprintf("Log-Likelihood: %f", logLik(obj)))
   if (expertbool) {
-    info <- obj[["expert.info.matrix"]]
+    
     for (e in names(obj[["expert.pars"]])) {
       
       gpp <- gate_path_product("0", e, obj$list_priors)
@@ -21,10 +55,11 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
       cat(sprintf("\n--------------------------\nexpert-%s \t share:  %.3f\n\n", e, share))
       
       p <- obj[["expert.pars"]][[e]]
-      se <- sqrt(diag(info[[e]][["sandwich"]]))
+      se <- expert.errs[[e]]
       zstat <- p / se
       tbl <- cbind(p, se, zstat, 2 * pnorm(-abs(zstat)))
-      colnames(tbl) <- c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)")
+      dimnames(tbl) <- list(obj[['expert.pars.nms']],
+                            c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)"))
       printCoefmat(tbl, digits = 3)
     }
   }
@@ -32,23 +67,30 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   cat("\n\n----------------------------------------------------\n\n")
   
   if (gatebool) {
-    for (g in names(obj[["gate.pars"]])) {
-      
-      pars <- obj[["gate.pars"]][[g]]
-      if (!is(pars, "list"))
-        pars <- list(pars)
-      info <- obj[["gate.info.matrix"]]
-      if (!is(info, "list"))
-        info <- list(info)
-      
-      nn <- length(pars)
-      cat(sprintf("\n--------------------------\ngate-%s\n", g))
-      for (i in seq_len(nn)) {
-        p <- pars[[i]]
-        se <- sqrt(diag(info[[i]][["sandwich"]]))
+    
+    if (wide_hme) {
+      pars <- obj[["gate.pars"]][["0"]]
+      cat(sprintf("\n--------------------------\ngate-%s\n", "0"))
+      for (g in seq_along(pars)) {
+        p <- pars[[g]]
+        se <- gate.errs[["0"]][[g]]
         zstat <- p / se
         tbl <- cbind(p, se, zstat, 2 * pnorm(-abs(zstat)))
-        colnames(tbl) <- c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)")
+        dimnames(tbl) <- list(obj[['gate.pars.nms']],
+                              c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)"))
+        printCoefmat(tbl, digits = 3)
+        cat("\n")
+      }
+    } else {
+      pars <- obj[["gate.pars"]]
+      for (g in names(pars)) {
+        cat(sprintf("\n--------------------------\ngate-%s\n", g))
+        p <- pars[[g]]
+        se <- gate.errs[[g]]
+        zstat <- p / se
+        tbl <- cbind(p, se, zstat, 2 * pnorm(-abs(zstat)))
+        dimnames(tbl) <- list(obj[['gate.pars.nms']],
+                              c("Estimate", "Std.Err", "z-stat", "Pr(>|z|)"))
         printCoefmat(tbl, digits = 3)
         cat("\n")
       }
@@ -56,14 +98,4 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   }
   
   cat("\n\n----------------------------------------------------\n\n")
-  
-  # Seperate the calculation of the marginal effects outside the main function call
-  #if (margbool) {
-  #  for (e in names(obj[["expert.pars"]])) {
-  #    p <- as.matrix(round(obj[["gate.margins"]][[e]], 4))
-  #    dimnames(p) <- list(c(obj[["gate.pars.nms"]]), "")
-  #    cat(sprintf("\n--------------------------\nexpert-%s marginal effects\n", e))
-  #    print(p)
-  #  }
-  # }
 }

@@ -106,7 +106,7 @@ siblings <- function(d, nodes)
 }
 
 
-# given a node address, find all nodes that share the same parent
+# given a node address, find all nodes that share the same depth
 generation <- function(x, nodes)
 {
   nodes[which(nchar(nodes) == nchar(x))]
@@ -127,7 +127,6 @@ is_terminal <- function(d, nodes)
     return(bool)
   }
   lapply(d, f_)
-  #Map(function(y, z) if (y) z, b, d)d[unlist(b)]
 }
 
 

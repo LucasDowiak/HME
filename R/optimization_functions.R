@@ -133,7 +133,7 @@ gradient <- function(grad_type)
   if (grad_type == "gaussian") {
     f_ <- function(parm, Y, X, wt)
     {
-      beta <- parm[1:(length(parm) - 1)]
+      beta <- parm[-length(parm)]
       variance <- exp(parm[length(parm)])
       eps <- Y - (X %*% beta)
       g <- wt * (-0.5 * ((1 / variance) - (eps / variance)**2))
@@ -188,85 +188,157 @@ Q <- function(like_type)
 
 
 
-multinomial_info_matrix <- function(node, treestr, gate.pars, ln, lp, Z, rp)
+logistic_score <- function(node, list_post, list_priors, Z)
 {
-  gate.par <- gate.pars[[node]]
-  if (is.list(gate.par))
-    m <- length(gate.pars) + 1
-  else
-    m <- 2
-  H <- joint_posterior_weight(node=node, lp=lp, rp=rp)
-  h <- lp[[node]]
-  g <- ln[[node]]
+  # joint posterior
+  H <- joint_posterior_weight(node=node, lp=list_post, rp=1)
+  # prior weight for gating node
+  g <- list_priors[[node]]
   
-  I <- matrix(0, nrow=ncol(Z), ncol=ncol(Z))
-  for (i in seq_len(nrow(Z))) {
-   for (j in seq_len(ncol(h) - 1)) {
-     wt <- H[i] * (h[i, j] - g[i, j])
-     I <- I + wt**2 * (Z[i, ] %o% Z[i, ])
-   }
+  splits <- ncol(g) - 1L
+  omega_score <- vector("list", length(splits))
+  for (s in seq_len(splits)) {
+    # sweep out gating varibles Z in direction 1
+    omega_score[[s]]  <- sweep(Z, 1, as.array(H * (1 - g[, s])), `*`)
   }
-  
-  G <- matrix(0, nrow=nrow(Z), ncol=ncol(Z))
-  for (j in seq_len(ncol(h) - 1)) {
-    G <- G + sweep(Z, 1, H * (h[,j] - g[,j]), `*`) 
-  }
-  
-  HS <- matrix(0, nrow=ncol(Z), ncol=ncol(Z))
-  for (i in seq_len(nrow(Z))) {
-    OZ <- Z[i, ] %o% Z[i, ]
-    tmp <- matrix(0, nrow=ncol(Z), ncol=ncol(Z))
-    for (j in seq_len(ncol(g) - 1)) {
-      for (k in seq_len(ncol(g) - 1)) {
-        tmp <- H[i] * ((j == k) - g[i, j]) * g[i, k] * OZ
-      }
-    }
-    HS <- HS + tmp
-  }
-  OPG <- crossprod(G)
-  sandwich <- solve(HS) %*% OPG %*% solve(HS)
-  return(list(OPG=OPG, I=I, H=HS, sandwich=sandwich))
+  # sweep out gating varibles Z in direction 1
+  # omega_score <- sweep(Z, 1, as.array(H * (1 - g[, 1])), `*`)
+  return(c(omega_score))
 }
 
 
-expert_info_matrix <- function(expert, expert_type=c("gaussian"), expert.pars,
-                               lp, X, Y)
+logistic_hessian <- function(node, list_post, list_priors, Z)
 {
-  expert_type <- match.arg(expert_type)
-  if (expert_type == "gaussian") {
-    out <- gaussian_sandwich(expert, expert.pars, lp, X, Y)
+  
+  # joint posterior
+  H <- joint_posterior_weight(node=node, lp=list_post, rp=1)
+  # prior weight for gating node
+  g <- list_priors[[node]]
+  
+  nrz <- nrow(Z)
+  ncz <- ncol(Z)
+  ncg <- ncol(g)
+  
+  # Outer hessian
+  ZZ <- apply(Z, 1, function(x) x %*% t(x))
+  dim(ZZ) <- c(ncz, ncz, nrz)
+  
+  gamma_t <- function(z)
+  {
+    o <- z %*% t(z)
+    diag(o) <- -z * (1 - z)
+    return(o)
+  }
+  Gamma <- apply(g[, -ncg, drop=FALSE], 1, gamma_t)
+  dim(Gamma) <- c(ncg - 1L, ncg - 1L, nrow(g))
+  
+  d <- (ncg - 1) * ncz
+  hess <- array(dim=c(d, d, nrow(Z)))
+  for (i in seq_len(nrz)) {
+    hess[,,i] <- H[i] * Gamma[,,i] %x% ZZ[,,i]
+  }
+  return(hess)
+}
+
+
+gaussian_score <- function(node, expert.pars, list_post, list_priors, Y, X)
+{
+  # extract the variables for the expert
+  pars <- expert.pars[[node]]
+  np <- length(pars)
+  betas <- pars[-np]
+  variance <- exp(pars[np])
+  
+  # joint posterior probability and residuals
+  H <- joint_posterior_weight(node, lp=list_post, rp=1)
+  eps <- Y - expert_pred(pars, X, "gaussian")
+  
+  beta_score <- sweep(X, 1, as.array(H * (eps / variance)), `*`)
+  var_score <- -0.5 * H * ((eps**2 / variance) - 1)
+  gaussian_score <- cbind(beta_score, var_score)
+  colnames(gaussian_score) <- c(colnames(beta_score), "variance")
+  return(gaussian_score)
+}
+
+
+gaussian_hessian <- function(node, expert.pars, list_post, list_priors, Y, X)
+{
+  # extract the variables for the expert
+  pars <- expert.pars[[node]]
+  np <- length(pars)
+  betas <- pars[-np]
+  variance <- exp(pars[np])
+  
+  # joint posterior probability
+  H <- joint_posterior_weight(node, lp=list_post, rp=1)
+  yhat <- expert_pred(pars, X, "gaussian")
+  eps <- Y - yhat
+  
+  out_array <- array(NA_real_, dim=c(length(pars), length(pars), length(Y)))
+  for (ii in seq_along(Y)) {
+    XX <- X[ii, ] %o% X[ii, ]
+    Xe <- X[ii, ] * eps[ii]
+    VV <- -0.5 * eps[ii]**2
+    out_array[,,ii] <- (H[ii] / variance) * cbind(rbind(XX, Xe), c(t(Xe), VV))
+  }
+  return(out_array)
+}
+
+
+# Take a list of square matrices and make them block diagonal
+block_diag <- function(lst)
+{
+  if (!inherits(lst, "list")) {
+    stop("lst must be a list of matrices.")
+  }
+  clss <- sapply(lst, inherits, "matrix")
+  if (!all(clss)) {
+    stop("All elements of `lst` must be of class `matrix`.")
+  }
+  nc <- sapply(lst, ncol)
+  nr <- sapply(lst, nrow)
+  if (any(nc != nr)) {
+    stop("Elements of `lst` are not all square matrices")
+  }
+  out <- matrix(0, nrow=sum(nr), ncol=sum(nc))
+  idx <- 0
+  for (ii in seq_along(nr)) {
+    ed <- cumsum(nr)[ii]
+    st <- idx + 1
+    out[st:ed, st:ed] <- lst[[ii]]
+    idx <- ed
   }
   return(out)
 }
 
-gaussian_sandwich <- function(expert, expert.pars, lp, X, Y)
+
+sandwich_vcov <- function(gte.nms, exp.nms, lp, ln, exp.pars, Y, X, Z, N)
 {
-  pars <- expert.pars[[expert]]
-  np <- length(pars)
-  variance <- pars[np]
+  gate_scores <- napply(gte.nms, logistic_score, lp, ln, Z)
   
-  H <- joint_posterior_weight(expert, lp, 1)
-  yhat <- expert_pred(pars, X, "gaussian")
-  eps <- Y - yhat
-  Beta <- sweep(X, 1, H * (eps / variance), `*`)
-  Var <- -0.5 * H * ((1 / variance) - (eps / variance)**2)
-  G <- cbind(Beta, Var)
-  colnames(G) <- c(colnames(G)[1:(np-1)], "variance")
+  expt_scores <- napply(exp.nms, gaussian_score, exp.pars, lp, ln, Y, X)
   
-  HS <- matrix(0, nrow=np, ncol=np)
-  for (i in seq_len(nrow(X))) {
-    OX <- X[i, ] %o% X[i, ]
-    BB <- -(H[i] / variance) * OX
-    VB <- -H[i] * (eps[i] / variance**2) * X[i,]
-    VV <- -0.5 * H[i] * (-(1/variance**2) + 2 * (eps[i]**2 / variance**3))
-    tmp <- rbind(BB, VB)
-    tmp <- cbind(tmp, c(VB, VV))
-    HS <- HS + tmp
-  }
-  dimnames(HS) <- list(colnames(G), colnames(G))
-  OPG <- crossprod(G)
-  sandwich <- solve(HS) %*% OPG %*% solve(HS)
-  return(list(OPG=OPG, H=HS, sandwich=sandwich))
+  # Create the full score vector of theta = (omega + beta)
+  scores <- do.call(cbind, c(unlist(gate_scores, recursive=FALSE), expt_scores))
+  nc <- ncol(scores)
+  rm(gate_scores, expt_scores)
+  
+  # Sum outer product of each input pattern
+  scores <- apply(scores, 1, function(x) x %*% t(x))
+  dim(scores) <- c(nc, nc, N)
+  scores <- rowSums(scores, dims=2)
+  
+  gate_hess <- napply(gte.nms, logistic_hessian, lp, ln, Z)
+  gate_hess <- lapply(gate_hess, rowSums, dims=2)
+  
+  expt_hess <- napply(exp.nms, gaussian_hessian, exp.pars, lp, ln, Y, X)
+  expt_hess <- lapply(expt_hess, rowSums, dims=2)
+  
+  H <- block_diag(c(gate_hess, expt_hess))
+  
+  vcv <- solve(H) %*% scores %*% solve(H)
+  
+  return(list(hessian=H, OPG=scores, sandwich=vcv))
 }
 
 

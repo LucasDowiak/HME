@@ -3,8 +3,9 @@ source("R/benchmark_hme.R")
 source("R/wage_data_prep.R")
 
 
-all_vars <- c("lnwage", "age16", "age16sq", "black", "indian", "asian", "hisp",
-              "yreduc", "Creativity", "Design", "Analytics", "Perseptive")
+
+all_vars <- c("lnwage", "age16", "age16sq", "sex", "black", "indian", "asian", "hisp",
+              "yreduc", "Creativity", "Design", "Analytics", "Perceptive")
 
 boolcc <- complete.cases(dtf[, .SD, .SDcols=all_vars[-10]])
 booldd <- complete.cases(dtf[, .SD, .SDcols=all_vars])
@@ -15,12 +16,44 @@ dtftrain <- dtf[!booltest & booldd]
 # seperate into test and validation set
 
 
-lapply(list(hme_wage_1D_2E, hme_wage_2D_3E, hme_wage_2D_4E, hme3), criterion, "aic")
-saveRDS(hme3, file="wage/hme_1D_3E.RDS")
+form_ols <- "lnwage ~ age16 + age16sq + yreduc + sex + black + indian + asian + hisp + Creativity + Design + Analytics + Perceptive"
 
-form_ols <- "lnwage ~ age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
+form_full <- "lnwage ~ age16 + age16sq + yreduc + sex + black + indian + asian + hisp + Creativity + Design + Analytics + Perceptive | age16 + age16sq + yreduc + sex + black + indian + asian + hisp + Creativity + Design + Analytics + Perceptive"
 
-form <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive"
+form_mid <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + yreduc + sex + black + indian + asian + hisp + Creativity + Design + Analytics + Perceptive"
+
+form_min <- "lnwage ~ age16 + age16sq | age16 + age16sq + yreduc + sex + black + indian + asian + hisp + Creativity + Design + Analytics + Perceptive"
+
+
+dir("models/")
+mod3d <- readRDS("models/hme_3d_full.RDS")
+B <- 199
+b <- 1
+ME_mat <- matrix(0, B, 13)
+while (b <= B) {
+  t1 <- Sys.time()
+  print(sprintf("Starting %s out of %s. Time is %s", b, B, Sys.time()))
+  dtfshuffle <- dtftrain[sample.int(.N, replace=TRUE)]
+  mod <- try(
+    hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), formula=form_full,
+        data=dtfshuffle, holdout=dtftest, maxiter=150, tolerance=1e-4, trace=0)
+  )
+  if (inherits(mod, "try-error")) {
+    next
+  } else {
+    me <- marginal_effects(mod)
+    ME_mat[b,] <- me$margins
+    t2 <- Sys.time()
+    print(sprintf("Ending %s out of %s. It took %.3f minutes.", b, B, t2 - t1))
+    write.csv(ME_mat, "margins/min_spec_3w_me.csv", row.names=FALSE)
+    b <- b + 1
+  }
+}
+colnames(ME_mat) <- names(me$margins)
+write.csv(ME_mat, "margins/min_spec_3w_me.csv", row.names=FALSE)
+
+
+
 c("0", "0.1", "0.2")
 c("0", "0.1", "0.2", "0.1.1", "0.1.2")
 c("0", "0.1", "0.2", "0.1.1", "0.1.2", "0.2.1", "0.2.2")
@@ -33,28 +66,41 @@ c("0",
   "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
   "0.1.1.1", "0.1.1.2", "0.1.2.1", "0.1.2.2")
 
-"lnwage ~ age16 + age16sq | age16 + age16sq + black + indian + asian + hisp + yreduc"
-
 lm_mod <- lm("lnwage ~ age16 + age16sq + yreduc + black + indian + asian + hisp",
              data=dtftrain)
 
 
 debugonce(hme)
 
-hme1 <- hme(c("0",
-              "0.1", "0.2",
-              "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
-            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
-            #init_gate_pars = hme1$gate.pars, init_expert_pars = hme1$expert.pars)
+# Wage
+hme_2d <- hme(c("0", "0.1", "0.2"), form="Sepal.Width ~ Petal.Width | Petal.Width",
+              data=iris, holdout=NULL, maxiter=1, tolerance=1e-5, trace=0,
+              init_gate_pars=hme_iris_2d$gate.pars, init_expert_pars=hme_iris_2d$expert.pars)
+
+hme_3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), form=form_full,
+              data=dtftrain, holdout=dtftest, maxiter=100, tolerance=1e-5, trace=0)
+
+hme_3w <- hme(c("0", "0.1", "0.2", "0.3"), form=form_full,
+              data=dtftrain, holdout=dtftest, maxiter=100, tolerance=1e-5, trace=0)
+
+
+# Iris
+hme_iris_2d <- hme(c("0", "0.1", "0.2"), form="Sepal.Width ~ Petal.Width | Petal.Width",
+                   data=iris, maxiter=75, tolerance=1e-5, trace=0)
+
+hme_iris_3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), form="Sepal.Width ~ Petal.Width | Petal.Width",
+                   data=iris, maxiter=75, tolerance=1e-5, trace=0)
+
+hme_iris_3w <- hme(c("0", "0.1", "0.2", "0.3"), form="Sepal.Width ~ Petal.Width | Petal.Width",
+                   data=iris, maxiter=75, tolerance=1e-5, trace=0)
+
 ME1 <- marginal_effects(hme1)
 # saveRDS(hme1, file="models/*d.RDS")
 hme2 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
               "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             #init_gate_pars = hme2$gate.pars, init_expert_pars = hme2$expert.pars)
 ME2 <- marginal_effects(hme2)
@@ -62,7 +108,7 @@ hme3 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
               "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             # init_gate_pars = hme3$gate.pars, init_expert_pars = hme3$expert.pars)
 ME3 <- marginal_effects(hme3)
@@ -70,7 +116,7 @@ hme4 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
               "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             # init_gate_pars = hme4$gate.pars, init_expert_pars = hme4$expert.pars)
 ME4 <- marginal_effects(hme4)
@@ -78,7 +124,7 @@ hme5 <- hme(c("0",
               "0.1", "0.2",
               "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
               "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perseptive",
+            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             # init_gate_pars = hme5$gate.pars, init_expert_pars = hme5$expert.pars)
 ME5 <- marginal_effects(hme5)
@@ -179,3 +225,30 @@ for (ee in hme3e$expert.nms) {
   proj <- p[1] + p[2] * age_ + p[3] * age_**2 + p[4] * 14
   print(summary(proj))
 }
+
+
+
+two_prop_z <- function(DT, bool, variable_name)
+{
+  p1 <- mean(DT[bool, ][[variable_name]])
+  n1 <- DT[bool, .N]
+  
+  p2 <- mean(DT[!bool, ][[variable_name]])
+  n2 <- DT[!bool, .N]
+  
+  p_star <- (p1 * n1 + p2 * n2) / (n1 + n2)
+  numerator <- p1 - p2
+  denominator <- sqrt( p_star * (1 - p_star) * ( 1/n1 + 1/n2 ) )
+  
+  z_score <- numerator / denominator
+  p_value <- 2 * pnorm(-abs(z_score))
+  return(c(z_score=z_score, p_value=p_value))
+}
+
+p1 <- dtftrain[!bool_expt2, mean(yreduc)]
+n1 <- dtftrain[!bool_expt2, .N]
+p2 <- dtftrain[bool_expt2, mean(yreduc)]
+n2 <- dtftrain[bool_expt2, .N]
+two_prop_z(dtftrain, bool_expt2, "hispanic")
+
+

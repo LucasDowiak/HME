@@ -64,15 +64,15 @@ dtfONet[, Analytics := cobb_douglass(Analyzing_Data_or_Information_Importance,
 dtfONet[, Creativity := cobb_douglass(Thinking_Creatively_Importance,
                                       Thinking_Creatively_Level, a, b)]
 dtfONet[, Design := cobb_douglass(Design_Importance, Design_Level, a, b)]
-dtfONet[, Perseptive := cobb_douglass(Social_Perceptiveness_Importance,
+dtfONet[, Perceptive := cobb_douglass(Social_Perceptiveness_Importance,
                                       Social_Perceptiveness_Level, a, b)]
 
 dtfONet[, Design := scale(Design)]
-dtfONet[, Perseptive := scale(Perseptive)]
+dtfONet[, Perceptive := scale(Perceptive)]
 dtfONet[, Creativity := scale(Creativity)]
 dtfONet[, Analytics := scale(Analytics)]
 
-dtfONetMeans <- dtfONet[, .(code, Creativity, Design, Analytics, Perseptive)]
+dtfONetMeans <- dtfONet[, .(code, Creativity, Design, Analytics, Perceptive)]
 dtfONetMeans <- dtfONetMeans[, lapply(.SD, mean, na.rm=T), by=code]
 
 dtf <- merge(dtf, dtfONetMeans, by.x="soccoda", by.y="code", all.x=T)
@@ -87,39 +87,38 @@ par(mfrow=c(2,2))
 
 dtf[sex==1 & !is.na(Design), plot(density(Design),
                                   main="Design", xlab="", ylab="",
-                                  col="goldenrod2")]
-dtf[sex==0 & !is.na(Design), lines(density(Design), col="skyblue")]
+                                  col="goldenrod2", lty=4)]
+dtf[sex==0 & !is.na(Design), lines(density(Design), col="skyblue", lty=1)]
 grid()
 
 dtf[sex==0 & !is.na(Analytics), plot(density(Analytics),
                                      main="Analytics", xlab="", ylab="",
-                                     col="skyblue")]
-dtf[sex==1 & !is.na(Analytics), lines(density(Analytics), col="goldenrod2")]
+                                     col="skyblue", lty=1)]
+dtf[sex==1 & !is.na(Analytics), lines(density(Analytics), col="goldenrod2", lty=4)]
 grid()
 
 dtf[sex==0 & !is.na(Creativity), plot(density(Creativity),
                                       main="Creativity", xlab="", ylab="",
-                                      col="skyblue")]
-dtf[sex==1 & !is.na(Creativity), lines(density(Creativity), col="goldenrod2")]
+                                      col="skyblue", lty=1)]
+dtf[sex==1 & !is.na(Creativity), lines(density(Creativity), col="goldenrod2", lty=4)]
 grid()
 
-dtf[sex==0 & !is.na(Perseptive), plot(density(Perseptive),
-                                      main = "Perseptive", xlab="", ylab="",
-                                      col="skyblue")]
-dtf[sex==1 & !is.na(Perseptive), lines(density(Perseptive), col="goldenrod2")]
+dtf[sex==0 & !is.na(Perceptive), plot(density(Perceptive),
+                                      main = "Perceptive", xlab="", ylab="",
+                                      col="skyblue", lty=1)]
+dtf[sex==1 & !is.na(Perceptive), lines(density(Perceptive), col="goldenrod2", lty=4)]
 grid()
 
-legend(-6, 1.15, legend = c("Male", "Female"),
-       col=c("skyblue", "goldenrod2"), lwd=2,
-       xpd="NA")
+legend(-6, 1.35, legend = c("Male", "Female"), col=c("skyblue", "goldenrod2"),
+       lwd=2, lty=c(1,4), xpd="NA")
 
 plot(1, type = "n", axes=FALSE, xlab="", ylab="")
 legend(x = "center",inset = 0,
        legend = c("Male", "Female"), 
        col=c("skyblue", "goldenrod2"), lwd=5, cex=.5, horiz = TRUE)
 
-summary(dtf[sex==0, .(Creativity, Design, Analytics, Perseptive)])
-sum(complete.cases(dtf[sex==0, .(Design, Creativity, Analytics, Perseptive)]))
-sum(complete.cases(dtf[sex==0, .(Creativity, Analytics, Perseptive)]))
+summary(dtf[sex==0, .(Creativity, Design, Analytics, Perceptive)])
+sum(complete.cases(dtf[sex==0, .(Design, Creativity, Analytics, Perceptive)]))
+sum(complete.cases(dtf[sex==0, .(Creativity, Analytics, Perceptive)]))
 
 

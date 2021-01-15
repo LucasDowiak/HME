@@ -9,16 +9,18 @@ logLik.hme <- function(obj)
 criterion <- function(obj, type=c("aic", "bic", "mse"))
 {
   type <- match.arg(type)
-  L <- logLik(obj)
   K <- obj[["no.of.pars"]]
+  N <- obj[["N"]]
+  L <- logLik(obj) * N
+  
   
   if (type %in% c("aic", "bic")) {
     if (type == "aic") {
       penalty <- 2
     } else if (type == "bic") {
-      penalty <- log(obj[["N"]])
+      penalty <- log(N)
     }
-    out <- penalty * K - 2 * L
+    out <- (penalty * K - 2 * L) / N
   } else if (type == "mse") {
     out <- min(obj$MSE)
   }
