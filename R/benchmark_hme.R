@@ -95,6 +95,11 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
     expert.pars <- mstep[["exp.pars"]]
     gate.pars <- mstep[["gat.pars"]]
     newLL <- mstep[["loglik"]] / length(Y)
+    ewmaLL <- if (is.infinite(oldLL)) {
+      newLL
+    } else {
+      0.9 * oldLL + 0.1 * newLL
+    }
     logL[ii + 1, ] <- newLL
     parM[ii + 1, ] <- unlist(c(gate.pars, expert.pars))
     if (!nullholdout) {
@@ -103,9 +108,9 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
       errorR[ii + 1, ] <- mean((Yp - yhat)**2)
     }
     if (trace > 0) {
-      cat('\r', sprintf("Step: %d - Log-Likelihood: %f", ii, newLL))
+      cat('\r', sprintf("Step: %d - Log-Likelihood: %f - Weighted LL: %f", ii, newLL, ewmaLL))
     } else {
-      cat('\n', sprintf("Step: %d - Log-Likelihood: %f", ii, newLL))
+      cat('\n', sprintf("Step: %d - Log-Likelihood: %f - Weighted LL: %f", ii, newLL, ewmaLL))
     }
     if (abs(oldLL - newLL) < tolerance)
       break

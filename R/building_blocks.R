@@ -106,7 +106,7 @@ siblings <- function(d, nodes)
 }
 
 
-# given a node address, find all nodes that share the same parent
+# given a node address, find all nodes that share the same depth
 generation <- function(x, nodes)
 {
   nodes[which(nchar(nodes) == nchar(x))]
