@@ -76,7 +76,7 @@ demonstrated by estimating a Mincer earning function using census data. Marginal
 robust standard errors, a tree-growing algorithm, and a modest extension are also
 discussed.
 
-\end{abstract}
+ˇ\end{abstract}
 
 \vspace{1pt}
 
@@ -91,12 +91,12 @@ discussed.
 \section{Introduction}
 
 The concepts of mixture models and mixture distributions are old hat
-in the economics business. \cite{Hamilton1989} and \cite{GoldfeldQuant1973}
+in the economics field. \cite{Hamilton1989} and \cite{GoldfeldQuant1973}
 are a few of the pioneering works for time series and cross sectional
-regression, respectively. We are also knee deep in the age of machine
+regression, respectively. We are also deep into the age of machine
 learning, and it's reigning champion, the artificial neural network, has
-been successfuly adapted and studied in the context of applied econometrics.
-This article adds to the small body of literature that employs a specific
+been successfully adapted and studied in the context of applied econometrics.
+This article adds to the small body of literature that employs a novel
 neural network architecture to model the weights of a mixture model. In doing
 so, we leverage the highly flexible nature of a neural network but maintain
 interpretability and the means to quantify marginal effects.
@@ -104,15 +104,15 @@ The model under investigation is called the Hierarchical Mixture
 of Experts (HME), a class of mixture models whose defining feature is 
 its conditional weighting scheme. The model's origin story traces back to \cite{JJNH1991}.
 The authors use a single multinomial classifier to assign, in a probablistic
-sense, input patterns to local \textit{experts}. These \textit{experts} are
+sense, input patterns to local \textit{experts}. These experts are
 almost always some flavor of regression or classification model.
 The multinomial structure that assigns inputs to experts is
 refered to as the \textit{gating network}. The authors employ this
 mixture of experts (ME) framework to model vowel discrimination in a speech
 recognization context. Shortly after, \cite{JordanJacobs1992}
-generalize a single-layer multinomial gating network
-to allow for more than one layer while \cite{JordanJacobs1993} demonstrate
-an Expectation-Maximization approach to estimation strategy more suitable to the additional complexity
+generalize this single-layer multinomial gating network to one with an arbitrary
+number of layers. \cite{JordanJacobs1993} then demonstrate
+an Expectation-Maximization approach to model estimation that is capable handling the additional complexity
 the generalization requires during optimization. The result
 of this extension is a gating network that takes on a tree-like structure,
 stemming from an initial multinomial split and filtering down through additional
@@ -120,15 +120,14 @@ multinomial partitions of the input space. HME models nest ME models as special 
 Pushing a little further, one additional case is studied as well. As the depth of an HME
 grows, so too must the number of experts. If we have a symmetric HME network,
 this growth is geometric with respect to the network's depth. With this in mind,
-we propose a model where each expert is not unique, but a member of a fixed
-set of experts that are allowed to repeat at different terminal nodes of the
-network. We refer to this additional model as a Hierarchical Mixture of Repeated
+a further extension can be considered where each expert is not unique, but a member of a fixed
+set of experts. We refer to this additional model as a Hierarchical Mixture of Repeated
 Experts (HMRE). Figure (\ref{fig:network_comparison}) provides an example
-of each of these models studied in this article.
+of each of the variaations of this class of model.
 
 \bigskip
 
-This article investigates the adoption of ME, HME, and HMRE models to an applied
+This article investigates the adoption of ME and HME models to an applied
 econometric framework, with particular attention focused on interpretation of
 the gating network and robust inference of parameter estimates. The outline for the
 rest of this manuscript is as follows: the remainder of this section
@@ -141,7 +140,7 @@ marginal effects of the model's covariates. In section \ref{sec:SimpleExample},
 we provide a vary simple demonstration of the HME in action and then
 move on to a more economically relevant example of applying the HME model to
 a Mincer wage equation in section \ref{sec:MincerWageEx}. Section
-\ref{sec:Conclusion} offers a modest conclusion.
+\ref{sec:Conclusion} concludes.
 
 \begin{figure}[!ht]
   \centering
@@ -166,8 +165,8 @@ a Mincer wage equation in section \ref{sec:MincerWageEx}. Section
 
 \subsection{Relevant Literature}
 
-MoE and HME frameworks have been utilized for both time series and
-cross-sectional analysis. Within the cross-sectional approach literature,
+ME and HME frameworks have been utilized for both time series and
+cross-sectional analysis. Within the cross-sectional literature,
 \cite{WaterhouseRobinson1995} puts forth a method to grow an HME from a       % wr95 tree-growing
 single split from the root node. The authors are influenced by the popular
 technique used for classification and regression trees \cite{CART1984} and  % cart as inspiration for application
@@ -185,6 +184,8 @@ for a mixture of general linear models estimated by maximum likelihood to
 produce consistent and asymptotically normal estimates of the mean response.
 The conditions are validated for poisson, gamma, gaussian, and binomial experts.
 
+\bigskip
+
 Alternatively, \cite{WMS1995} provide a detailed discussion 
 examining ME applied in a time series context and provide valuable
 insights to avoid overfitting the model to the data, a common problem in
@@ -193,38 +194,38 @@ framework. Using five and a half decades of monthly US industrial production
 data, the authors allow the series to choose between two models, one modeled
 as a random walk and the other as trend stationary. In addition, they present a
 Bayesian approach to estimation. \cite{CarvalhoTanner2003} lay out the necessary regularity conditions to perform
-hypthesis tests on stationary MoE time series of generalized linear models (HoE-GLM)
+hypthesis tests on stationary ME time series of generalized linear models (ME-GLM)
 using Wald tests. The dual cases of a well-specificed and a miss-specified model
-are considered. The authors restrict their analysis to MoE-GLM models involving
+are considered. The authors restrict their analysis to ME-GLM models involving
 lagged dependent and lagged external covariate variables only. Generazlization to
 include lagged conditional mean values is left for another time.
 \cite{CarvalhoTanner2005} take a similar approach to \cite{CarvalhoTanner2003} but
-apply their analysis to a purely auto-regressive context restricted to gaussian models.
+apply their analysis to a purely auto-regressive context restricted to Gaussian models.
 The authors extend arguments in \cite{CarvalhoTanner2003} to non-stationary series and
 provide simulated evidence that using the BIC is helpful in selecting the 
-approprite number of experts to include. \cite{CarvalhoTanner2006} refocus the discussion on MoE of time series
+approprite number of experts to include. \cite{CarvalhoTanner2006} re-focus the discussion on ME of time series
 regressions restricted to exponential family distributions. Distilling
 the available literature at the time, the authors cover the important
 topics of estimation and asymptotic properties in the maximum likelihood
 framework, selection of the number of experts, model validation and
-fitting. \cite{CarvalhoSkoulakis2010} Applies mixture-of-experts of a single time series.
-Using stock returns, the authors structure the gating network using lagged
+fitting. \cite{CarvalhoSkoulakis2010} applies ME of a single time series.
+Using stock returns the authors structure the gating network using lagged
 dependent variabels and an 'external' covariate capturing a measure of the
 trade volume at that time.
 
-In this article, estimation and inference is from a maximum likelihood 
-perspective and will remain the primary focues. Estimation of MoE and HME
-models from a Bayesian has received considerable amount of attention as well.
+\bigskip
 
+In this article estimation and inference is from a maximum likelihood 
+perspective and will remain the primary focues. Estimation of ME and HME
+models from a Bayesian has received considerable amount of attention as well.
 \cite{Waterhouse1995BayesianMF} provided an initial approach to estimating
-a MoE by combining gaussian priors on the gating and expert parameters
+a ME by combining gaussian priors on the gating and expert parameters
 with gamma hyperparameter priors in an approximating ensemble to the true
 joint density of the model. Optimizition of the parameter vector for the approximating density
 occurs a block of parameters at a time. \cite{UedaGhahramani2002} improve
 on \cite{Waterhouse1995BayesianMF} by optizimg for the appropriate number of
 experts in in addtion to  model parameters. \cite{BishopSvenson2003} find
-previous bayesian approaches to estimating an HME lacking [\cite{HuertaJiangTanner2003},
-\cite{UedaGhahramani2002}]. Using variational inference, the authors provide a
+previous bayesian approaches to estimating an HME lacking. Using variational inference, the authors provide a
 complete bayesian estimation approach to the log marginal likelihood. With an eye
 to prediction, the author's advocate that their approach makes the HME model
 easier to estimate without overfitting.
@@ -245,33 +246,33 @@ to generalized linear models and basic examples.
 \section{Model} \label{sec:Model}
 
 We start by presenting the HME as a standard mixture model.
-For a given input and output pair $(\boldsymbol{X_{t}}, Y_{t})$, each expert
-provides a probablistic model relating input $\boldsymbol{X_{t}}$ to output
-$Y_{t}$:
+For a given input and output pair $(\boldsymbol{x}_{t}, y_{t})$, each expert
+provides a probablistic model relating input $\boldsymbol{x}_{t}$ to output
+$y_{t}$:
 
 \begin{equation} \label{eq:ConditionalDistribution}
-  P^{m}_{t} \equiv P^{m}(Y_{t}|\boldsymbol{X_{t}}; \boldsymbol{\beta}^{m}), \quad m = 1,2,...,M
+  P^{m}_{t} \equiv P^{m}(y_{t}|\boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}), \quad m = 1,2,...,M
 \end{equation}
 
 where $m$ is one of the $M$ component experts in the mixture. The experts
 are combined with associated weights into a mixture distribution
 
 \begin{equation} \label{eq:staticmixture}
-  P(Y_{t} | \boldsymbol{X_{t}}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(Y_{t} | \boldsymbol{X_{t}}; \boldsymbol{\beta}^{m})
+  P(y_{t} | \boldsymbol{x}_{t}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(y_{t} | \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 Here, $\expmixwt_{t}(m)$ is the probability that the input unit $t$ belongs
 to expert $m$ and has the usual restrictions: $0 \leq \expmixwt(m|t) \leq 1$
 for each $m$ and $\sum_{m} \expmixwt(m|t) = 1$. The gating network of the model
 applies a particular functional form to model $\expmixwt(m|t)$, which includes a
-second set of covariates $\boldsymbol{Z_{t}}$ and parameter vector $\boldsymbol{\omega}$:
+second set of covariates $\boldsymbol{z}_{t}$ and parameter vector $\boldsymbol{\omega}$:
 
 \begin{equation} \label{eq:mixture}
-  P(Y_{t} | \boldsymbol{X_{t}}, \boldsymbol{Z_{t}}; \, \boldsymbol{\beta}, \boldsymbol{\omega}) = \sum_{m=1}^{M} \expmixwt(m | \boldsymbol{Z_{t}}; \boldsymbol{\omega}) P^{m}(Y_{t} | \boldsymbol{X_{t}}; \boldsymbol{\beta}^{m})
+  P(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \expmixwt(m | \boldsymbol{z}_{t}; \boldsymbol{\Omega}) P^{m}(y_{t} | \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 
-\subsection{Gating Network and $\expmixwt(m | \boldsymbol{Z}, \boldsymbol{\omega})$} \label{subsec:GatingNetwork}
+\subsection{Gating Network and $\expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega})$} \label{subsec:GatingNetwork}
 
 The gating network model is structured as a collection of nodes in a tree
 structure that branches out in successive layers. The location of these nodes will
@@ -284,11 +285,11 @@ arbitrary number of splits. While a fully generalized gating network is
 conceptually attractive, it presents practical challenges for implementation.
 In this paper we address several architectures for the gating network, each
 with its own set of structural restrictions on the shape of the network and
-the number of splits each gating node can take. For arbitary node at address $a$,
+the number of splits each gating node can take. For arbitary gating node at address $a$,
 we use a multinomial logistic regression to model the split in direction $i$ to be:
 
 \begin{equation} \label{eq:softmax}
-  g^{a,i}_{t} \equiv g^{a,i}_{t}(\boldsymbol{Z_{t}}, \boldsymbol{\omega}^{a}) = \frac{\exp(\boldsymbol{Z_{t}} \ \boldsymbol{\omega}^{a,i})}{\sum^{J}_{j=1} {\exp(\boldsymbol{Z_{t}} \ \boldsymbol{\omega}^{a,j})}}
+  g^{a,i}_{t} \equiv g^{a,i}_{t}(\boldsymbol{z_{t}}, \boldsymbol{\omega}^{a}) = \frac{\exp(\boldsymbol{z^{\top}_{t}} \ \boldsymbol{\omega}^{a,i})}{\sum^{J}_{j=1} {\exp(\boldsymbol{z^{\top}_{t}} \ \boldsymbol{\omega}^{a,j})}}
 \end{equation}
 
 The parameters in equation (\ref{eq:softmax}) are subject to the usual
@@ -312,40 +313,42 @@ of expert $m$ for input pattern $i$ to be the product of the path taken
 from the root node to expert $m$:
 
 \begin{equation} \label{eq:gpath2}
-  \expmixwt(m | Z, \boldsymbol{\omega}) = \gateprod{g^{0}}{P^{m}}
+  \expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega}) = \gateprod{g^{0}}{P^{m}}
 \end{equation}
 
 For network architectures with multiple paths from the root node to
 the same expert (see bottom right of figure (\ref{fig:network_comparison})),
-we can index these multiples paths by $l$ so that:
+we can index these multiples paths by $l$ so that
 
 \begin{equation} \label{eq:pathsums}
-  \expmixwt(m | Z_{t}, \boldsymbol{\omega}) = \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} 
+  \expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega}) = \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} 
 \end{equation}
 
 
-By collecting--and summing--all possible paths from the root node to each
+By collecting and summing all possible paths from the root node to each
 expert, the conditional probability given in equation (\ref{eq:mixture}) can be
 expanded and expressed as:
 
 \begin{equation} \label{eq:contribution}
   \begin{split}
-    P(Y_{t}|X_{t}, Z_{t}; \boldsymbol{\omega}, \boldsymbol{\beta}) =& \sum_{m} \expmixwt(m | Z_{t}, \boldsymbol{\omega}) P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \\ 
-      =& \sum_{m} P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
+    P(y_{t}| \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \boldsymbol{\Omega}, \boldsymbol{\beta}) =& \sum_{m} \expmixwt(m | \boldsymbol{z}_{t}, \boldsymbol{\Omega}) P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \\ 
+      =& \sum_{m} P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
   \end{split}
 \end{equation}
 
-The product of these individual probabilities across the full sample size $T$ yields
-the likelihood function.
+If we concatenate the parameters of the gating network with the parametes of
+the experts as $\boldsymbol{\theta} = [\boldsymbol{\Omega} \,\, \boldsymbol{\beta}]$,
+then the product of these individual probabilities across the full sample size $T$ yields
+the likelihood function. 
 
 \begin{equation} \label{eq:likelihood}
-  \mathcal{L}(\boldsymbol{\theta}| Y, X, Z) = \prod_{t}\sum_{m}P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
+  \mathcal{L}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t}\sum_{m}P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
 \end{equation}
 
 And taking its log yields the log likelihood
 
 \begin{equation} \label{eq:loglikelihood}
-  \boldsymbol{l}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t}\log\sum_{m}P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta^{m}}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
+  \boldsymbol{l}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t}\log\sum_{m} P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l}
 \end{equation}
 
 The functional form of the log likelihood (\ref{eq:loglikelihood}) does not
@@ -358,7 +361,7 @@ original paper.
 \section{The EM Set-Up} \label{sec:Estimation}
 
 The EM approach to estimating an HME model starts by suggesting that if a
-resarcher had perfect information, each input vector $X_{t}$ could be matched
+resarcher had perfect information, each input vector $\boldsymbol{x}_{t}$ could be matched
 to the expert $P^{m}$ that generated it with certainty. If a set of indicator
 variables is introduced that captures this certainty, an \textit{augmented}
 version of the likelihood in equation (\ref{eq:likelihood}) can be put forward.
@@ -374,21 +377,20 @@ Define the indicator set as:
 We can then reformulate the likelihood equation
 
 \begin{equation}  \label{eq:auglikelihood}
-  \mathcal{L}_{c}(\boldsymbol{\theta}|Y, X, Z) = \prod_{t} \prod_{m} \left[ P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
+  \mathcal{L}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t} \prod_{m} \left[ P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
 \begin{equation}  \label{eq:augloglikelihood}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y, X, Z) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \sum_{m} I_{t}(m) \left[\log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) + \log \shortsum{l} \sumgateprod{g^{0}}{P^{m}}{l} \right]
 \end{equation}
 
 As mentioned previously, summing over multiple paths $l$ in equation
 (\ref{eq:augloglikelihood}) is only necessary in the HMRE case. For the ME
 and HME cases, $l = 1$, simplifying the second log in (\ref{eq:augloglikelihood})
 to $\log(\gateprod{g^{0}}{P^{m}})$. Going forward, we will focus our analysis on
-the ME and HME specifications with work on the HMRE case arriving in forthcoming
-articles.
+the ME and HME specifications with work on the HMRE case left for another time.
 
 
 %In previous works, each terminal node of thevtree was usually its own unique
@@ -415,8 +417,8 @@ discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
-  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}|Y,X,Z) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(Y_{t}|X_{t}; \boldsymbol{\beta}^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
-   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(Y_{t}|X_{t},\beta^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\
+  Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] & = \sum_{t}\sum_{m} \mathbb{E} \left[ I_{t}(m) \right] \left[ \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\ 
+   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{P^{m}_{t}} \left[ \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) + \log \gateprod{g^{0}_{t}}{P^{m}_{t}} \right] \\
    & = \sum_{t} Q_{t}(\boldsymbol{\theta})
  \end{split}
 \end{equation}
@@ -457,13 +459,13 @@ parameters governing each expert and each gating network can be grouped
 together and optmized on their own. For the experts we have:
 
 \begin{equation}
-  \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{P^{m}_{t}} \log P^{m} (Y_{t}|X_{t}; \boldsymbol{\beta}^{m})
+  \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{P^{m}_{t}} \log P^{m} (y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
-And for the gating node:
+And for the gating nodes:
 
 \begin{equation}
-  \argmax_{\boldsymbol{\omega^{a}}} \sum_{t} \gateprod{h^{0}_{t}}{h^{a}_{t}} \log g(Z_{t}, \boldsymbol{\omega}^{a})
+  \argmax_{\boldsymbol{\omega^{a}}} \sum_{t} \gateprod{h^{0}_{t}}{h^{a}_{t}} \log g( \boldsymbol{z}_{t}, \boldsymbol{\omega}^{a})
 \end{equation}
 
 
@@ -473,9 +475,9 @@ And for the gating node:
 When considering inference, it's worth thinking about what would motivate
 a researcher to turn to an HME model in the first place. At times,
 a researcher may suspect that a latent structure exists within the data
-and that a single regression $Y_{i} = X_{i} \boldsymbol{\beta}$
+and that a single regression $y_{t} = \boldsymbol{x}^{\top}_{t} \boldsymbol{\beta}$
 may mask a critical change in relationship depending on membership to
-some unknown sub-group $j$ of the data $Y_{ij} = X_{ij} \boldsymbol{\beta}_{j}$.
+some unknown sub-group $j$ of the data $y_{tj} = \boldsymbol{x}^{\top}_{t} \boldsymbol{\beta}_{j}$.
 A wide variety of time series, especially those with longer histories,
 experience changes in behaviour over time. They can be subjected to sharp one-off
 changes in value or more gradual changes of behavior over time. Regardless of
@@ -483,7 +485,7 @@ the context, any latent structural change in the data generating
 process may also introduce some hidden form of heterogeneity to the error terms. 
 Rather than taking a firm stance on any concealed structure, an HME
 setup ideally limits the work the researcher needs to do to specifying
-a set of well-chosen conditioning variables $Z$ to feed through the gating
+a set of well-chosen conditioning variables $\boldsymbol{Z}$ to feed through the gating
 network. This limited workload may come at a cost, though. By allowing the 
 gating network to find it's own mixture allocations, the odds of arriving at a
 mispecified model becomes a concern. To guard against this, we use a sandwich
@@ -537,7 +539,7 @@ For a generic gating node $a$ we can define the individual score for
 sample $t$ as:
 
 \begin{equation} \label{eq:gateScore}
-  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) = \frac{\partial Q_{t}}{\partial \boldsymbol{\omega}^{a,i}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} (1 - g^{a, i}_{t}) \boldsymbol{Z}_{t} 
+  \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a, i}) = \frac{\partial Q_{t}}{\partial \boldsymbol{\omega}^{a,i}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} (1 - g^{a, i}_{t}) \boldsymbol{z}_{t} 
 \end{equation}
 
 
@@ -554,14 +556,14 @@ $\boldsymbol{\beta}^{j} \neq \boldsymbol{\beta}^{k}$. Such an HME is defined by
 plays a critical role in guaranteeing the convergence of the model.
 
 In this article, each HME discussed will employ a set of experts running 
-a standard linear regression model with gaussian errors. To aide with model optimization,
+a standard linear regression model with Gaussian errors. To aide with model optimization,
 the specification of the parameter vector for each regression
  $\boldsymbol{\beta}^{m} = [\beta_{0}^{m} \,\, \ldots \,\, \beta_{k}^m \,\, \phi^{m}]$
 takes on a unique form where we model the log variance explicitly
 $\phi = \log \sigma^{2}$.
 
 \begin{equation}
-  P^{m}(Y_{t} | X_{t}; \, \boldsymbol{\beta}^{m}, \phi^{m}) = \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  ( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}  }{2 \exp (\phi^{m}) } \right) }
+  P^{m}(y_{t} | \boldsymbol{x}_{t}; \, \boldsymbol{\beta}^{m}, \phi^{m}) = \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  ( y_{t} - \boldsymbol{x}^{\top}_{t} \boldsymbol{\beta}^{m} )^{2}  }{2 \exp (\phi^{m}) } \right) }
 \end{equation}
 
 
@@ -581,13 +583,13 @@ regression expert is:
 with:
 
 \begin{equation}
-  \frac{\partial Q_{t}}{\partial \boldsymbol{\beta}^{m}} = \gateprod{h^{0}_{t}}{f^{m}_{t}} \frac{( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )}{\exp{(\phi^{m})}} \boldsymbol{X}_{t}
+  \frac{\partial Q_{t}}{\partial \boldsymbol{\beta}^{m}} = \gateprod{h^{0}_{t}}{f^{m}_{t}} \frac{( y_{t} - \boldsymbol{x}^{\top}_{t} \boldsymbol{\beta}^{m} )}{\exp{(\phi^{m})}} \boldsymbol{x}_{t}
 \end{equation}
  
 and
 
 \begin{equation}
-  \frac{\partial Q_{t}}{\partial \phi^{m}} = \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{2} \Big( \frac{( Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m} )^{2}}{\exp{(\phi^{m})}} - 1 \Big)
+  \frac{\partial Q_{t}}{\partial \phi^{m}} = \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{2} \Big( \frac{( y_{t} - \boldsymbol{x}^{\top}_{t} \boldsymbol{\beta}^{m} )^{2}}{\exp{(\phi^{m})}} - 1 \Big)
 \end{equation}
 
 
@@ -600,7 +602,7 @@ The hessian is equally straight-forward. Starting with equation
 
 
 \begin{equation} \label{eq:nodehessian}
-  \Ht{\bw{a}} \equiv \frac{\partial^{2} Q}{\partial \boldsymbol{\omega}^{a,i} \partial \boldsymbol{\omega}^{a,j}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} \boldsymbol{\Gamma}^{a}_{t} \otimes  \boldsymbol{Z}_{t} \boldsymbol{Z}_{t}^\top
+  \Ht{\bw{a}} \equiv \frac{\partial^{2} Q}{\partial \boldsymbol{\omega}^{a,i} \partial \boldsymbol{\omega}^{a,j}} = \gateprod{h^{0}_{t}}{h^{a}_{t}} \boldsymbol{\Gamma}^{a}_{t} \otimes  \boldsymbol{z}_{t} \boldsymbol{z}_{t}^\top
 \end{equation}
 
 where $\otimes$ is the kronecker product and:
@@ -619,12 +621,12 @@ For each expert regression:
 
 \begin{equation}
   \Ht{\boldsymbol{\beta}^{m}} = \frac{\gateprod{h^{0}_{t}}{f^{m}_{t}}}{\exp{(\phi^{m})}} \begin{bmatrix}
-  \boldsymbol{X}_{t} \boldsymbol{X}_{t}     &  \boldsymbol{X}_{t} \epsilon^{m}_{t}     \\
-  \boldsymbol{X}_{t} \epsilon^{m}_{t}       &  \frac{1}{2} (\epsilon^{m}_{t})^{2}
+  \boldsymbol{x}_{t} \boldsymbol{x}^{\top}_{t}     &  \boldsymbol{x}_{t} \epsilon^{m}_{t}     \\
+  \boldsymbol{x}^{\top}_{t} \epsilon^{m}_{t}       &  \frac{1}{2} (\epsilon^{m}_{t})^{2}
     \end{bmatrix}
 \end{equation}
 
-where we have set $\epsilon^{m}_{t} = Y_{t} - \boldsymbol{X}_{t} \boldsymbol{\beta}^{m}$
+where we have set $\epsilon^{m}_{t} = y_{t} - \boldsymbol{x}^{\top}_{t} \boldsymbol{\beta}^{m}$
 to ease the notational burden. Staying consistent with the score vector, we
 sum the hessian matrices across observations:
 
@@ -648,11 +650,11 @@ variable through their marginal effects may provide a simplifying lens of the
 model's governing principles. Just as for logistic and multinomial regression,
 the marginal effects of an HME model have a closed form solution. Starting
 with equation (\ref{eq:mixture}) we replace the expert distributions
-$P^{m}_{t}$ with the regression's functional form $f^{m}_{t}$ and use
+$P^{m}_{t}$ with the regression's output $y^{m}_{t}$ and use
 the relationship in equation (\ref{eq:gpath2}) to arrive at: 
 
 \begin{equation} \label{eq:mixture2}
-  y_{t} = f(X_{t}, Z_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{f^{m}_{t}} f^{m}(X_{t}; \boldsymbol{\beta}^{m})
+  y_{t} = f( \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{y^{m}_{t}} y^{m}
 \end{equation}
 
 The functional form of the marginal effect depends on where the variables
@@ -680,7 +682,7 @@ regressions, respectively. With this notation, we can express the full marginal 
 of the HME by where the explanatory variables appear in the model.
 
 \begin{equation} \label{eq:hme_marginal_effect_def}
-  \frac{\partial y_{t}}{\partial \boldsymbol{T}} = \sum_{m=1}^{M} \boldsymbol{\Delta}^{m} = \sum_{m=1}^{M} \left[ \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{Z}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{W}}   \quad   \frac{\partial f^{m}_{t}}{\partial \boldsymbol{U}_{X}}   \right]
+  \frac{\partial y_{t}}{\partial \boldsymbol{T}} \equiv \boldsymbol{\Delta} = \sum_{m=1}^{M} \boldsymbol{\Delta}^{m} = \sum_{m=1}^{M} \left[ \frac{\partial y^{m}_{t}}{\partial \boldsymbol{U}_{Z}}   \quad   \frac{\partial y^{m}_{t}}{\partial \boldsymbol{W}}   \quad   \frac{\partial y^{m}_{t}}{\partial \boldsymbol{U}_{X}}   \right]
 \end{equation}
 
 with the functional form of the each covariate group in (\ref{eq:hme_marginal_effect_def})
@@ -688,41 +690,41 @@ defined as:
 
 
 \begin{equation} \label{eq:ME_gating}
-  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{U}_{Z}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{U}_{Z}}}f^{m}_{t}
+  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{U}_{Z}} = \frac{\partial \gateprod{g^{0}_{t}}{y^{m}_{t}}}{{\partial \boldsymbol{U}_{Z}}} y^{m}_{t}
 \end{equation}
 
 
 \begin{equation} \label{eq:ME_expert}
-  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{U}_{X}} = \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{U}_{X}}}
+  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{U}_{X}} = \gateprod{g^{0}_{t}}{y^{m}_{t}} \frac{\partial y^{m}_{t}}{{\partial \boldsymbol{U}_{X}}}
 \end{equation}
 
 
 \begin{equation} \label{eq:ME_both}
-  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{W}} = \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{{\partial \boldsymbol{W}}}y^{m}_{t} + \gateprod{g^{0}_{t}}{f^{m}_{t}} \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}}
+  \frac{\partial y_{t}^{m}}{\partial \boldsymbol{W}} = \frac{\partial \gateprod{g^{0}_{t}}{y^{m}_{t}}}{{\partial \boldsymbol{W}}} y^{m}_{t} + \gateprod{g^{0}_{t}}{y^{m}_{t}} \frac{\partial y^{m}_{t}}{{\partial \boldsymbol{W}}}
 \end{equation}
 
 Not matter how complex the model becomes, the researcher can always interpret
 the estimated HME through a single vector of marginal effects of $\boldsymbol{T}$.
 
 Of the four components in equations (\ref{eq:ME_gating}) - (\ref{eq:ME_both}),
-three have already been established: $f_{t}^{m}$ is the output from local
-expert $m$, $\gateprod{g^{0}_{t}}{f^{m}_{t}}$ is the prior weight for
-input $t$ for local expert $m$, and $\frac{\partial f^{m}_{t}}{{\partial \boldsymbol{X}}}$
+three have already been established: $y_{t}^{m}$ is the output from local
+expert $m$, $\gateprod{g^{0}_{t}}{y^{m}_{t}}$ is the prior weight for
+input $t$ for local expert $m$, and $\frac{\partial y^{m}_{t}}{{\partial \boldsymbol{X}}}$
 is the marginal effect of the local expert $m$. What is left is the
 partial derivative of the gating network with respect to a variables
-in that network $\frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial Z}$.
+in that network $\frac{\partial \gateprod{g^{0}}{y^{m}}}{\partial Z}$.
 Starting with equation (\ref{eq:gpath}), we take the partial with
 respect to gating matrix $\boldsymbol{Z}$:
 
 \begin{equation}
-  \boldsymbol{\delta}^{m} \equiv \frac{\partial \gateprod{g^{0}}{f^{m}}}{\partial \boldsymbol{Z}} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial \boldsymbol{Z}}
+  \boldsymbol{\delta}^{m} \equiv \frac{\partial \gateprod{g^{0}}{y^{m}}}{\partial \boldsymbol{Z}} = \frac{\partial g^{0, i} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}}{\partial \boldsymbol{Z}}
 \end{equation}
 
 and applying the product rule gives us:
 
 \begin{equation} \label{eq:hme_gate_marginal_effect}
   \begin{split}
-    \delta^{m} &= \frac{\partial g^{0, i}}{\partial \boldsymbol{Z}} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}                       \\
+    \boldsymbol{\delta^{m}} &= \frac{\partial g^{0, i}}{\partial \boldsymbol{Z}} g^{i|0, j} \cdots g^{k|\cdots|j|i|0, m}                       \\
                                      &+ g^{0, i} \frac{\partial g^{i|0, j}}{\partial \boldsymbol{Z}} \cdots g^{k|\cdots|j|i|0, m} \\
                                      &+ \dots                                                                                     \\
                                      &+ g^{0, i} g^{i|0, j} \cdots \frac{\partial g^{k|\cdots|j|i|0, m}}{\partial \boldsymbol{Z}} \\
@@ -739,7 +741,7 @@ we can substitute equation (\ref{eq:gate_marginal_effect}) into
 (\ref{eq:hme_gate_marginal_effect}) to arrive at:
 
 \begin{equation} \label{eq:marginal_effects}
-  \boldsymbol{\delta^{m}} = \gateprod{g^{0}}{P^{m}} \left(\boldsymbol{\omega}^{0, i} + \boldsymbol{\omega}^{i|0, j} + \cdots + \boldsymbol{\omega}^{k|\cdots|j|i|0, m} - \left( \mean{\boldsymbol{\omega}}^{0} + \mean{\boldsymbol{\omega}}^{i|0} + \cdots + \mean{\boldsymbol{\omega}}^{k|\cdots|j|i|0} \right) \right)
+  \boldsymbol{\delta^{m}} = \gateprod{g^{0}}{y^{m}} \left(\boldsymbol{\omega}^{0, i} + \boldsymbol{\omega}^{i|0, j} + \cdots + \boldsymbol{\omega}^{k|\cdots|j|i|0, m} - \left( \mean{\boldsymbol{\omega}}^{0} + \mean{\boldsymbol{\omega}}^{i|0} + \cdots + \mean{\boldsymbol{\omega}}^{k|\cdots|j|i|0} \right) \right)
 \end{equation}
 
 
@@ -758,8 +760,8 @@ expert regression, $\boldsymbol{\beta}$. These results are collected in table
     \begin{tabular}{| l | c c c |}
     \hline
                                                                                     & \underline{$\boldsymbol{U}_{Z}$}                                                            & \underline{$\boldsymbol{W}$}                                                                                                                                                                                           & \underline{$\boldsymbol{U}_{X}$}   \\ [2ex]
-    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\omega}^{a}}$ & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} f^{m}_{t}$   & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} f^{m}_{t} + \frac{\partial \gateprod{g^{0}_{t}}{f^{m}_{t}}}{\partial \boldsymbol{\omega}^{a}}  \frac{\partial f^{m}_{t}}{{\partial \boldsymbol{W}}}$                                           & $\boldsymbol{0}$                   \\ [2ex]
-    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\beta}^{m}}$  & $\boldsymbol{0}$                                                                            & $\boldsymbol{\delta}^{m}_{t} \frac{\partial f^{m}_{t}}{\partial \boldsymbol{\beta}^{m}} + \gateprod{g^{0}_{t}}{f^{m}_{t}}   \frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{W} \partial \boldsymbol{\beta}^{m}}$    & $\gateprod{g^{0}_{t}}{f^{m}_{t}}  \frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{U}_{X} \partial \boldsymbol{\beta}^{m}}$  \\ [1ex]
+    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\omega}^{a}}$ & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} y^{m}_{t}$   & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} y^{m}_{t} + \frac{\partial \gateprod{g^{0}_{t}}{y^{m}_{t}}}{\partial \boldsymbol{\omega}^{a}}  \frac{\partial y^{m}_{t}}{{\partial \boldsymbol{W}}}$                                           & $\boldsymbol{0}$                   \\ [2ex]
+    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\beta}^{m}}$  & $\boldsymbol{0}$                                                                            & $\boldsymbol{\delta}^{m}_{t} \frac{\partial y^{m}_{t}}{\partial \boldsymbol{\beta}^{m}} + \gateprod{g^{0}_{t}}{y^{m}_{t}}   \frac{\partial^{2} y^{m}_{t}}{\partial \boldsymbol{W} \partial \boldsymbol{\beta}^{m}}$    & $\gateprod{g^{0}_{t}}{y^{m}_{t}}  \frac{\partial^{2} y^{m}_{t}}{\partial \boldsymbol{U}_{X} \partial \boldsymbol{\beta}^{m}}$  \\ [1ex]
     \hline
     \end{tabular}
   \caption{\label{tbl:delta_method_gradients} Delta Method Gradient Cases}
@@ -769,10 +771,10 @@ expert regression, $\boldsymbol{\beta}$. These results are collected in table
 
 Again, many of the expressions in table \ref{tbl:delta_method_gradients}
 have already been defined in previous sections. The two experssions new to this
-section are $\frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}$
+section are $\frac{\partial^{2} y^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}$
 and  $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$.
 For the standard OLS regressions that are considered in this paper,
-$\frac{\partial^{2} f^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}} = \boldsymbol{1}$.
+$\frac{\partial^{2} y^{m}_{t}}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}} = \boldsymbol{1}$.
 Conceptually, $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$
 describes how the marginal effects of the gating network change in response
 to small changes in the parameters of $\boldsymbol{\Omega}$. The value of
@@ -826,13 +828,32 @@ constructed with the robust variance-covariance matrix from equation
 (\ref{eq:hme_marginal_effect_def}) to (\ref{eq:delta_definitions_imp}).
 
 
-\begin{equation}
+\begin{equation} \label{eq:std_errs_full_marginal_effects}
   Asy.Var \left[ \boldsymbol{ \hat{ \Delta } } \right] = \sum^{M}_{n=1}  \left( \frac{1}{T} \sum^{T}_{t=1} \frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)     \boldsymbol{V}(\boldsymbol{\hat{\theta}})      \left( \frac{1}{T} \sum^{T}_{t=1} \frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)^\top
+\end{equation} 
+
+Note that equation (\ref{eq:std_errs_full_marginal_effects}) estimates
+the precision of the marginal effects of $\boldsymbol{T}_k$ on the full model,
+which relies on equations (\ref{eq:ME_gating}), (\ref{eq:ME_expert}), and
+(\ref{eq:ME_both}). If desired, we can isolate the marginal effects of 
+the variables in the gating network ($\boldsymbol{Z}_k$) on the outcome,
+which would take a slight modification of equation (\ref{eq:ME_gating}).
+
+\begin{equation} \label{eq:ME_gating_only}
+  \boldsymbol{\Delta}_{Z_{t}} \equiv \sum^{m} \frac{\partial y_{t}^{m}}{\partial \boldsymbol{Z}} = \sum^{m} \frac{\partial \gateprod{g^{0}_{t}}{y^{m}_{t}}}{{\partial \boldsymbol{Z}}} y^{m}_{t}
 \end{equation}
 
+Similarly, we can isolate the marginal effects of the variables in the
+expert regressions on the outcome, which would take a slight modification
+of equation (\ref{eq:ME_expert}). 
 
+\begin{equation} \label{eq:ME_expert_only}
+  \boldsymbol{\Delta}_{X_{t}} \equiv \sum^{m} \frac{\partial y_{t}^{m}}{\partial \boldsymbol{X}} = \sum^{m} \gateprod{g^{0}_{t}}{y^{m}_{t}} \frac{\partial y^{m}_{t}}{{\partial \boldsymbol{X}}}
+\end{equation}
 
-
+Substituting $\boldsymbol{\Delta}_{Z_{t}}$ or $\boldsymbol{\Delta}_{X_{t}}$
+into (\ref{eq:std_errs_full_marginal_effects}) will yield analagous estimates of 
+the precision of (\ref{eq:ME_gating_only}) and (\ref{eq:ME_expert_only}). 
 
 \section{A simple example} \label{sec:SimpleExample}
 
@@ -846,7 +867,7 @@ basic view of the species specific clustering inherent in the data.
 
 \begin{figure}[!ht]
   \includegraphics[width=\textwidth]{basic_iris_plot.jpeg}
-  \caption{Three different Iris species are presented: Setosa
+  \caption{Three different iris species: Setosa
   (blue circles), Versicolor (orange triangles), Virginia (green crosses).
   Sepal width is on the vertical axis and petal width on the horizontal
   axis.}
@@ -855,8 +876,8 @@ basic view of the species specific clustering inherent in the data.
 
 The work below uses the ME and HME architectures to estimate a flower's sepal
 width using only it's petal width as a predictor. The petal width will be used
-as the sole covariate in the local linear expert regressions ($X$) as well as
-in the gating network ($Z$). 
+as the sole covariate in the local linear expert regressions ($\boldsymbol{X}$) as well as
+in the gating network ($\boldsymbol{Z}$). 
 
 \begin{equation} \label{eq:HME_iris}
     sepal.width_{i} = \beta_{0} + \beta_{1} * petal.width_{i} + \varepsilon_{i} \enspace | \enspace \omega_{0} + \omega_{1} * petal.width_{i}
@@ -877,16 +898,27 @@ Two sets of regressions are run. Since the Versicolor and Virginica species
 can be viewed as one larger cluster, a two-expert ME model is run
 and compared to a benchmark OLS where Versicolor and Virginica are labelled
 as the same species. A second set of regressions are run with three mixture
-experts for ME and HME, as well as their corresponding three species OLS
-regression. Results are collected in table \ref{tbl:Iris}. Coefficients for
-local experts in the two expert ME regression match closely with the OLS
-benchmark. When moving to the three expert models, there is now a choice
-on what kind of gating scheme to employ. We can go deep (HME) by adding 
-a gating network with depth two, or we can go wide (ME) by keeping the
-depth of the gating network at one. When comparing the coefficients of the
-local regressions, the HME architecture clearly outperforms the ME
-architecture. The ME model fails to identify the three seperate
-species that are known to exist.  
+experts. When moving to the three expert model, there is now a choice
+on what kind of gating architecture to employ. We can go deep by adding 
+a gating network with depth two (HME), or we can go wide by keeping the
+depth of the gating network at one (ME). Again, for comparative purposes, a benchmark
+OLS regression is estimated for each species separately. Results are collected in table \ref{tbl:Iris}.
+Coefficients for local experts in the two expert ME regression match closely with the OLS
+benchmark. The strong seperation between the Setosa and Veriscolor/Virginica
+clusters makes it easy for the ME gating network to discriminate between the two using
+just the Petal Width dimension. This task becomes a little more complicated when
+considering all three species at the same time since there exists some overlap
+between the Versicolor and Virginica clusters. When comparing the coefficients of the
+local regressions (see table \ref{tbl:Iris}), the HME architecture clearly
+outperforms the ME architecture. While the ME model does obtain a larger
+log-likelihod value than the OLS estimate, it fails to identify the three
+separate species that are known to exist. The HME model, on the other hand,
+naturally picks up on the three underlying clusters while also providing a superior
+likelihood value. This speaks to one of the major caveats of using this class of model.
+The likelihood value of an ME or HME can always been improved by adding more and
+more experts, but this improvement should not be confused with the model gaining a
+finer understanding of the underlying data generating process. It simply starts to
+over-fit to the data at hand.
 
 \begin{landscape}
 \begin{table} 
@@ -943,6 +975,14 @@ species that are known to exist.
 \end{landscape}
 
 
+\begin{figure}[!ht]
+  \includegraphics[width=\textwidth]{Iris_fitted_regressions.jpeg}
+  \caption{Comparison of the fitted experts between the ME and HME architectires
+  applied to the Iris dataset. OLS regression esitmates are drawn in solid lines.
+  Although the HME and ME both acheive superior log-likelihood values compared to
+  OLS, only the HME is able to identify the three iris species clusters.}
+  \label{fig:Iris_fitted_regressions}
+\end{figure}
 
 
 \section{A Mincer Wage Equation} \label{sec:MincerWageEx}
@@ -962,19 +1002,20 @@ Our data will come from two sources. First, from the 2000 Census,
 we devise a measure of the hourly (log) wage. In addition to income, we also collect information on age,
 years of education (YrsEdu), job occupations codes, 
 and a set of demographic identifiers indicating the race of the
-indivduals contained in census sample. We pull from the
-Occupation Information Network (ONet) a set of knowledge and skill-based
+indivduals contained in the census sample. For the occupational codes, we use
+the Standard Occupation Classification (SOC) codes from the
+Occupation Information Network (ONet). Each occupation is
+associated with a set of knowledge and skill-based
 attributes describing what qualities are necessary to perform each
-job suitably. ONet is a federally sponsered source of occupational
-information. It details, on a per occupation basis, "the knowledge,
+job suitably. A federally sponsored source, ONet details, "the knowledge,
 skills, and abilities required as well as how the work is
 performed in terms of tasks, work activities, and other descriptors"
 (\cite{ONET}).
 
-To link the occupational codes in the census data to the soc codes used
-by ONet, we use the cross walk provided by Sarah Porter
-"cite{Crosswalk}". This mapping is not one-to-one. When more than one soc code points to a single census
-code, we take the average of the soc codes. After a quick but careful scan of the job attributes
+To link the occupational codes in the census data to the SOC codes used
+by ONet, we use the cross walk provided by Sarah Porter (\cite{Crosswalk}).
+This mapping is not one-to-one. When more than one SOC code points to a single census
+code, we take the average of the SOC codes. After a quick but careful scan of the job attributes
 available on ONet, the following four were selected. The footnootes
 provide the full classification hierarchy listed on the website. 
 
@@ -1004,34 +1045,14 @@ weight for the level scale.
   have unit variance.}
   \label{fig:JobChar_vs_sex}
 \end{figure}
-% There was a hope that the added variables would provided a much needed boost of
-% density to the set of identifying features. Many of the Census 
-% variables are discrete -- all of them except the wage, actually,
-% if one thinks age and years of education lean more towards
-% categorical variables than continuous ones. So in addition to their intrinsic value
-% as points of economic and social interest, the job characteristics 
-
-% From a practical
-% optimization perspective, we will be using a gradient based approach to optimization, 
-
 
 The total number of individuals in the Census data numbers 105,796.
 After applying our crosswalk, only 75,957 cases remain with complete
 information across both datasets. Of those 75,957, roughly ten percent
 (7,315) are randomly held-out and used as a test set to gauge
-out-of-sample forecast model performance. This leaves 68,642 individuals left
-as a training set. A summary descriptions of the covariates is provided
-in table \ref{tbl:census_cov_summary}.
-
-For comparative purposes, we first estimate equation (\ref{eq:mincer_equ}) 
-for a two expert model. At this specification, there is no distinction
-between the HME and ME. A three expert model is then estimated for these two
-respective architectures to test whether there is an advantage to allowing 
-the gating network to go deep, as opposed to staying shallow with a depth of one.
-A detail summary for these models will be explored further in this section.
-To provide context on these models' behaviour has they grow in complexity, each
-architecture is estimated up to six experts. References for these results also
-appear below but in less detail.
+out-of-sample forecast performance across model specifications.
+This leaves 68,642 individuals left as a training set. A statistical summary
+of the covariates is provided in table \ref{tbl:census_cov_summary}.
 
 \begin{table} \centering
   \caption{Summary Statistics}
@@ -1039,18 +1060,18 @@ appear below but in less detail.
     \begin{tabular}[l]{l r r r r}
   \cmidrule{1-5}
 
-              & 25\%   & Mean & 50\% & 75\%   \\
+              & 25\%   & Mean & 50\% & 75\%    \\
   \cmidrule{1-5}
-  Wage (hr)   & 9.20  & 15.82 & 13.32  & 19.44\\
-  Yrs Edu     & 12.00 & 13.78 & 14.00  & 16.00\\
+  Wage (hr)   & 9.20  & 15.82 & 13.32  & 19.44 \\
+  Yrs Edu     & 12.00 & 13.78 & 14.00  & 16.00 \\
   Age         & 30.00 & 39.15 & 39.00  & 48.00 \\
   Age16       & 14.00 & 23.15 & 23.00  & 32.00 \\
-  Female      & --    & 40.47 & --     & --   \\
-  Af Amer     & --    &  8.62 & --     & --   \\
-  Indian      & --    &  1.05 & --     & --   \\
-  White       & --    & 77.00 & --     & --   \\
-  Hispanic    & --    & 10.00 & --     & --   \\
-  Asian       & --    &  3.36 & --     & --   \\
+  Female      & --    & 40.47 & --     & --    \\
+  Af Amer     & --    &  8.62 & --     & --    \\
+  Indian      & --    &  1.05 & --     & --    \\
+  White       & --    & 77.00 & --     & --    \\
+  Hispanic    & --    & 10.00 & --     & --    \\
+  Asian       & --    &  3.36 & --     & --    \\
   Creative    & 46.65 & 53.30 & 53.82  & 58.94 \\
   Design      & 15.00 & 30.58 & 26.33  & 38.97 \\
   Analytic    & 44.01 & 52.63 & 52.68  & 62.18 \\
@@ -1064,14 +1085,13 @@ appear below but in less detail.
   \end{threeparttable}
 \end{table}
 
-
 A natural question to consider as a researcher is where to put the variable(s)
 of interest while performing an HME estimation. \cite{JiangTanner2000}
 provide their proof of model consistency for HME of GLM's for the case where
 all covariates appear in the gating network as well as the experts. We will
 call this the \textit{full} specifications:
 
-\begin{equation}
+\begin{equation} \label{eq:full_formula}
   log(wage) = Age + YrsEdu + Sex +  Race + Occ \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
@@ -1079,57 +1099,149 @@ We will compare this \textit{full} specification to two others. A
 \textit{mid} specification where the local experts contain age and
 years of education while removing demographic indicators:
 
-\begin{equation}
+\begin{equation} \label{eq:mid_formula}
   log(wage) = Age + YrsEdu \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
 And finally a \textit{minimal} specification where our core variable
 of interest, years of education, appears solely in the gating network.
 
-\begin{equation}
+\begin{equation} \label{eq:min_formula}
   log(wage) = Age \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
-Results for these regressions are collected in tables \ref{tbl:2E_full_regressions_results},
-\ref{tbl:3E_D_full_regressions_results}, and \ref{tbl:3E_W_full_regressions_results}.
-There are a few points worth noting. First, for this dataset, increasing the
-number of experts yields increasingly better log-likelihood and BIC values.
-Second, there is a clear advantage to using the HME architecture. In table (), compare the rows with different gating types (col 1)
-but with the same number of experts (col 3).The HME approach outperforms the
-ME across the board. Third, for both ME and HME types, models with more
-covariates in the local expert regressions lead to higher log-likeihood
-values. 
+For comparative purposes, we estimate several different regressions across three
+different dimensions: model architectures (ME vs HME), the number of experts,
+and the regression specification (equations (\ref{eq:full_formula}) -
+(\ref{eq:min_formula})). Table \ref{tbl:model_comparison} presents a view of these
+results across those dimensions. After looking at the results,
+two themes emerge. First, there is a clear advantage to using the HME structure
+if the aim is to maximize the likelihood value. The HME structure shows consistent
+improvement across specifications as the number of experts increase, while the ME
+struggles to improve the likelhood value if there is only one gating split.
+This increase in efficiency is most likely due
+to the HME's more refined gating architecture, whose recursive partitioning is more
+effective at finding the next improvement in the parameter vector than the single
+multinomial split in the ME. As for the second theme, it's best to give the expert
+regressions as much information as possible. The Full specification clearly outperforms
+the Mid specification, which outperforms the Min specification. Referencing table
+\ref{tbl:model_comparison}, if one holds the architecture and the number of experts
+constant, the performance metrics show clear improvement as the regression specification
+adds more explanatory variables.
 
+Turning attention to the main variable of focus, table \ref{tbl:YrsEdu_coef} provides a 
+comparison of the average marginal effect for \textit{YrsEdu} across the same dimensions
+explored for the performance metrics. There is a noticeable change across model specifications.
+Compared to the OLS coefficient of 0.76, the Min specification,
+which includes \textit{YrsEdu} only in the gating network, underestimates the returns
+to education. The Mid specification, which includes \textit{Age} and
+\textit{YrsEdu} in the expert regressions as well as the gating network,
+overestimates the returns to education in all the models except the HME with four
+and five experts. The Full specification, which has the entire suite of
+variables in both places, matches most closely to the OLS estimate across the estimated
+models.
 
+For our census sample, estimating up to five experts is pretty extreme.
+It's rather unlikely that there exists more than one distinct cluster, let alone two\footnote{Testing if a (H)ME model is even necessary would be a valuable addition to this paper}.
+Because of this, a deeper analysis of the regression results are only explored
+for the three models that have the least complexity/experts. We first estimate equation (\ref{eq:mincer_equ}) 
+for a two expert model. At this specification, there is no distinction
+between the HME and ME. A three expert model is then estimated for these two
+respective architectures to asses if different conclusions to the estimated
+Mincer equations arise. Results for these regressions are collected in tables \ref{tbl:2E_full_regressions_results},
+\ref{tbl:3W_full_regressions_results}, and \ref{tbl:3D_full_regressions_results}
+and complimented by graphs \ref{tbl:ME2_sample_comparison}, \ref{tbl:ME3_sample_comparison},
+and \ref{tbl:HME3_sample_comparison}, which provide mean and median values for the subset of individuals
+in the census sample that are attributed to each expert based on the value of
+their posterior weights\footnote{For example, observation $i$ is assigned to expert $j$ if the posterior vector's largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}.
 
+Broadly speaking, all three models explored share the same macro view of the data.
+On the right side of tables \ref{tbl:2E_full_regressions_results},
+\ref{tbl:3W_full_regressions_results}, and \ref{tbl:3D_full_regressions_results}
+are a group of columns titled '(H)ME Marginal Effects'.
+Here the marginal effects of the model can be broken down and attributed to the
+gating network or the expert regressions. "Both", "Experts", and "Gates" refers to marginal effcts referenced by equations
+(\ref{eq:ME_both}), (\ref{eq:ME_expert}), and (\ref{eq:ME_gating}),
+respectively. The values are fairly consistent across variables and model
+architectures with the coefficients for \textit{Age} and it's square a modest exception,
+ranging from 0.028 (HME) to 0.042 (2-Expert ME) for \textit{Age}. Notice also that the
+marginal effects from the expert regressions are the lion's share of total marginal effect,
+ranging from one to two orders of magnitude larger than marginal effects for the gating
+network.
+
+When left to segment the data set on it's own, the two expert ME model estimates two different
+wage equations, one for the majority of the population that tends to be
+older, whiter, and more educated (see table \ref{tbl:ME2_sample_comparison}), and a second
+smaller popular that is more diverse, significantly young, with less education on average.
+The difference between the average age of the two populations is noticeable and
+might play a role behind the marginal effects for \textit{Age} moving around as
+much as it does. This younger cohert breaking off from the bulk of the sample
+repeats for both 3-expert models as well. Interestingly, the 3-expert models then share a
+further partition of the sample around age, with a third older cohort separating itself
+from the smaller sample. When taken together with the regression diagnostics, the model
+suggests that returns to education evolve over an individual's lifetime. When young,
+the returns to education are at their smallest and then expand during main earning years
+of middle age. Returns then dip slightly as individuals come closer to retirement age.
+
+When looking at the occupational attributes there is similar agreement between
+the estimated models. The marginal effects for all three are in close proximity between
+the ME and HME models. Those individuals who specialize in performing analytics
+enjoy the greatest hourly rate (0.126 - 0.128). Design (0.074 to 0.081) and 
+Perceptive (0.053 to 0.057) attributes get a smaller bump to the their hourly
+wage while Creative types (-0.044 to -0.043) clearly have alternative motivation than
+monetary gain.
 
 \begin{table} \centering
-  \caption{Full Model Information}
+  \caption{Comparing Complexity, Architecture, and Regression Specification}
   \begin{threeparttable}
     {\footnotesize
-    \begin{tabular}[r]{l l r r r r}
-  \cmidrule{1-6}
-        &         &  \multicolumn{4}{c}{Model Comparison} \\ 
-   \cmidrule(l){3-6}
-Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
-  \cmidrule{1-6}
+    \begin{tabular}[r]{l l l r r r r}
+  \cmidrule{1-7}
+         &       &         &  \multicolumn{4}{c}{Performance Metrics} \\ 
+   \cmidrule(l){4-7}
+Specification & Architecture  & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
+  \cmidrule{1-7}
 
-1    &    2    & -0.541  & 1.082  & 1.088  & 0.182 \\
-1    &    3    & -0.541  & 1.084  & 1.094  & 0.182 \\
-1    &    4    & -0.537  & 1.078  & 1.091  & 0.181 \\
-1    &    5    & -0.535  & 1.073  & 1.089  & 0.182 \\
-2    &    3    & -0.524  & 1.052  & 1.061  & 0.182 \\
-2    &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
-3    &    5    & -0.505  & 1.015  & 1.031  & 0.178 \\
-3    &    6    & \ibu{-0.503}  & \ibu{1.011}  & \ibu{1.031}  & \ibu{0.178} \\
-        \cmidrule(l){1-6}
+Full     &  ME   &    2    & -0.541  & 1.082  & 1.088  & 0.182 \\
+         &  ME   &    3    & -0.526  & 1.053  & 1.062  & 0.182 \\
+         &  ME   &    4    & -0.537  & 1.078  & 1.091  & 0.181 \\
+         &  ME   &    5    & -0.535  & 1.073  & 1.089  & 0.182 \\
+         &  HME  &    3    & -0.525  & 1.052  & 1.061  & 0.182 \\
+         &  HME  &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
+         &  HME  &    5    & \iu{-0.505}  & \iu{1.015}  & \iu{1.031}  & \iu{0.178} \\
+         &       &         &         &        &        &       \\
+Mid      &  ME   &    2    & -0.560  & 1.120  & 1.123  & 0.185 \\
+         &  ME   &    3    & -0.558  & 1.117  & 1.123  & 0.186 \\
+         &  ME   &    4    & -0.581  & 1.163  & 1.171  & 0.192 \\
+         &  ME   &    5    & -0.590  & 1.182  & 1.192  & 0.199 \\
+         &  HME  &    3    & -0.541  & 1.083  & 1.088  & 0.184 \\
+         &  HME  &    4    & -0.528  & 1.057  & 1.065  & 0.183 \\
+         &  HME  &    5    & \it{-0.519}  & \it{1.039} & \it{1.050}  & \it{0.182} \\
+         &       &         &         &        &        &       \\
+Min      &  ME   &    2    & -0.596  & 1.192  & 1.195  & 0.192 \\
+         &  ME   &    3    & -0.587  & 1.176  & 1.181  & 0.192 \\
+         &  ME   &    4    & -0.629  & 1.260  & 1.268  & 0.211 \\
+         &  ME   &    5    & -0.564  & 1.131  & 1.140  & 0.189 \\
+         &  HME  &    3    & -0.581  & 1.163  & 1.168  & 0.190 \\
+         &  HME  &    4    & -0.546  & 1.094  & 1.101  & 0.182 \\
+         &  HME  &    5    & \it{-0.524}  & \it{1.049}  & \it{1.059}  & \it{0.182} \\
+        \cmidrule(l){1-7}
     \end{tabular}
     }
     \begin{tablenotes}
-      \item{\footnotesize Log-Likelihood and BIC are divided by the sample size (68,642)}
-    \end{tablenotes} \label{tbl:HME_spec_full}
+      \item{\footnotesize \textbf{Note:} Log-Likelihood, AIC, and BIC are divided by the sample size: 68,642.
+      Italicized entries are the winning values within specification while underlined entries are the best values across all three specifications.
+      }
+      \item{\footnotesize \textbf{Note:} The MSE is calculated from a hold-out test set with sample size: 7,315}
+      \item{\footnotesize \textbf{Note:} After looking at the results, two themes emerge. \textbf{One}, there is a clear advantage to using the HME structure if the aim is to maximize the likelihood value.
+      The HME structure shows consistent improvement across specifications as the number of experts increases,
+      while the ME struggles to match this consistency. \textbf{Two}, give the expert regressions as much information as possible. The Full specification clearly outperforms the Mid and Min specifications across the board.
+      }
+      \item{\footnotesize }
+    \end{tablenotes} \label{tbl:model_comparison}
   \end{threeparttable}
 \end{table}
+
 
 
 \begin{table} \centering
@@ -1137,77 +1249,70 @@ Depth & Experts & Log-Lik & AIC    & BIC    & MSE   \\
   \begin{threeparttable}
     \begin{tabular}[l]{r r r r r}
   \cmidrule{1-5}
-        &         & \multicolumn{3}{c}{Coefficient} \\ 
+        &         & \multicolumn{3}{c}{Avg. Marginal Effect} \\ 
   \cmidrule(r){3-5}
   Depth & Experts & Min   & Mid   & Full      \\
   \cmidrule{1-5}
 
-  1     & 2       & 0.051 & 0.082 & 0.075     \\
-  1     & 3       & 0.051 & 0.081 & 0.076     \\
-  1     & 4       & 0.039 & 0.085 & 0.075     \\
-  1     & 5       & 0.063 & 0.095 & 0.076     \\
-  2     & 3       & 0.063 & 0.080 & 0.074     \\
-  2     & 4       & 0.063 & 0.078 & 0.073     \\
-  3     & 5       & 0.068 & 0.075 & 0.069     \\
-  3     & 6       & 0.067 & 0.074 & 0.069     \\
+  ME      & 2       & 0.051 & 0.082 & 0.076     \\
+  ME      & 3       & 0.051 & 0.081 & 0.074     \\
+  ME      & 4       & 0.039 & 0.085 & 0.075     \\
+  ME      & 5       & 0.063 & 0.095 & 0.076     \\
+  HME     & 3       & 0.063 & 0.080 & 0.073     \\
+  HME     & 4       & 0.063 & 0.078 & 0.073     \\
+  HME     & 5       & 0.068 & 0.075 & 0.069     \\
 
   \hline
     \end{tabular}
     \begin{tablenotes}
-      \item{\footnotesize OLS coef: 0.078}
-      \item{\footnotesize Log-Likelihood is divided by the sample size (68,642)}
+      \item{\footnotesize \textbf{Note:} OLS coef: 0.076}
+      \item{\footnotesize \textbf{Note:} There is a noticeable change across in the marginal return to an extra year of education.
+      Compared to the OLS coefficient of 0.76, the Min specification, which includes \textit{YrsEdu} only in the gating network, underestimates the returns to education.
+      The Mid specification, which includes \textit{Age} and \textit{YrsEdu} in the expert regressions as well as the gating network, overestimates the returns to education in all the models except the HME with four and five experts.
+      The Full specification, which has the entire suite of variables in both places, matches most closely to the OLS estimate across the estimated models.}
     \end{tablenotes} \label{tbl:YrsEdu_coef}
   \end{threeparttable}
 \end{table}
 
-We also compare the marginal effects across specifications. According to table
-(), the five-expert HME model performs the best for each
-of the three specifications. Table \ref{tbl:model_marg_effects} summarizes
-the marginal effects across specifications and benchmarks them to an standard
-OLS regresssion.
-
-The marginal effects for the constant term in the HME are not comparable
-to the OLS model. These marginal effects include the constant terms in the
-gating network, invalidating them as an intercept term. The return to
-education does appear to be materially lower for the HME models as
-compared to the standard OLS while the quadratic wage curve is similar
-in the \textit{full} specification but somewhat different in the
-\textit{mid} and \textit{minimal} specifications. When it comes to
-the coefficients for race, a bit of variations starts to appear
-across specifications. Interestingly, the \textit{mid} specification
-seems to deviate the most from the OLS benchmark while the
-\textit{minimal} specification maintains comparable marginal effects.
-There doesn't seem to be an obvious explanation for this discrepency. 
 
 
+\begin{landscape}
 \begin{table} \centering
-  \caption{Two Expert Full Specification Regression Results}
+  \caption{Regression Results: Two-Expert, Full Parameter Specification}
     \begin{threeparttable}
-      \begin{tabular}[l]{l r r r r}
-\cmidrule{1-5}
-                & Coef.  &  SE   &  Coef.   & SE  \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}
-(Intercept)     &  1.259   &  0.017     &    1.494   & 0.014  \\
-Age16           &  0.031   &  0.001     &    0.068   & 0.001  \\
-Age16sq         & -0.000   &  0.000     &   -0.002   & 0.000  \\
-YrsEduc         &  0.081   &  0.001     &    0.036   & 0.001  \\
-Sex             & -0.243   &  0.004     &   -0.032   & 0.004  \\
-Black           & -0.078   &  0.006     &   -0.045   & 0.006  \\
-Indian          & -0.106   &  0.016     &    1.390   & 0.108  \\
-Asian           & -0.045   &  0.010     &    0.036   & 0.009  \\
-Hisp            & -0.121   &  0.006     &   -0.082   & 0.005  \\
-Creativity      & -0.054   &  0.003     &   -0.008   & 0.003  \\
-Design          &  0.081   &  0.002     &    0.078   & 0.002  \\
-Analytics       &  0.134   &  0.003     &    0.112   & 0.003  \\
-Perceptive      &  0.064   &  0.002     &   -0.013   & 0.002  \\
-Variance        & -1.653   &  0.007     &   -2.682   & 0.008  \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}
-Share:          &          &  0.830     &            & 0.170  \\
-\cmidrule{1-5}
+      \begin{tabular}[l]{l r l r l c r l c r l r l r l}
+
+\cmidrule{1-15}
+& \multicolumn{4}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
+\cmidrule(l){2-5}    \cmidrule(l){7-8}     \cmidrule(l){10-15}
+& \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
+                \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
+Intercept     &  1.231 & *      &  1.494 & *     &&  1.241 & *     &&  1.225 & *        &  1.260 & *        & -0.040 &        \\
+Age16           &  0.032 & *      &  0.068 & *     &&  0.035 & *     &&  0.042 &          &  0.038 & *        &  0.004 &        \\
+Age16sq         & -0.000 & *      & -0.002 & *     && -0.001 & *     && -0.001 &          & -0.001 & *        & -0.000 &        \\
+YrsEduc         &  0.082 & *      &  0.036 & *     &&  0.076 & *     &&  0.076 & *        &  0.075 & *        &  0.000 &        \\
+Female          & -0.244 & *      & -0.032 & *     && -0.215 & *     && -0.209 & *        & -0.207 & *        & -0.002 &        \\
+Af Amer         & -0.076 & *      & -0.045 & *     && -0.076 & *     && -0.076 & *        & -0.071 & *        & -0.005 &        \\
+Indian          & -0.081 & *      &  1.390 & *     && -0.091 & *     && -0.085 & +        & -0.079 & *        & -0.005 &        \\
+Asian           & -0.045 & *      &  0.036 & *     && -0.032 & *     && -0.024 &          & -0.028 & *        &  0.003 &        \\
+Hisp            & -0.121 & *      & -0.082 & *     && -0.106 & *     && -0.112 & *        & -0.112 & *        & -0.000 &        \\
+Creativity      & -0.054 & *      & -0.008 & *     && -0.046 & *     && -0.044 & *        & -0.045 & *        &  0.002 &        \\
+Design          &  0.080 & *      &  0.078 & *     &&  0.082 & *     &&  0.081 & *        &  0.080 & *        &  0.001 &        \\
+Analytics       &  0.133 & *      &  0.112 & *     &&  0.131 & *     &&  0.126 & *        &  0.129 & *        & -0.003 &        \\
+Perceptive      &  0.063 & *      & -0.013 & *     &&  0.058 & *     &&  0.053 & *        &  0.049 & *        &  0.004 &        \\
+Log-Variance    & -1.651 & *      & -2.682 & *     &&  --    &       &&  --    &          &  --    &          &  --    &        \\
+                \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
+Share$^{4}$:          &  0.826 &        &  0.174 &       &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+\cmidrule{1-15}
       \end{tabular}
 
       \begin{tablenotes}
-        \item Log-Likelihood: -0.541
+        \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
+        \item Log-Likelihood: ME -0.541, OLS -0.558
+        \item $^{1}$ Fitted coefficients from the two-expert model with the full parameter specification from equation (\ref{eq:full_formula})
+        \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the margianal values to their right
+        \item $^{3}$ Marginal effects for the HME model. Both, Experts, and Gates refers to marginal effcts referenced by equations (\ref{eq:std_errs_full_marginal_effects}), (\ref{eq:ME_expert_only}), and (\ref{eq:ME_gating_only}), respectively.
+        \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
 
       \end{tablenotes} \label{tbl:2E_full_regressions_results}
 
@@ -1215,275 +1320,223 @@ Share:          &          &  0.830     &            & 0.170  \\
     \end{threeparttable}
 
 \end{table}
-
+\end{landscape}
 
 
 \begin{table} \centering
-  \caption{Three Expert Deep Full Specification Regression Results}
+  \caption{Sample Mean Comparison: Two-Expert ME}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l r r r r}
+  \cmidrule{1-5}
+  Share:$^{1}$& \multicolumn{2}{c}{(0.826)} & \multicolumn{2}{c}{(0.174)} \\
+              & Mean & Median & Mean & Median \\
+  \cmidrule{1-5}
+  Wage (hr)   &   2.679 &   2.681 &  2.175 &  2.197 \\
+  Age         &  25.814 &  25.000 &  6.965 &  7.000 \\
+  Age16       & 759.812 & 625.000 & 62.478 & 49.000 \\
+  Female      &   0.408 &   0.000 &  0.386 &  0.000 \\
+  Af Amer     &   0.084 &   0.000 &  0.101 &  0.000 \\
+  Indian      &   0.009 &   0.000 &  0.018 &  0.000 \\
+  White       &   0.778 &   1.000 &  0.698 &  1.000 \\
+  Hispanic    &   0.037 &   0.000 &  0.028 &  0.000 \\
+  Asian       &   0.091 &   0.000 &  0.155 &  0.000 \\
+  YrsEduc     &  13.916 &  14.000 & 12.974 & 12.000 \\
+  Creative    &  -0.191 &  -0.137 & -0.464 & -0.542 \\
+  Design      &  -0.344 &  -0.535 & -0.442 & -0.635 \\
+  Analytic    &  -0.196 &  -0.247 & -0.499 & -0.550 \\
+  Perceptive  &   0.230 &   0.127 & -0.233 & -0.532 \\
+  \cmidrule{1-5}
+  N           &      -- &  58,939 &     -- &  9,703 \\
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize $^{1}$ The share is calculated by summing the 
+      posterior weights across observations for each expert.}
+      \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
+      in the census sample that are classified based on the value of their posterior weights.
+      For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+      largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+    \end{tablenotes} \label{tbl:ME2_sample_comparison}
+  \end{threeparttable}
+\end{table}
+
+
+\begin{landscape}
+\begin{table} \centering
+  \caption{Regression Results: Wide Three-Expert, Full Parameter Specification}
     \begin{threeparttable}
-      \begin{tabular}[l]{l r r r r r r}
-\cmidrule{1-7}                                                                           
-                &  Coef.   &   SE   &   Coef.  & SE   &   Coef.  &  SE    \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}
-(Intercept)     &  1.430   &  0.014   &  0.951  &  0.072   &   1.506  &  0.015    \\
-age16           &  0.018   &  0.001   &  0.037  &  0.003   &   0.051  &  0.001    \\
-age16sq         & -0.000   &  0.000   & -0.001  &  0.000   &  -0.001  &  0.000    \\
-yreduc          &  0.082   &  0.001   &  0.074  &  0.004   &   0.038  &  0.001    \\
-sex             & -0.260   &  0.003   & -0.122  &  0.017   &  -0.039  &  0.004    \\
-black           & -0.089   &  0.006   & -0.017  &  0.029   &  -0.047  &  0.006    \\
-indian          & -0.118   &  0.016   &  0.103  &  0.055   &  -0.059  &  0.016    \\
-asian           & -0.037   &  0.008   & -0.042  &  0.029   &   0.055  &  0.010    \\
-hisp            & -0.145   &  0.005   &  0.101  &  0.031   &  -0.066  &  0.005    \\
-Creativity      & -0.045   &  0.003   & -0.121  &  0.013   &  -0.022  &  0.003    \\
-Design          &  0.081   &  0.002   & -0.058  &  0.013   &   0.070  &  0.003    \\
-Analytics       &  0.127   &  0.003   &  0.180  &  0.014   &   0.116  &  0.003    \\
-Perceptive      &  0.065   &  0.002   &  0.125  &  0.010   &  -0.003  &  0.002    \\
-variance        & -1.884   &  0.005   & -0.594  &  0.018   &  -2.729  &  0.009    \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}
-share:          &             &     0.771   &             &   0.078   &             &   0.151     \\
-\cmidrule{1-7} 
+      \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
+
+\cmidrule{1-17}
+& \multicolumn{6}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
+\cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
+& \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
+                \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+Intercept     &  1.379 & *      &  1.574 & *      &  0.562 & *      &&  1.241 & *     &&  1.367 &          &  1.340 & *        &  0.032 &        \\
+Age16           &  0.021 & *      &  0.045 & *      &  0.060 & *      &&  0.035 & *     &&  0.029 &          &  0.027 & *        &  0.002 &        \\
+Age16sq         & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
+YrsEduc         &  0.082 & *      &  0.032 & *      &  0.080 & *      &&  0.076 & *     &&  0.074 &          &  0.077 & *        & -0.002 &        \\
+Female          & -0.251 & *      & -0.022 & *      & -0.149 & *      && -0.215 & *     && -0.206 &          & -0.218 & *        &  0.012 &        \\
+Af Amer         & -0.084 & *      & -0.056 & *      & -0.054 & -      && -0.076 & *     && -0.076 &          & -0.078 & *        &  0.002 &        \\
+Indian          & -0.105 & *      & -0.046 & *      &  0.010 &        && -0.091 & *     && -0.091 &          & -0.090 & *        & -0.002 &        \\
+Asian           & -0.030 & *      &  0.057 & *      & -0.091 & *      && -0.032 & *     && -0.024 &          & -0.025 & *        &  0.001 &        \\
+Hisp            & -0.136 & *      & -0.061 & *      &  0.071 & +      && -0.106 & *     && -0.107 &          & -0.111 & *        &  0.004 &        \\
+Creativity      & -0.038 & *      & -0.022 & *      & -0.177 & *      && -0.046 & *     && -0.044 &          & -0.047 & *        &  0.003 &        \\
+Design          &  0.080 & *      &  0.080 & *      & -0.037 & *      &&  0.082 & *     &&  0.075 &          &  0.071 & *        &  0.004 &        \\
+Analytics       &  0.123 & *      &  0.110 & *      &  0.196 & *      &&  0.131 & *     &&  0.128 &          &  0.128 & *        &  0.000 &        \\
+Perceptive      &  0.060 & *      & -0.008 & *      &  0.168 & *      &&  0.058 & *     &&  0.057 &          &  0.061 & *        & -0.004 &        \\
+Log-Variance    & -1.893 & *      & -2.891 & *      & -0.627 & *      &&  --    &       &&  &          &  &          &  &        \\
+\cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+\cmidrule{1-17}
       \end{tabular}
 
       \begin{tablenotes}
-        \item Log-Likelihood: -0.525
+        \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
+        \item Log-Likelihood: ME -0.526, OLS -0.558
+        \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
+        \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the margianal values to their right
+        \item $^{3}$ Marginal effects for the HME model. Both, Experts, and Gates refers to marginal effcts referenced by equations (\ref{eq:std_errs_full_marginal_effects}), (\ref{eq:ME_expert_only}), and (\ref{eq:ME_gating_only}), respectively.
+        \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
 
-      \end{tablenotes} \label{tbl:3E_D_full_regressions_results}
+      \end{tablenotes} \label{tbl:3W_full_regressions_results}
 
 
     \end{threeparttable}
 
 \end{table}
-
+\end{landscape}
 
 
 \begin{table} \centering
-  \caption{Three Expert Wide Full Specification Regression Results}
+  \caption{Sample Mean Comparison: Wide Three-Expert HME}
+  \begin{threeparttable}
+    \begin{tabular}[l]{l r r r r r r}
+  \cmidrule{1-7}
+  Share:$^{1}$& \multicolumn{2}{c}{(0.809)} & \multicolumn{2}{c}{(0.111)} & \multicolumn{2}{c}{(0.080)} \\
+              & Mean & Median & Mean & Median & Mean & Median \\
+  \cmidrule{1-7}
+  Wage (hr)   &   2.664 &   2.667 &  2.106 &  2.096 &   2.549 &   2.221 \\
+  Age         &  24.916 &  24.000 &  5.830 &  6.000 &  27.827 &  28.000 \\
+  Age16       & 722.355 & 576.000 & 41.789 & 36.000 & 904.103 & 784.000 \\
+  Female      &   0.420 &   0.000 &  0.301 &  0.000 &   0.250 &   0.000 \\
+  Af Amer     &   0.090 &   0.000 &  0.060 &  0.000 &   0.064 &   0.000 \\
+  Indian      &   0.010 &   0.000 &  0.012 &  0.000 &   0.010 &   0.000 \\
+  Hispanic    &   0.036 &   0.000 &  0.020 &  0.000 &   0.102 &   0.000 \\
+  Asian       &   0.100 &   0.000 &  0.114 &  0.000 &   0.045 &   0.000 \\
+  YrsEduc     &  13.802 &  14.000 & 13.101 & 12.000 &  15.837 &  16.000 \\
+  Creative    &  -0.209 &  -0.141 & -0.422 & -0.456 &  -0.195 &  -0.282 \\
+  Design      &  -0.344 &  -0.535 & -0.387 & -0.535 &  -0.765 &  -0.860 \\
+  Analytic    &  -0.218 &  -0.264 & -0.472 & -0.412 &  -0.072 &   0.049 \\
+  Perceptive  &   0.177 &   0.127 & -0.122 & -0.455 &   0.851 &   0.877 \\
+  \cmidrule{1-7}
+  N           &      -- &  60,396 &     -- &  6,603 &      -- &   1,643 \\
+  \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize $^{1}$ The share is calculated by summing the 
+      posterior weights across observations for each expert.}
+      \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
+      in the census sample that are classified based on the value of their posterior weights.
+      For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+      largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+    \end{tablenotes} \label{tbl:ME3_sample_comparison}
+  \end{threeparttable}
+\end{table}
+
+
+\begin{landscape}
+  \begin{table} \centering
+    \caption{Regression Results: Deep Three-Expert, Full Parameter Specification}
+      \begin{threeparttable}
+        \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
+  
+  \cmidrule{1-17}
+  & \multicolumn{6}{c}{HME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{HME Marginal Effects$^{3}$} \\
+  \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
+  & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
+                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+  Intercept       &  1.404 & *      &  1.559 & *      &  0.898 & *      &&  1.241 & *     &&  1.393 &          &  1.382 & *        &  0.011 &        \\
+  Age16           &  0.020 & *      &  0.050 & *      &  0.044 & *      &&  0.035 & *     &&  0.028 &          &  0.026 & *        &  0.003 &        \\
+  Age16sq         & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
+  YrsEduc         &  0.082 & *      &  0.034 & *      &  0.074 & *      &&  0.076 & *     &&  0.073 &          &  0.075 & *        & -0.001 &        \\
+  Female          & -0.257 & *      & -0.034 & *      & -0.131 & *      && -0.215 & *     && -0.209 &          & -0.217 & *        &  0.008 &        \\
+  Af Amer         & -0.086 & *      & -0.048 & *      & -0.041 &        && -0.076 & *     && -0.076 &          & -0.077 & *        &  0.001 &        \\
+  Indian          & -0.113 & *      & -0.057 & *      &  0.043 &        && -0.091 & *     && -0.100 &          & -0.093 & *        & -0.007 &        \\
+  Asian           & -0.033 & *      &  0.058 & *      & -0.062 & +      && -0.032 & *     && -0.025 &          & -0.023 & *        & -0.001 &        \\
+  Hisp            & -0.143 & *      & -0.066 & *      &  0.077 & *      && -0.106 & *     && -0.111 &          & -0.114 & *        &  0.003 &        \\
+  Creativity      & -0.042 & *      & -0.021 & *      & -0.136 & *      && -0.046 & *     && -0.043 &          & -0.047 & *        &  0.004 &        \\
+  Design          &  0.080 & *      &  0.068 & *      & -0.048 & *      &&  0.082 & *     &&  0.074 &          &  0.068 & *        &  0.006 &        \\
+  Analytics       &  0.124 & *      &  0.112 & *      &  0.183 & *      &&  0.131 & *     &&  0.128 &          &  0.127 & *        &  0.000 &        \\
+  Perceptive      &  0.063 & *      & -0.003 &        &  0.135 & *      &&  0.058 & *     &&  0.056 &          &  0.061 & *        & -0.004 &        \\
+  Log-Variance    & -1.895 & *      & -2.791 & *      & -0.622 & *      &&  --    &       &&  &          &  &          &  &        \\
+  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+  Share$^{4}$:          & 0.783  &        & 0.133  &      & 0.084 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+  \cmidrule{1-17}
+        \end{tabular}
+  
+        \begin{tablenotes}
+          \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
+          \item Log-Likelihood: HME -0.525, OLS -0.558
+          \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
+          \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the margianal values to their right
+          \item $^{3}$ Marginal effects for the HME model. Both, Experts, and Gates refers to marginal effcts referenced by equations (\ref{eq:std_errs_full_marginal_effects}), (\ref{eq:ME_expert_only}), and (\ref{eq:ME_gating_only}), respectively.
+          \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
+  
+        \end{tablenotes} \label{tbl:3D_full_regressions_results}
+  
+  
+      \end{threeparttable}
+  
+  \end{table}
+  \end{landscape}
+
+
+
+  \begin{table} \centering
+    \caption{Sample Mean Comparison: Deep Three-Expert HME}
     \begin{threeparttable}
-      {\small
       \begin{tabular}[l]{l r r r r r r}
-\cmidrule{1-7}    
-                 & Coef.  &  SE   &  Coef.  &  SE   &  Coef.  &  SE   \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}    
-(Intercept)      &  1.310   & 0.016    &  2.039    & 0.033    &  1.234     & 0.017   \\
-age16            &  0.046   & 0.002    &  0.150    & 0.004    &  0.031     & 0.001   \\
-age16sq          & -0.001   & 0.000    & -0.011    & 0.000    & -0.000     & 0.000   \\
-yreduc           &  0.055   & 0.001    & -0.028    & 0.003    &  0.081     & 0.001   \\
-sex              & -0.046   & 0.004    &  0.021    & 0.009    & -0.234     & 0.004   \\
-black            & -0.019   & 0.006    & -0.062    & 0.014    & -0.081     & 0.006   \\
-indian           & -0.075   & 0.016    &  0.117    & 0.031    & -0.088     & 0.018   \\
-asian            &  0.063   & 0.010    &  0.002    & 0.027    & -0.038     & 0.010   \\
-hisp             & -0.044   & 0.005    & -0.047    & 0.010    & -0.118     & 0.006   \\
-Creativity       & -0.003   & 0.003    & -0.039    & 0.007    & -0.049     & 0.003   \\
-Design           &  0.054   & 0.003    &  0.118    & 0.005    &  0.081     & 0.002   \\
-Analytics        &  0.131   & 0.003    &  0.005    & 0.007    &  0.128     & 0.003   \\
-Perceptive       & -0.014   & 0.002    & -0.010    & 0.005    &  0.061     & 0.002   \\
-variance         & -2.904   & 0.009    & -2.708    & 0.022    & -1.659     & 0.007   \\
-\cmidrule(l){2-3}  \cmidrule(l){4-5}  \cmidrule(l){6-7}          
-share:           &          & 0.088    &            & 0.030     &             & 0.881    \\ 
-\cmidrule{1-7}     
+    \cmidrule{1-7}
+    Share:$^{1}$& \multicolumn{2}{c}{(0.783)} & \multicolumn{2}{c}{(0.133)} & \multicolumn{2}{c}{(0.084)} \\
+                & Mean & Median & Mean & Median & Mean & Median \\
+    \cmidrule{1-7}
+    Wage (hr)   &   2.683 &   2.676 &  2.137 &  2.140 &   2.432 &   2.075 \\
+    Age         &  25.523 &  25.000 &  6.494 &  7.000 &  26.913 &  27.000 \\
+    Age16       & 746.250 & 625.000 & 50.858 & 49.000 & 873.924 & 729.000 \\
+    Female      &   0.414 &   0.000 &  0.358 &  0.000 &   0.313 &   0.000 \\
+    Af Amer     &   0.088 &   0.000 &  0.073 &  0.000 &   0.075 &   0.000 \\
+    Indian      &   0.010 &   0.000 &  0.016 &  0.000 &   0.018 &   0.000 \\
+    White       &   0.770 &   1.000 &  0.753 &  1.000 &   0.749 &   1.000 \\
+    Hispanic    &   0.036 &   0.000 &  0.027 &  0.000 &   0.101 &   0.000 \\
+    Asian       &   0.096 &   0.000 &  0.131 &  0.000 &   0.057 &   0.000 \\
+    YrsEduc     &  13.846 &  14.000 & 13.077 & 12.000 &  15.378 &  16.000 \\
+    Creative    &  -0.198 &  -0.137 & -0.444 & -0.508 &  -0.201 &  -0.282 \\
+    Design      &  -0.330 &  -0.530 & -0.477 & -0.635 &  -0.757 &  -0.859 \\
+    Analytic    &  -0.206 &  -0.253 & -0.471 & -0.412 &  -0.161 &  -0.007 \\
+    Perceptive  &   0.185 &   0.127 & -0.082 & -0.308 &   0.756 &   0.877 \\
+    \cmidrule{1-7}
+    N           &      -- &  58,429 &     -- &  8,674 &      -- &   1,539 \\
+    \hline
       \end{tabular}
-      }
       \begin{tablenotes}
-        \item Log-Likelihood: -0.541
-
-      \end{tablenotes} \label{tbl:3E_W_full_regressions_results}
-
-
+        \item{\footnotesize $^{1}$ The share is calculated by summing the 
+        posterior weights across observations for each expert.}
+        \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
+        in the census sample that are classified based on the value of their posterior weights.
+        For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+        largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+      \end{tablenotes} \label{tbl:HME3_sample_comparison}
     \end{threeparttable}
-
-\end{table}
-
-
-
-
-
-\begin{table} \centering
-  \caption{Full Marginal Effects}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l l r r r}
-      \cmidrule{1-5}
-
-                  & OLS      & Full    & Mid     & Min    \\
-      \cmidrule{1-5}
-
-      Const.      & 0.819    &  1.036  & 1.035   & 1.057  \\
-                  & 0.013**  &  --     & --      & --     \\[0.3cm]
-      
-      Yrs Edu     & 0.096    & 0.091   & 0.091   & 0.088  \\
-                  & 0.008**  & --      & --      & --     \\[0.3cm]
-
-      Age         & 0.044    & 0.044   & 0.041   & 0.041  \\
-                  & 0.001**  & --      & --      & --     \\[0.3cm]
-
-      Age Sq      & -0.0006  & -0.0007 & -0.0006 & -0.0006\\
-                  & 0.0000** & --      & --      & --     \\[0.3cm]
-
-      Afr Amer    & -0.175   & -0.166  & -0.120  & -0.155 \\
-                  & 0.007**  & --      & --      & --     \\[0.3cm]
-
-      Indian      & -0.118   & -0.091  & -0.098  & -0.116 \\
-                  & 0.019**  & --      & --      & --     \\[0.3cm]
-
-      Hispanic    & -0.165   & -0.174  & -0.117  & -0.132 \\
-                  & 0.006**  & --      & --      & --     \\[0.3cm]
-
-      Asian       & -0.070   & -0.049  & -0.043  & -0.070 \\
-                  & 0.010**  & --      & --      & --     \\[0.3cm]
-
-
-      \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item[1]{\footnotesize Each non-OLS model is a five-expert HME.}
-    \end{tablenotes} \label{tbl:model_marg_effects}
-  \end{threeparttable}
-\end{table}
-
-
-\begin{table} \centering
-  \caption{Full Marginal Effects}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l l r r r r r}
-      \cmidrule{1-7}
-
-                  & OLS      & 2     & 3     & 4    &  5    &  6    \\
-      \cmidrule{1-7}
-
-      Const.      &   & 1.321  & 1.359  & 1.262  & 1.359  & 1.405       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Age         &   & 0.037  & 0.032  & 0.036  & 0.030  & 0.035       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-      
-      Age Sq      &   & -0.001  & -0.001  & -0.001  & -0.000  & -0.001       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Yrs Edu     &   & 0.072  & 0.072  & 0.073  & 0.070  & 0.070       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-        
-      Sex         &   & -0.208  & -0.209  & -0.201  & -0.191  & -0.176       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Afr Amer    &   & -0.078  & -0.079  & -0.079  & -0.076  & -0.074       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Indian      &   & -0.096  & -0.102  & -0.095  & -0.107  & -0.046       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Asian       &   & -0.028  & -0.030  & -0.020  & -0.009  & -0.001      \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Hispanic    &   & -0.118  & -0.119  & -0.098  & -0.090  & -0.088       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-        
-      Creativity  &   & -0.044  & -0.043  & -0.054  & -0.069  & -0.060       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Design      &   & 0.081  & 0.070  & 0.062  & 0.043  & 0.055       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-        
-      Analytics   &   & 0.129  & 0.128  & 0.131  & 0.144  & 0.140       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-       
-      Perceptive  &   & 0.055  & 0.058  & 0.057  & 0.051  & 0.052       \\
-                  &   &   &   &   &   &        \\[0.3cm]
-
-
-      \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item[1]{\footnotesize Each non-OLS model is a five-expert HME.}
-    \end{tablenotes} \label{tbl:model_marg_effects_2}
-  \end{threeparttable}
-\end{table}
-
-
-\begin{table} \centering
-  \caption{Log Wage Expert Equations - Full Specification}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l l l l l l l}
-      \cmidrule{1-7}
-
-                  & OLS      & 1       & 2 &3 &4 & 5  \\
-      \cmidrule{1-7}
-
-      Share       & --       & 0.625   & 0.193   & 0.117   & 0.046   & 0.018    \\[0.3cm]
-
-      Const.      & 0.819    & 1.048   & 1.493   & 1.687   & 1.341   & 1.643    \\
-                  & 0.013**  & 0.014** & 0.010** & 0.014** & 0.084** & 0.013**  \\[0.3cm]
-      
-      Yrs Edu     & 0.096    & 0.105   & 0.032   & 0.034   & 0.040   & 0.0126   \\
-                  & 0.008**  & 0.001** & 0.001** & 0.001** & 0.005** & 0.0011** \\[0.3cm]
-
-      Age         & 0.044    & 0.024   & 0.0616  & 0.003   & 0.044   & 0.011    \\
-                  & 0.001**  & 0.001** & 0.001** & 0.0006**& 0.004** & 0.0008** \\[0.3cm]
-
-      Age Sq      & -0.0006  & -0.0003 & -0.001  & 0.00008 & -0.0006 & -0.0005  \\
-                  & 0.0000** &0.00001**&0.00001**&0.00001**&0.00008**& 0.0000** \\[0.3cm]
-
-      Afr Amer    & -0.175   & -0.209  & -0.135  & -0.036  & -0.022  & -0.078   \\
-                  & 0.007**  & 0.007** & 0.006** & 0.006** & 0.045   &  0.007** \\[0.3cm]
-
-      Indian      & -0.118   & -0.131  & -0.181  & -0.122  & 0.654  & 0.432     \\
-                  & 0.019**  & 0.018** & 0.016** & 0.014** & 0.138**& 0.014**   \\[0.3cm]
-
-      Hispanic    & -0.165   & -0.108  & 1.590   & -0.032  & -1.037 & -0.041    \\
-                  & 0.006**  & 0.006** & 0.041** & 0.004** & 0.072**& 0.005**   \\[0.3cm]
-
-      Asian       & -0.070   & -0.051  & 0.059  & -0.068   & -0.468 & 0.145     \\
-                  & 0.010**  & 0.010** & 0.008**& 0.009**  & 0.076**& 0.013**   \\[0.3cm]
-      
-      log Var    & --       & -1.824   & -2.512 & -2.776   & -0.409 & -4.586    \\
-                 & --       & 0.008**  & 0.015**& 0.022**  & 0.005**& 0.095**   \\[0.3cm]
-
-
-      \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item[1]{\footnotesize Five-expert \textit{full} HME.}
-    \end{tablenotes} \label{tbl:model_local_experts}
-  \end{threeparttable}
-\end{table}
-
-
-
-\begin{table} \centering
-  \caption{Log Wage Expert Equations - Mid specification}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l l l l l l l}
-      \cmidrule{1-7}
-
-                  & OLS & 1       & 2       &3 &4 & 5  \\
-      \cmidrule{1-7}
-
-      Share       & --  & 0.632   & 0.168   & 0.126   & 0.056   & 0.017     \\[0.3cm]
-
-      Const.      &     & 1.021   & 1.291   & 1.676   & 1.449   & 1.684    \\
-                  &     & 0.013** & 0.013** & 0.011** & 0.073** & 0.011**   \\[0.3cm]
-      
-      Yrs Edu     &     & 0.102   & 0.059   & 0.014   & 0.040   & 0.012    \\
-                  &     & 0.001** & 0.001** & 0.001** & 0.005** & 0.001**  \\[0.3cm]
-
-      Age         &     & 0.029   & 0.010   & 0.072   & 0.036   & -0.032    \\
-                  &     & 0.001** & 0.001** & 0.001** & 0.004** & 0.001**  \\[0.3cm]
-
-      Age Sq      &     & -0.0004 & -0.0002 & -0.001  & -0.0005 & 0.005   \\
-                  &     & 0.0001**& 0.0000**& 0.0000**& 0.0001**& 0.000**  \\[0.3cm]
-      
-      log Var     & --   & -1.886 & -2.493  & -2.772  & -0.435  & -4.571     \\
-                  & --   & 0.008**& 0.017** & 0.021** & 0.005** & 0.085**    \\[0.3cm]
-
-
-      \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item[1]{\footnotesize Five-expert \textit{mid} HME.}
-    \end{tablenotes} \label{tbl:model_local_expert_regressions}
-  \end{threeparttable}
-\end{table}
-
+  \end{table}
 
 \section{Conclusion} \label{sec:Conclusion}
+
+In this article, a novel mixture model is explored that borrows equally from the
+economic and deep learning fields. A flexible (and optionally deep) gating network
+is used to learn the latent structure of a dataset and then apply local
+regressions to that latent structure. Robust standard errors and closed form expressions
+for marginal effects were developed and demonstrated on two different datasets. 
 
 
 \section{Miscellaneous}
@@ -1566,6 +1619,6 @@ AIC/BIC/VOUNG test being prefered.
 
 
 
-% \printbibliography
+\printbibliography
 
 \end{document}
