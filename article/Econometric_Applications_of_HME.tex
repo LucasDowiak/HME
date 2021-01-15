@@ -1191,6 +1191,16 @@ Perceptive (0.053 to 0.057) attributes get a smaller bump to the their hourly
 wage while Creative types (-0.044 to -0.043) clearly have alternative motivation than
 monetary gain.
 
+
+\section{Conclusion} \label{sec:Conclusion}
+
+In this article, a novel mixture model is explored that borrows equally from the
+economic and deep learning fields. A flexible (and optionally deep) gating network
+is used to learn the latent structure of a dataset and then apply local
+regressions to that latent structure. Robust standard errors and closed form expressions
+for marginal effects were developed and demonstrated on two different datasets. 
+
+
 \begin{table} \centering
   \caption{Comparing Complexity, Architecture, and Regression Specification}
   \begin{threeparttable}
@@ -1529,94 +1539,6 @@ Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  
       \end{tablenotes} \label{tbl:HME3_sample_comparison}
     \end{threeparttable}
   \end{table}
-
-\section{Conclusion} \label{sec:Conclusion}
-
-In this article, a novel mixture model is explored that borrows equally from the
-economic and deep learning fields. A flexible (and optionally deep) gating network
-is used to learn the latent structure of a dataset and then apply local
-regressions to that latent structure. Robust standard errors and closed form expressions
-for marginal effects were developed and demonstrated on two different datasets. 
-
-
-\section{Miscellaneous}
-
-
-\subsection{HMRE}
-
-
-Score function for HMRE
-
-\begin{equation} \label{eq:gateJacobian}
-  \begin{split}
-    \frac{\partial Q}{\partial \omega^{a,i}_{p}} =& \sum_{t} \sum_{m=1}  \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \sum_{l} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}} \\
-  \end{split}
-\end{equation}
-
-Where we have the ratio of the posterior $h^{0,m}$ and prior 
-$\sum_{l} \pi_{n^{a} \overset{l}{\longleftrightarrow} P^{m}}$ weights with resepect
-to the root node and the gradient of the posterior weight with respect to the node
-in questions $\frac{\partial g^{a,m}}{\partial \omega^{a,i}_{p}}$. Since
-$\pi_{n^{a} \overset{l}{\longleftrightarrow} P^{m}}$ is a product of values, the
-partial in equation (\ref{eq:gateJacobian}) is simply that same product chain but
-absent of node $g^a$ times the partial of node $g^a$ with respect to
-$\omega^{a,i}_{p}$.
-
-\begin{equation} \label{eq:gatechainpartial}
-  \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}} = [\pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}} (-g^{a})] \frac{\partial g^{a, j(l)}}{\partial \omega^{a, i}}
-\end{equation}
-
-
-
-Hessian for HMRE
-\begin{equation}
-  \begin{split}
-    \frac{\partial^{2} Q}{\partial \omega^{a,i}_{p} \partial \omega^{a',j}_{q}} =& \sum_{t} \sum_{m} \left[  \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}} - \left( \frac{h^{0,m}_{t}}{\sum_{l} \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}} \right)^{2} \sum_{l} \sum_{l'} \frac{\partial \pi_{n^{0}_{t} \overset{l}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a,i}_{p}}  \frac{\partial \pi_{n^{0}_{t} \overset{l'}{\longleftrightarrow} P^{m}_{t}}}{\partial \omega^{a',j}_{q}} \right]
-  \end{split}
-\end{equation}
-
-
-Posterior node for HMRE
-\begin{equation} 
-  h^{a,m}_{t} = \frac{P^{m}_{t} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{m}_{t}}{l}}{\sum_{k} P^{k} \shortsum{l} \sumgateprod{g^{a}_{t}}{P^{k}_{t}}{l}}
-\end{equation}
-
-
-
-\subsection{Odd Facts}
-
-Variables that appear in the gating network but not in the expert regressions
-are sometimes called Concomitant Variables (see R FlixMix package).
-
-
-
-
-\subsection{Wald Test is Invalid}
-S+plus GLM section on problems with binomial GLMs
-  -- Hauck and Donner (1977) JASA. Quoting S+plus: If there are
-  some $\hat{\beta}_{i}$ that are large, the curvature of the log-likelihood at
-  $mathbf{\hat{\beta}}$ can be much less than near $\beta_{i}=0$, and so the Walk
-  approximation understimates the change in log-likelihood on setting $\beta_{i}=0$.
-  This happens in such a way that as $|\hat{\beta}_{i}| \rightarrow \infty$. Thus
-  highly significant coefficients according to the likelihood ratio test may have
-  non-significant t ratios ............. There is one fairly common circumstance
-  in which both convergence problems and the Hauek-Donner phenomenon can occur.
-  This is when the fitted probs are extremely close to zero or one.
-
-
-
-\section{Diagnostics}
-pg 7 of \cite{WMS1995} suggested observing the distribution of the terminal
-$g_{i}$. If only one expert is responsible for each observations, $g_{i}$ will
-be close to one for a single expert and near zero for all other experts.
-Can we formalize this comparison in to a specific test?
-
-density forecasts evaluations.
-
-Standard likelihood-ratio test is not valid (\cite{CarvalhoTanner2006}) with
-AIC/BIC/VOUNG test being prefered.
-
-
 
 
 \printbibliography
