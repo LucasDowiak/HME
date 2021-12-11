@@ -1,4 +1,4 @@
-setwd("~/hme/")
+setwd("~/Git/hme/")
 source("R/benchmark_hme.R")
 source("R/wage_data_prep.R")
 

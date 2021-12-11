@@ -1,3 +1,4 @@
+source("R/building_blocks.R")
 library(data.table)
 
 dtf <- fread("data/wage_equation.csv")

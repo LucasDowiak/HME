@@ -391,13 +391,13 @@ Define the indicator set as:
 We can then reformulate the likelihood equation
 
 \begin{equation}  \label{eq:auglikelihood}
-  \mathcal{L}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t} \prod_{m} \left[ \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right)  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \right]^{I_{t}(m)}
+  \mathcal{L}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t} \prod_{m} \left[ \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right)  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \right]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
 \begin{equation}  \label{eq:augloglikelihood}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \sum_{m} I_{t}(m) \left[\log \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right) + \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \right]
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \sum_{m} I_{t}(m) \left[\log \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right) + \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \right]
 \end{equation}
 
 As mentioned previously, summing over multiple paths $l$ in equation
@@ -424,10 +424,10 @@ discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
  \end{split}
 \end{equation}
 
-Here $\gateprod{h^{0}_{t}}{h^{k,\dots|j|i|0}}$ is analogous to equation (\ref{eq:gpath})
+Here $\gateprod{h^{0}_{t}}{k,\dots|j|i|0}$ is analogous to equation (\ref{eq:gpath})
 
 \begin{equation} \label{eq:hpath}
-  \gateprod{h^{0}_{t}}{h^{k|\ldots|j|i|0}} =
+  \gateprod{h^{0}_{t}}{k|\ldots|j|i|0} =
     \begin{cases} 
        h^{0, \, i}_{t} \ h^{i|0, \, j}_{t} \ldots h^{\dots|j|i|0, \, k}_{t} & \textrm{if path is feasible} \\
        0 & \textrm{otherwise}
@@ -437,7 +437,7 @@ Here $\gateprod{h^{0}_{t}}{h^{k,\dots|j|i|0}}$ is analogous to equation (\ref{eq
 and the $h^{a, i}_{t}$ are arrived at using Bayes' theorem.
 
 \begin{equation} \label{eq:posteriornode}
-  \h{a,i}{t} = \frac{g^{a, i} \shortsum{k} P^{k}_{t} \gateprod{g^{i|a}_{t}}{k}}{\shortsum{j} g^{a, j} \shortsum{m} P^{m}_{t} \gateprod{g^{j|a}_{t}}{m}}
+  \h{a,i}{t} = \frac{g^{a, i}_{t} \shortsum{k} P^{k}_{t} \gateprod{g^{i|a}_{t}}{k}}{\shortsum{j} g^{a, j}_{t} \shortsum{m} P^{m}_{t} \gateprod{g^{j|a}_{t}}{m}}
 \end{equation}
 
 
@@ -466,7 +466,7 @@ together and optimized on their own. For the experts we have:
 and for the gating nodes:
 
 \begin{equation} \label{eq:OmegaUpdate}
-  \argmax_{\boldsymbol{\omega^{a}}} \sum_{t} \gateprod{h^{0}_{t}}{h^{a}} \log g( \boldsymbol{z}_{t}, \boldsymbol{\omega}^{a})
+  \argmax_{\boldsymbol{\omega^{a}}} \sum_{t} \gateprod{h^{0}_{t}}{a} \log g( \boldsymbol{z}_{t}, \boldsymbol{\omega}^{a})
 \end{equation}
 
 It is worth noting that the weights in these optimizations 
@@ -493,9 +493,13 @@ the M-step holds them constant and then re-estimates the parameter vector:
 Again, due to the separable nature of $Q$ (see the middle equality of eq (\ref{eq:Estep})),
 the parameters of each expert regression and each gating node can be
 updated one-at-a-time with equations (\ref{eq:BetaUpdate}) and
-(\ref{eq:OmegaUpdate}), respectively. This separability of the Q function when
-applied to finite mixture problems was noticed in the original and excellent
+(\ref{eq:OmegaUpdate}), respectively. The separability of the Q function -- when
+applied to finite mixture -- was noticed in the original and excellent
 work of \citet{EM_DLR1977}. See Section 4.3 for the authors' example. 
+From a computational perspective, this set-up has the additional benefit
+of being embarrassingly parallel, making it easier to scale to larger
+and larger data sets.
+
 
 \bigskip
 
@@ -545,8 +549,6 @@ estimator for the variance-covariance matrix:
 \begin{equation} \label{eq:robustgatevarcov}
   \boldsymbol{V}(\boldsymbol{\theta}) = \HI{\boldsymbol{\theta}} \boldsymbol{G}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}
 \end{equation}
-
-
 
 where $\boldsymbol{G}(\boldsymbol{\theta})$ is the sum of the outer products of the score 
 vectors
@@ -599,13 +601,13 @@ For a generic gating node $a$ we can define the individual score for
 sample $t$ as:
 
 \begin{equation} \label{eq:gateScore}
-  \boldsymbol{S}_{t}(\bw{a, i}) = \frac{\partial \boldsymbol{l}_{t}(\boldsymbol{\theta}^{*}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) }{\partial \boldsymbol{\omega}^{a,i}} = \left[ \frac{ \FnOmegaNaught{a}{i} }{ \sum_{m} \gateprod{g^{0}_{t}}{P^{m} } P^{m}_{t} } \right] \boldsymbol{z}_{t}^{\top} 
+  \boldsymbol{S}_{t}(\bw{a, i}) = \frac{\partial \boldsymbol{l}_{t}(\boldsymbol{\theta}^{*}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) }{\partial \boldsymbol{\omega}^{a,i}} = \left[ \frac{ \FnOmegaNaught{a}{i} }{ \sum_{m} \gateprod{g^{0}_{t}}{m} P^{m}_{t} } \right] \boldsymbol{z}_{t}^{\top} 
 \end{equation}
 
 with
 
 \begin{equation} \label{eq:omegaScore}
-  \FnOmegaNaught{a}{i} = \left( (1 - g^{a, i}_{t}) \sum_{k}^{m(a, i)} \gateprod{g^{0}_{t}}{P^{k}} P^{k}_{t} - \sum_{j \neq i} g^{a,j}_{t} \sum_{k'}^{m(a, j)} \gateprod{g^{0}_{t}}{P^{k'}}  P^{k'} \right)
+  \FnOmegaNaught{a}{i} = \left( (1 - g^{a, i}_{t}) \sum_{k}^{m(a, i)} \gateprod{g^{0}_{t}}{k} P^{k}_{t} - \sum_{j \neq i} g^{a,j}_{t} \sum_{k'}^{m(a, j)} \gateprod{g^{0}_{t}}{k'}  P^{k'} \right)
 \end{equation}
 
 In expression (\ref{eq:gateScore}) above, $ \FnOmegaNaught{a}{i} \left[ \sum_{m} \gateprod{g^{0}_{t}}{P^{m}} \right]^{-1}$
@@ -656,13 +658,13 @@ In this case the score vector for all expert regressions can be expressed as:
 with
 
 \begin{equation} \label{eq:ExpertScoreBeta}
-  \frac{\partial \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m}} = \gateprod{g^{0}_{t}}{P^{m}} \frac{ \epsilon^{m}_{t} }{\exp{(\phi^{m})}} \boldsymbol{x}_{t}^{\top}
+  \frac{\partial \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m}} = \gateprod{g^{0}_{t}}{m} \frac{ \epsilon^{m}_{t} }{\exp{(\phi^{m})}} \boldsymbol{x}_{t}^{\top}
 \end{equation}
  
 and
 
 \begin{equation} \label{eq:ExpertScoreVariance}
-  \frac{\partial \boldsymbol{l}_{t}}{\partial \phi^{m}} = \frac{1}{2} \gateprod{g^{0}_{t}}{P^{m}} \left( \frac{( \epsilon^{m}_{t} )^{2}}{\exp{(\phi^{m})}} - 1 \right)
+  \frac{\partial \boldsymbol{l}_{t}}{\partial \phi^{m}} = \frac{1}{2} \gateprod{g^{0}_{t}}{m} \left( \frac{( \epsilon^{m}_{t} )^{2}}{\exp{(\phi^{m})}} - 1 \right)
 \end{equation}
 
 Expressions (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance})
@@ -915,8 +917,8 @@ expert regressions, $\boldsymbol{\beta}$. These results are collected in Table
     \begin{tabular}{| l | c c c |}
     \hline
                                                                                     & \underline{$\boldsymbol{U}_{Z}$}                                                            & \underline{$\boldsymbol{V}$}                                                                                                                                                                                           & \underline{$\boldsymbol{U}_{X}$}   \\ [2ex]
-    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\omega}^{a}}$ & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} \Eym$        & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} \Eym + \frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \boldsymbol{\omega}^{a}}  \frac{\partial \Eym}{{\partial \boldsymbol{V}}}$  & $\boldsymbol{0}$                   \\ [2ex]
-    $\frac{\partial \boldsymbol{\Delta_{t}^{m}}}{\partial \boldsymbol{\beta}^{m}}$  & $\boldsymbol{0}$                                                                            & $\boldsymbol{\delta}^{m}_{t} \frac{\partial \Eym}{\partial \boldsymbol{\beta}^{m}} + \gateprod{g^{0}_{t}}{m}   \frac{\partial^{2} \Eym}{\partial \boldsymbol{V} \partial \boldsymbol{\beta}^{m}}$    & $\gateprod{g^{0}_{t}}{m}  \frac{\partial^{2} \Eym}{\partial \boldsymbol{U}_{X} \partial \boldsymbol{\beta}^{m}}$  \\ [1ex]
+    $\frac{\partial \boldsymbol{\Delta}_{t}^{m}}{\partial \boldsymbol{\omega}^{a}}$ & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} \Eym$        & $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a}} \Eym + \frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \boldsymbol{\omega}^{a}}  \frac{\partial \Eym}{{\partial \boldsymbol{V}}}$  & $\boldsymbol{0}$                   \\ [2ex]
+    $\frac{\partial \boldsymbol{\Delta}_{t}^{m}}{\partial \boldsymbol{\beta}^{m}}$  & $\boldsymbol{0}$                                                                            & $\boldsymbol{\delta}^{m}_{t} \frac{\partial \Eym}{\partial \boldsymbol{\beta}^{m}} + \gateprod{g^{0}_{t}}{m}   \frac{\partial^{2} \Eym}{\partial \boldsymbol{V} \partial \boldsymbol{\beta}^{m}}$    & $\gateprod{g^{0}_{t}}{m}  \frac{\partial^{2} \Eym}{\partial \boldsymbol{U}_{X} \partial \boldsymbol{\beta}^{m}}$  \\ [1ex]
     \hline
     \end{tabular}
   \caption{\label{tbl:delta_method_gradients} Delta Method Gradient Cases}
