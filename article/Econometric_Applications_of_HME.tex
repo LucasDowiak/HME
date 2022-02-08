@@ -3,6 +3,7 @@
 \usepackage{amssymb}
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{mathbbol}
 \usepackage{threeparttable}
 \usepackage{booktabs}
@@ -47,10 +48,14 @@
 \newcommand{\Eym}{\mathbb{E}^{m} \left[ y_{t} \right]}
 \newcommand{\FnOmegaNaught}[2]{\Omega^{(0)}_{t}( #1, #2 )}
 \newcommand{\FnOmegaOne}[4]{\Omega^{(1)}_{t}(#1, #2)(#3, #4)}
+\newcommand{\FnOmegaTwo}[3]{\Omega^{(2)}_{t}(#1, #2, #3)}
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
 
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}{Definition}[section]
 
 \setlength{\parindent}{0pt}
 
@@ -145,7 +150,7 @@ expectation-maximization approach to estimation while Section \ref{sec:Inference
 concerns itself with robust inference of the estimated parameters.
 Section \ref{sec:MarginalEffects} provides detail on how to derive the
 marginal effects of the model's covariates. In Section \ref{sec:SimpleExample},
-a vary simple demonstration of the HME in action is presented with 
+a very simple demonstration of the HME in action is presented with 
 a more economically relevant example of applying the HME model to
 a Mincer wage equation in Section \ref{sec:MincerWageEx}. Section
 \ref{sec:Conclusion} concludes.
@@ -338,7 +343,6 @@ we can index these multiples paths by $l$ so that
   \expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega}) = \shortsum{l} \sumgateprod{g^{0}}{m}{l} 
 \end{equation}
 
-
 By collecting and summing all possible paths from the root node to each
 expert, the conditional probability given in equation (\ref{eq:mixture}) can be
 expanded and expressed as:
@@ -346,23 +350,31 @@ expanded and expressed as:
 \begin{equation} \label{eq:contribution}
   \begin{split}
     P(y_{t}| \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \boldsymbol{\Omega}, \boldsymbol{\beta}) =& \sum_{m} \expmixwt(m | \boldsymbol{z}_{t}, \boldsymbol{\Omega}) P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \\ 
-      =& \sum_{m} \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right)  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
+      =& \sum_{m} \left( \shortsum{l} \sumgateprod{g^{0}_{t}}{m}{l} \right)  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
   \end{split}
 \end{equation}
 
-If we concatenate the parameters of the gating network with the parameters of
-the experts as $\boldsymbol{\theta} = [\boldsymbol{\beta} \,\, \boldsymbol{\Omega}]$,
+As it was just mentioned, summing over multiple paths $l$ in equation (\ref{eq:contribution})
+is only necessary in the HMRE case. For the ME and HME cases, $l$ equals 1,
+reducing the mixture weight to Equation (\ref{eq:gpath2}). Going forward,
+this essay will concentrate on the ME and HME cases, leaving the
+exposition for the HMRE for another time.
+
+\bigskip
+
+If we concatenate the parameters of the gating network with the parameters
+of the experts as $\boldsymbol{\theta} = [\boldsymbol{\beta} \,\, \boldsymbol{\Omega}]$,
 then the product of these individual probabilities across the full sample size $T$ yields
 the likelihood function. 
 
 \begin{equation} \label{eq:likelihood}
-  \mathcal{L}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t}  \sum_{m} \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right)  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
+  \mathcal{L}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t}  \sum_{m} \gateprod{g^{0}_{t}}{m}  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
 And taking its log yields the log likelihood
 
 \begin{equation} \label{eq:loglikelihood}
-  \boldsymbol{l}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \log \left[ \sum_{m} \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right) P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \right]
+  \boldsymbol{l}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \log \left[ \sum_{m} \gateprod{g^{0}_{t}}{m} P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \right]
 \end{equation}
 
 The functional form of the log likelihood (\ref{eq:loglikelihood}) does not
@@ -391,20 +403,15 @@ Define the indicator set as:
 We can then reformulate the likelihood equation
 
 \begin{equation}  \label{eq:auglikelihood}
-  \mathcal{L}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t} \prod_{m} \left[ \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right)  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \right]^{I_{t}(m)}
+  \mathcal{L}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t} \prod_{m} \left[ \gateprod{g^{0}}{m}  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \right]^{I_{t}(m)}
 \end{equation}
 
 leading to the complete-data log-likelihood
 
 \begin{equation}  \label{eq:augloglikelihood}
-  \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \sum_{m} I_{t}(m) \left[\log \left( \shortsum{l} \sumgateprod{g^{0}}{m}{l} \right) + \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \right]
+  \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \sum_{m} I_{t}(m) \left[\log \gateprod{g^{0}}{m} + \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) \right]
 \end{equation}
 
-As mentioned previously, summing over multiple paths $l$ in equation
-(\ref{eq:augloglikelihood}) is only necessary in the HMRE case. For the ME
-and HME cases, $l$ equals 1, simplifying the first log in (\ref{eq:augloglikelihood})
-to $\log(\gateprod{g^{0}}{m})$. Going forward, we will focus our analysis on
-the ME and HME specifications with work on the HMRE case left for another time.
 
 \subsection{E-Step} \label{sec:Estep}
 The E-step of the algorithm performs an expectation over the complete
@@ -417,8 +424,8 @@ discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 \begin{equation} \label{eq:Estep}
   \begin{split}
   Q(\boldsymbol{\theta}) = \mathbb{E} \left [ \boldsymbol{l}_{c}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] & = \sum_{t}\sum_{m} \EIm{m} \left[ \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}) + \log \gateprod{g^{0}_{t}}{m} \right] \\ 
-   & = \sum_{t} \sum_{m} \EIm{m}  \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})   +       \sum_{t} \sum_{m} \sum_{a} \mathbb{E} \left[ I_{t}(a) \right] \log \gateprod{g^{0}_{t}}{a} \\
-   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{m}  \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})   +       \sum_{t} \sum_{m} \sum_{a} \gateprod{h^{0}_{t}}{a} \log \gateprod{g^{0}_{t}}{a} \\
+   & = \sum_{t} \sum_{m} \EIm{m}  \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})   +       \sum_{t} \sum_{a} \mathbb{E} \left[ I_{t}(a) \right] \log \gateprod{g^{0}_{t}}{a} \\
+   & = \sum_{t} \sum_{m} \gateprod{h^{0}_{t}}{m}  \log P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})   +       \sum_{t} \sum_{a} \gateprod{h^{0}_{t}}{a} \log \gateprod{g^{0}_{t}}{a} \\
    & = \sum_{t} Q^{(1)}_{t} (\boldsymbol{\beta}) + \sum_{t} Q^{(2)}_{t} (\boldsymbol{\Omega}) \\
    & = \sum_{t} Q_{t}(\boldsymbol{\theta})
  \end{split}
@@ -437,7 +444,7 @@ Here $\gateprod{h^{0}_{t}}{k,\dots|j|i|0}$ is analogous to equation (\ref{eq:gpa
 and the $h^{a, i}_{t}$ are arrived at using Bayes' theorem.
 
 \begin{equation} \label{eq:posteriornode}
-  \h{a,i}{t} = \frac{g^{a, i}_{t} \shortsum{k} P^{k}_{t} \gateprod{g^{i|a}_{t}}{k}}{\shortsum{j} g^{a, j}_{t} \shortsum{m} P^{m}_{t} \gateprod{g^{j|a}_{t}}{m}}
+  \h{a,i}{t} = \frac{g^{a, i}_{t} \shortsum{m} P^{m}_{t} \gateprod{g^{i|a}_{t}}{m}}{\shortsum{j} g^{a, j}_{t} \shortsum{k} P^{k}_{t} \gateprod{g^{j|a}_{t}}{k}}
 \end{equation}
 
 
@@ -504,7 +511,7 @@ and larger data sets.
 \bigskip
 
 It is worth mentioning a few more of the remarkable properties of the EM algorithm
-that are also established in \citet{EM_DLR1977}:
+that are established in \citet{EM_DLR1977}:
 
 \begin{enumerate}
   \item Given a sequence of parameter values produced by the General EM algorithm,
@@ -553,14 +560,14 @@ estimator for the variance-covariance matrix:
 where $\boldsymbol{G}(\boldsymbol{\theta})$ is the sum of the outer products of the score 
 vectors
 
-\begin{equation}
+\begin{equation} \label{eq:OPG}
   \boldsymbol{G}(\boldsymbol{\theta}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\theta})^\top
 \end{equation}
 
 and $\HH{\boldsymbol{\theta}}$ is the empirical Hessian:
 
-\begin{equation}
-  \HH{\boldsymbol{\theta}} = \frac{1}{T} \sum_{t} \Ht{\boldsymbol{\theta}}
+\begin{equation} \label{eq:Hessian}
+  \HH{\boldsymbol{\theta}} = \sum_{t} \Ht{\boldsymbol{\theta}}
 \end{equation}
 
 The following sections discusses how to form the score and hessian matrices 
@@ -590,32 +597,32 @@ score.
   \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a}) = [ \boldsymbol{S}_{t}(\bw{a, 1})^{\top} \,\, \ldots \,\, \boldsymbol{S}_{t}(\bw{a, J - 1})^{\top} ]^{\top}
 \end{equation}
 
-In what follows, the functions $m(a)$ and $m(a, i)$ will be used to return
-a subset of experts from a general HME model. The function $m(a)$ will
+In what follows, the functions $M(a)$ and $M(a, i)$ will be used to return
+a subset of experts from a general HME model. The function $M(a)$ will
 return the set of all experts that are ancestors of node $a$, while
-$m(a, i)$ returns the set of experts that are ancestors from branch
+$M(a, i)$ returns the set of experts that are ancestors from branch
 $i$ of node $a$. For instance, in network $\boldsymbol{C}$ of Figure
-\ref{fig:network_comparison}, $m('1|0') = \{'1|1|1|0', \, '2|1|1|0', \, '2|1|0'\}$,
-$m('1|0', 1) = \{'1|1|1|0', \, '2|1|1|0'\}$, and $m('1|0', 2) = \{'2|1|0'\}$.
+\ref{fig:network_comparison}, $M('1|0') = \{'1|1|1|0', \, '2|1|1|0', \, '2|1|0'\}$,
+$M('1|0', 1) = \{'1|1|1|0', \, '2|1|1|0'\}$, and $M('1|0', 2) = \{'2|1|0'\}$.
 For a generic gating node $a$ we can define the individual score for 
 sample $t$ as:
 
 \begin{equation} \label{eq:gateScore}
-  \boldsymbol{S}_{t}(\bw{a, i}) = \frac{\partial \boldsymbol{l}_{t}(\boldsymbol{\theta}^{*}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) }{\partial \boldsymbol{\omega}^{a,i}} = \left[ \frac{ \FnOmegaNaught{a}{i} }{ \sum_{m} \gateprod{g^{0}_{t}}{m} P^{m}_{t} } \right] \boldsymbol{z}_{t}^{\top} 
+  \boldsymbol{S}_{t}(\bw{a, i}) = \frac{\partial \boldsymbol{l}_{t}(\boldsymbol{\theta}^{*}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) }{\partial \boldsymbol{\omega}^{a,i}} = \left[ \frac{ \FnOmegaNaught{a}{i} }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} } \right] \boldsymbol{z}_{t}^{\top} 
 \end{equation}
 
 with
 
 \begin{equation} \label{eq:omegaScore}
-  \FnOmegaNaught{a}{i} = \left( (1 - g^{a, i}_{t}) \sum_{k}^{m(a, i)} \gateprod{g^{0}_{t}}{k} P^{k}_{t} - \sum_{j \neq i} g^{a,j}_{t} \sum_{k'}^{m(a, j)} \gateprod{g^{0}_{t}}{k'}  P^{k'} \right)
+  \FnOmegaNaught{a}{i} = \left( (1 - g^{a, i}_{t}) \sum_{m}^{M(a, i)} \gateprod{g^{0}_{t}}{m} P^{m}_{t} - \sum_{j \neq i} g^{a, j}_{t} \sum_{m'}^{M(a, j)} \gateprod{g^{0}_{t}}{m'}  P^{m'}_{t} \right)
 \end{equation}
 
-In expression (\ref{eq:gateScore}) above, $ \FnOmegaNaught{a}{i} \left[ \sum_{m} \gateprod{g^{0}_{t}}{P^{m}} \right]^{-1}$
+In expression (\ref{eq:gateScore}) above, $ \FnOmegaNaught{a}{i} \left[ \sum_{k} \gateprod{g^{0}_{t}}{P^{k}_{t}} P^{k}_{t}\right]^{-1}$
 is the instantaneous rate of change of the $t^{\mathrm{th}}$ contribution to
 the log-likelihood caused by a small perturbation of $\bw{a, i}$.
 At the maximum likelihood estimator $ \theta^{*}$, the sum
-of (\ref{eq:omegaScore}) should be approximately zero.
-This implies that over the sample T, the optimal $\bw{a, i}$
+of (\ref{eq:omegaScore}) over the full sample should be approximately zero.
+This implies that the optimal $\bw{a, i}$
 balances any gain of moving more weight to the set of experts that can be
 reached by taking direction $i$ at node $a$ against the loss suffered by 
 removing weight from the experts at the end of any path $j$ that does not 
@@ -645,7 +652,9 @@ $\phi = \log \sigma^{2}$.
 
 To help save space in the sections below, the following shorthand will be used 
 to denote the residual of each local expert: $\epsilon^{m}_{t} = y_{t} - \boldsymbol{x}_{t} \boldsymbol{\beta}^{m}$.
-In this case the score vector for all expert regressions can be expressed as:
+Beginning with the original log-likelihood equation defined in Equation (\ref{eq:loglikelihood}),
+and noting that there is only one path from root node to each expert in an HME ($l = 1$),
+the score vector for all expert regressions can be expressed as:
 
 \begin{equation}
   \boldsymbol{S}_{t}(\boldsymbol{\beta}) = [ \boldsymbol{S}_{t}(\boldsymbol{\beta}^{1})^{\top} \,\, \ldots \,\, \boldsymbol{S}_{t}(\boldsymbol{\beta}^{M})^{\top} ]^{\top}
@@ -657,19 +666,24 @@ In this case the score vector for all expert regressions can be expressed as:
 
 with
 
-\begin{equation} \label{eq:ExpertScoreBeta}
-  \frac{\partial \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m}} = \gateprod{g^{0}_{t}}{m} \frac{ \epsilon^{m}_{t} }{\exp{(\phi^{m})}} \boldsymbol{x}_{t}^{\top}
-\end{equation}
- 
+\begin{align} \label{eq:ExpertScoreBeta}
+  \frac{\partial \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m}} =& \left[ \frac{\gateprod{g^{0}_{t}}{m}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  (\epsilon^{m})^{2}  }{2 \exp (\phi^{m}) } \right) } \left( - \frac{\epsilon^{m}}{\exp(\phi^{m})} \right) (-\boldsymbol{x}_{t}^{\top}) \nonumber \\
+   =& \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{\epsilon^{m}}{\exp(\phi^{m})} \right] \boldsymbol{x}_{t}^{\top}
+\end{align}
+
 and
 
-\begin{equation} \label{eq:ExpertScoreVariance}
-  \frac{\partial \boldsymbol{l}_{t}}{\partial \phi^{m}} = \frac{1}{2} \gateprod{g^{0}_{t}}{m} \left( \frac{( \epsilon^{m}_{t} )^{2}}{\exp{(\phi^{m})}} - 1 \right)
-\end{equation}
+\begin{align} \label{eq:ExpertScoreVariance}
+  \frac{\partial \boldsymbol{l}_{t}}{\partial \phi^{m}} =& \left[ \frac{ \gateprod{g^{0}_{t}}{m} }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \bigg[ -\frac{1}{2} (2 \pi)^{-\frac{1}{2}} \left( \exp ( \phi^{m} ) \right)^{-\frac{3}{2}} \exp ( \phi^{m} ) \exp{ \left( -\frac{  ( y_{t} - \boldsymbol{x}_{t} \boldsymbol{\beta}^{m} )^{2}  }{2 \exp (\phi^{m}) } \right) }   + \nonumber \\
+   & \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  (\epsilon^{m}_{t})^{2}  }{2 \exp (\phi^{m}) } \right) } \left( \frac{ ( \epsilon^{m}_{t} )^{2} }{ 2 \exp( \phi^{m} )^{2} } \right) \exp( \phi^{m} ) \bigg] \nonumber \\
+   =& \frac{1}{2} \left[ \frac{ \gateprod{g^{0}_{t}}{m} P^{m}_{t} }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{ (\epsilon^{m}_{t})^{2} }{ \exp( \phi^{m} )} - 1 \right]
+\end{align}
+
 
 Expressions (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance})
-are the same as the score vectors for a single OLS regression but with
-the associated prior weights added on.
+are the same as the score vectors for a single (non-logged) OLS regression but
+with an appended term representing expert $m$'s portion of the total
+contribution to the likelihood for that observation.
 
 
 \subsection{The Hessian} \label{sec:TheHessian}
@@ -682,34 +696,30 @@ each other.
 
 \begin{equation} \label{eq:FullHessian}
   \Ht{\boldsymbol{\theta}} =  \begin{bmatrix}
-  \Ht{\boldsymbol{\beta}^{1}}                                               & \boldsymbol{0}                                                           & \cdots & \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{0, 1} }                & \cdots & \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{\boldsymbol{\cdot}, J - 1} }  \\
-  \boldsymbol{0}                                                            & \Ht{\boldsymbol{\beta}^{2}}                                              & \cdots & \Ht{\boldsymbol{\beta}^{2}, \, \bw{0, 1}}                   & \cdots & \Ht{\boldsymbol{\beta}^{2}, \, \bw{\boldsymbol{\cdot}, J - 1}}     \\
-  \vdots                                                                    & \vdots                                                                   & \ddots & \vdots                                                      &        & \vdots                                                             \\
-  \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{0, 1} }^{\top}                       & \Ht{ \boldsymbol{\beta}^{2}, \,  \bw{0, 1} }^{\top}                      & \cdots & \Ht{\bw{0, 1}}                                              & \cdots & \Ht{\bw{0, 1}, \, \bw{\boldsymbol{\cdot}, J - 1} }                 \\
-  \vdots                                                                    & \vdots                                                                   &        & \vdots                                                      & \ddots & \vdots                                                             \\
-  \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{\boldsymbol{\cdot}, J - 1} }^{\top}  & \Ht{ \boldsymbol{\beta}^{2}, \,  \bw{\boldsymbol{\cdot}, J - 1} }^{\top} & \cdots & \Ht{ \bw{0, 1}, \,  \bw{\boldsymbol{\cdot}, J - 1} }^{\top} & \cdots & \Ht{ \bw{\boldsymbol{\cdot}, J - 1}}                               \\
+  \Ht{\boldsymbol{\beta}^{1}, \boldsymbol{\beta}^{1}}                       & \Ht{\boldsymbol{\beta}^{2}, \boldsymbol{\beta}^{1}}                      & \cdots & \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{0, 1} }                & \cdots & \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{\boldsymbol{\cdot}, J - 1} }     \\
+  \Ht{\boldsymbol{\beta}^{1}, \boldsymbol{\beta}^{2}}                       & \Ht{\boldsymbol{\beta}^{2}, \boldsymbol{\beta}^{2}}                      & \cdots & \Ht{\boldsymbol{\beta}^{2}, \, \bw{0, 1}}                   & \cdots & \Ht{\boldsymbol{\beta}^{2}, \, \bw{\boldsymbol{\cdot}, J - 1}}        \\
+  \vdots                                                                    & \vdots                                                                   & \ddots & \vdots                                                      &        & \vdots                                                                \\
+  \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{0, 1} }^{\top}                       & \Ht{ \boldsymbol{\beta}^{2}, \,  \bw{0, 1} }^{\top}                      & \cdots & \Ht{\bw{0, 1}, \bw{0, 1}}                                   & \cdots & \Ht{\bw{0, 1}, \, \bw{\boldsymbol{\cdot}, J - 1} }                    \\
+  \vdots                                                                    & \vdots                                                                   &        & \vdots                                                      & \ddots & \vdots                                                                \\
+  \Ht{ \boldsymbol{\beta}^{1}, \,  \bw{\boldsymbol{\cdot}, J - 1} }^{\top}  & \Ht{ \boldsymbol{\beta}^{2}, \,  \bw{\boldsymbol{\cdot}, J - 1} }^{\top} & \cdots & \Ht{ \bw{0, 1}, \,  \bw{\boldsymbol{\cdot}, J - 1} }^{\top} & \cdots & \Ht{ \bw{\boldsymbol{\cdot}, J - 1}, \bw{\boldsymbol{\cdot}, J - 1}}  \\
     \end{bmatrix}
 \end{equation}
 
-Before getting into the details of matrix (\ref{eq:FullHessian}), it will
-be worth noting the parameter combinations that will result in  zero-valued
-elements of $\boldsymbol{H}_{t}$. First, there are no second-order
-partial derivatives across experts, meaning that for any experts
-$m$, $k$ where $m \neq k$, then
-$\frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\beta}^k} = \boldsymbol{0}$.
-This can already be seen in equation (\ref{eq:FullHessian}). Not noted in
-(\ref{eq:FullHessian}) are two additional cases where elements of $\boldsymbol{H}_{t}$ will
-equal zero. One, if the ancestors of two gating nodes have no shared experts. That is,
-for nodes $a$ and $b$, if $m(a) \cap m(b) = \{\}$, then 
-$ \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\omega}^{a, i} \partial \boldsymbol{\omega}^{b,n}} = 0 \,\, \textrm{for all} \,\, i, n$.
-Two, if the gating path to expert $m$ does not go through node $a$ then
-there are also no second-order partial derivatives between any parameters
-in node $a$ and those that appear in gating path to expert $m$ or in the
-parameter vector $\boldsymbol{\beta}^{m}$. That is, if $g^{a}$ is not a
-component of $\gateprod{g^{0}_{t}}{m} P^{m}$, then
-$\frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \bw{a, i}} = \boldsymbol{0}$
-and $\frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \bw{a, i} \partial \bw{b, n}} = \boldsymbol{0}$
-for all $g^{b}$ in $\gateprod{g^{0}_{t}}{m}$.
+Each block of the hessian will be non-zero. Looking at the score vectors in Equations
+(\ref{eq:gateScore}), (\ref{eq:ExpertScoreBeta}), and (\ref{eq:ExpertScoreVariance}),
+each contains the expression $\left[ \sum_{m} \gateprod{g^{0}_{t}}{P^{m}_{t}} P^{m}_{t} \right]^{-1}$.
+This term holds the parameters for every gate, split, and local expert in the model. The
+basic details for a generic block of the hessian can be described by the following
+three expressions:
+
+\begin{align}
+  \Ht{\boldsymbol{\beta}^{m}, \boldsymbol{\beta}^{n}} &= \begin{bmatrix} \label{eq:expertNodeHessian}
+    \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\beta}^{n}}    &  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \phi^{n}}     \\
+    \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \phi^{n}}^{\top}           &  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \phi^{m} \partial \phi^{n}}
+    \end{bmatrix} \\
+    \Ht{\boldsymbol{\beta}^{m}, \, \bw{a, i}} &= \left[ \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \bw{a, i}}  \frac{\partial^{2} \boldsymbol{l}_{t}}{ \partial \phi^{m} \partial \bw{a, i} }  \right] \\
+    \Ht{\bw{a, i}, \, \bw{b, n}} &= \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\omega}^{a, i} \partial \boldsymbol{\omega}^{b,n}}
+\end{align}
 
 \bigskip
 
@@ -727,62 +737,259 @@ parameter vector. Now, define $\mathbb{1}\{a, i, m\}$ as an indicator function
 that equals one if $\bw{a, i}$ is an explicit parameter vector to expert $m$
 and zero if it is an implicit parameter vector (it can only be one or the other).
 With this notation, the details to the hessian in equation (\ref{eq:FullHessian})
-can now be tackled. Starting with equation (\ref{eq:gateScore}), the
-second-order partial derivatives for a pair of gating vectors is:
+can now be tackled.
+
+\bigskip
+
+Starting with equation (\ref{eq:gateScore}), the second-order partial
+derivatives for a pair of gating vectors is:
 
 \begin{equation} \label{eq:nodehessian}
-  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\omega}^{a, i} \partial \boldsymbol{\omega}^{b,n}} = \left[ \sum_{m} \gateprod{g^{0}_{t}}{m} \right]^{-2} \FnOmegaNaught{a}{i} \cdot \FnOmegaNaught{b}{n} \, \boldsymbol{z}^{\top}_{t} \boldsymbol{z}_{t} \, + \, \left[ \sum_{m} \gateprod{g^{0}_{t}}{m} \right]^{-1} \boldsymbol{z}^{\top}_{t} \, \frac{ \partial \FnOmegaNaught{a}{i} }{\partial \bw{b, n}}^{\top}
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\omega}^{a, i} \partial \boldsymbol{\omega}^{b,n}} = - \left[ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} \right]^{-2} \FnOmegaNaught{a}{i} \cdot \FnOmegaNaught{b}{n} \, \boldsymbol{z}^{\top}_{t} \boldsymbol{z}_{t} \, + \, \left[ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}\right]^{-1} \boldsymbol{z}^{\top}_{t} \, \frac{ \partial \FnOmegaNaught{a}{i} }{\partial \bw{b, n}}^{\top}
 \end{equation}
 
-where
+where the value $\frac{ \partial \FnOmegaNaught{a}{i} }{\partial \bw{b, n}}$
+depends on the relative locations of $\bw{a, i}$ and $\bw{b, n}$:
 
 \begin{equation}
-  \frac{ \partial \FnOmegaNaught{a}{i} }{\partial \boldsymbol{\omega}^{b, n}} = \sum_{k}^{m(a) \, \cap \, m(b) } \sum_{j}^{J - 1} \sum_{l}^{J - 1} \left\{ \left( \mathbb{1}\{a, j, k\} - g^{a,j}_{t} \right) \left( \mathbb{1}\{b, l, k\} - g^{b,l}_{t} \right) \boldsymbol{\cdot} \FnOmegaOne{a}{j}{b}{l} \boldsymbol{\cdot} P^{k} \right\}  \boldsymbol{z}^{\top}_{t}
+  \frac{ \partial \FnOmegaNaught{a}{i} }{\partial \boldsymbol{\omega}^{b, n}} = \begin{cases} 
+       0 & \textrm{if $M(a) \cap M(b) = \{ \}$} \\
+       \FnOmegaOne{a}{i}{b}{n}  \, \boldsymbol{z}_{t}^{\top} & \textrm{if $M(a) \cap M(b) \neq \{ \}$ and $a \neq b$} \\
+       \left[ \FnOmegaOne{a}{i}{a}{n} + \FnOmegaTwo{a}{i}{n} \right] \, \boldsymbol{z}_{t}^{\top} & \textrm{if $M(a) \cap M(b) \neq \{ \}$ and $a = b$}
+    \end{cases}
 \end{equation}
 
-and
+and the terms $\Omega^{(1)}_{t}$ and $\Omega^{(2)}_{t}$ are defined by:
 
-\begin{equation} \label{eq:ExpertIntersection}
-  \FnOmegaOne{a}{i}{b}{n} = \begin{cases} 
-    \sum_{m}^{m(a,i) \, \cap \, m(b, n)}  \gateprod{g^{0}_{t}}{m}  & \textrm{if $m(a,i) \cap m(b, n) \neq \{ \}$} \\
-     0 & \textrm{if $m(a,i) \cap m(b, n) = \{ \}$}
-             \end{cases}
+\begin{equation}
+  \FnOmegaOne{a}{i}{b}{n} = \sum_{m}^{ M(a) \, \cap \, M(b) } \left( \mathbb{1}\{a, i, m\} - g^{a,i}_{t} \right) \left( \mathbb{1}\{b, n, m\} - g^{b,n}_{t} \right) \gateprod{g^{0}_{t}}{m} P^{m}_{t}
+\end{equation}
+
+\begin{equation}
+  \FnOmegaTwo{a}{i}{n} = - \sum_{m}^{M(a)} g^{a, i}_{t} ( \mathbb{1}\{i = n\} - g^{a, n}_{t} ) \gateprod{g^{0}_{t}}{m} P^{m}_{t}
+\end{equation}
+
+The cross-partial derivatives for a general gating node and an expert
+regression depends on their relative location. If expert $m \in M(a)$,
+then:
+
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\omega}^{a, i}} =  \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \left( \mathbb{1}\{a, i, m\} - g^{a, i}_{t} \right)  - \frac{ \Omega^{(0)}_{t}(a, i) }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} }  \right] \left[ \frac{ (\epsilon^{m}_{t}) }{\exp(\phi^{m})} \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{z}_{t}  
+\end{equation}
+
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \phi^{m} \partial \boldsymbol{\omega}^{a, i}} =  \frac{1}{2} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \left( \mathbb{1}\{a, i, m\} - g^{a, i}_{t} \right)  - \frac{ \Omega^{(0)}_{t}(a, i) }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} }  \right] \left[ \frac{ (\epsilon^{m}_{t})^{2} }{\exp(\phi^{m})} - 1 \right] \boldsymbol{z}_{t}^{\top} 
+\end{equation}
+
+And if $m \not\in M(a)$, then:
+
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\omega}^{a, i}} =  - \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{ \Omega^{(0)}_{t}(a, i) }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} }  \right] \left[ \frac{ (\epsilon^{m}_{t}) }{\exp(\phi^{m})} \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{z}_{t}  
+\end{equation}
+
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \phi^{m} \partial \boldsymbol{\omega}^{a, i}} =  - \frac{1}{2} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{ \Omega^{(0)}_{t}(a, i) }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} }  \right] \left[ \frac{ (\epsilon^{m}_{t})^{2} }{\exp(\phi^{m})} - 1 \right] \boldsymbol{z}_{t}^{\top} 
 \end{equation}
 
 Starting from equations (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance}),
 the next set of equations express the second-order partial derivatives for parameters
-of each individual expert:
+of the same individual expert:
 
-\begin{align}
-  \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial (\boldsymbol{\beta}^{m})^{2}} &= \frac{ \gateprod{g^{0}_{t}}{m} }{ \exp{(\phi^{m})} } \boldsymbol{x}_{t}^{\top} \boldsymbol{x}_{t} \\
-  \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \phi^{m}} &= - \gateprod{g^{0}_{t}}{m} \frac{ \epsilon^{m}_{t} }{\exp{(\phi^{m})}} \boldsymbol{x}_{t}^{\top} \\
-  \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial (\phi^{m})^{2}} &= \frac{ \gateprod{g^{0}_{t}}{m} (\epsilon^{m}_{t})^{2} }{ 2 \exp{(\phi^{m})} }
-\end{align}
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial (\boldsymbol{\beta}^{m})^{2}} =  \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \left( \frac{ \epsilon^{m}_{t} }{ \exp( \phi^{m}) } \right)^{2} \left( 1 - \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right) - \frac{1}{ \exp( \phi^{m} ) }  \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{x}_{t}
+\end{equation}
 
-And to round it out, the expression for the cross-partial derivatives
-between a gating parameter vector and an expert parameter vector can 
-be expressed as:
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \phi^{m}} =  \frac{1}{2} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{\epsilon^{m}_{t}}{\exp(\phi^{m})} \right] \left[ \left( \frac{ ( \epsilon^{m}_{t} )^{2} }{ \exp( \phi^{m}) } - 1 \right) \left( 1 - \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right) - 2  \right] \boldsymbol{x}_{t}^{\top}
+\end{equation}
 
-\begin{align}
-  \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \bw{a, i}} &= \gateprod{g^{0}_{t}}{m} \left( \mathbb{1}\{a, i, m\} - g^{a,i}_{t} \right) \frac{ \epsilon^{m} }{\exp{(\phi^{m})}} \boldsymbol{x}_{t}^{\top} \boldsymbol{z}_{t} \\
-  \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \phi^{m} \partial \bw{a, i}} &=  \frac{1}{2} \gateprod{g^{0}_{t}}{m} \left( \mathbb{1}\{a, i, m\} - g^{a,i}_{t} \right) \left( \frac{( \epsilon^{m} )^{2}}{\exp{(\phi^{m})}} - 1 \right) \boldsymbol{z}_{t}^{\top} \label{eq:ExpertNodeHessian}
-\end{align}
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial (\phi^{m})^{2}} =  \frac{1}{4} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \left( \frac{ ( \epsilon^{m}_{t} )^{2} }{ \exp( \phi^{m}) } - 1 \right) \left( 1 - \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right) - \frac{ 2 (\epsilon^{m}_{t})^{2} }{ \exp(\phi^{m}) }  \right] 
+\end{equation}
 
-Given the collection of equations (\ref{eq:nodehessian}) - (\ref{eq:ExpertNodeHessian}),
-the individual elements of the hessian in equation (\ref{eq:FullHessian})
-can be expressed as:
+Finally, the set of equations for the second-order partial derivatives for parameters
+of two separate experts:
 
-\begin{align}
-  \Ht{\boldsymbol{\beta}^{m}} &= \begin{bmatrix}
-    \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial (\boldsymbol{\beta}^{m})^{2}}  &  \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \phi^{m}}     \\
-    \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \phi^{m}}^{\top}       &  \frac{1}{2} (\epsilon^{m}_{t})^{2}
-    \end{bmatrix} \\
-    \Ht{\boldsymbol{\beta}^{m}, \, \bw{a, i}} &= \begin{bmatrix}
-      \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \bw{a, i}} & \frac{\partial \boldsymbol{l}^{2}_{t}}{ \partial \phi^{m} \partial \bw{a, i} } \\
-      \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial \phi^{m} \partial \bw{a, i}}^{\top}        & \frac{\partial \boldsymbol{l}^{2}_{t}}{\partial (\phi^{m})^{2}}
-    \end{bmatrix} \\
-    \Ht{\bw{a, i}, \, \bw{b, n}} &= \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\omega}^{a, i} \partial \boldsymbol{\omega}^{b,n}}
-\end{align}
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\beta}^{n} } = - \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{\gateprod{g^{0}_{t}}{n} P^{n}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{\epsilon^{m}_{t}}{\exp(\phi^{m})} \right] \left[ \frac{\epsilon^{n}_{t}}{\exp(\phi^{n})} \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{x}_{t} 
+\end{equation}
+
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\phi}^{n} } = - \frac{1}{2}  \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{\gateprod{g^{0}_{t}}{n} P^{n}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{\epsilon^{m}_{t}}{\exp(\phi^{m})} \right] \left[  \frac{ (\epsilon^{n}_{t})^{2} }{\exp(\phi^{n})} - 1 \right] \boldsymbol{x}_{t}^{\top} 
+\end{equation}
+
+\begin{equation} 
+  \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\phi}^{m} \partial \boldsymbol{\phi}^{n} } =  -\frac{1}{4} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{\gateprod{g^{0}_{t}}{n} P^{n}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{ (\epsilon^{m}_{t})^{2} }{\exp(\phi^{m})} - 1 \right] \left[ \frac{ (\epsilon^{n}_{t})^{2} }{\exp(\phi^{n})} - 1 \right] 
+\end{equation}
+
+
+\section{Model Selection} \label{sec:ModelSelection}
+
+For model discrimination we follow the sequential approach described 
+by \citet{Voung1989} for comparing two models with a potential set of overlapping
+conditional distributions. A few of the author's definitions, equations, and theorems relevant 
+to this article are collected and presented below. Much of the original wording
+and notation remain unchanged though some small alterations have been made to align with the
+notation of this article. 
+
+\bigskip
+
+\citet{Voung1989} centers his work on the likelihood-ratio (LR) framework.
+Suppose that there are two (H)ME models with different functional forms that need
+to be compared. These models will be labeled model A and model B. The log-likelihood
+for model A at the psuedo-true value $\boldsymbol{\theta}^{o}$ is given by
+$\boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$
+which is defined in Equation (\ref{eq:loglikelihood}). In this expression the log-likelhood is
+evaluated at the psuedo-true value $\boldsymbol{\theta}^{o}$. The value
+$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
+is the expectation of the log-likelihood value where the expectation is taken over the
+joint distribution of $(\boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$. Although
+$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
+is unknown, it can be consistently estimated by (1/N) times the log-likelihood
+value evaluated at the quasi-maximum likelihood estimator (MLE). Therefore (1/N) times
+the log-likelihood ratio statistic evaluated at the MLE is a consistent estimator of 
+$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] - \mathbb{E} \left[ \boldsymbol{l}^{B}(\boldsymbol{\gamma}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$.
+The sample analogue for the LR statistic is defined in equation (\ref{eq:LR_statistic}):
+
+\begin{equation} \label{eq:LR_statistic}
+  LR_{N} (\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \equiv  \sum_{t}^{N} \boldsymbol{l}^{A}_{t}(\hat{\boldsymbol{\theta}}) - \boldsymbol{l}^{B}_{t}(\hat{\boldsymbol{\gamma}}) = \sum_{t}^{N} \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) }
+\end{equation}
+
+\citet{Voung1989} characterizes the asymptotic distribution of the $LR_{N}$ statistic under very general
+conditions, covering the cases where the competing models are non-nested, overlapping,
+or nested and whether both, one, or neither model is misspecified.
+The overlapping case is particularly relevant for this article, best exemplified 
+when a M-expert ME model is compared to a M-expert HME model and the probability
+of the two competing models sharing a common set of conditional distributions
+is high. What follows is a sequence proceedure that identifies the limiting
+distribution of the likelihood-ratio statistic expressed in Equation
+(\ref{eq:sample_LR_convergence_to_population_LR}).
+
+\begin{equation} \label{eq:sample_LR_convergence_to_population_LR}
+  \frac{1}{c} LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \overset{a.s.}{\longrightarrow} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right]
+\end{equation}
+
+First, the correct asymptotic distribution of
+$LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$ needs to be 
+identified and its convergence rate ($1/c$). Second, given the correct asymptotic
+distribution, provide a directional test for which model is preferred over
+the other or if they are observationally equivalent given the data.
+For the overlapping model case there are two possible limiting distributions
+for $LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$.
+In one circumstance, the asymptotic distribution is normally distributed. In a second
+circumstance, a weighted sum of chi-squares is the limiting distribution.
+A weighted sum of chi-squares distribution has the following definition:
+
+\begin{definition}[Weighted Sums of Chi-Square Distributions] \label{def:WeightSum_of_ChiSq}
+  \emph{Let $\boldsymbol{Z} = (Z_{1}, ..., Z_{m})^{\top}$ be a vector of m independent standard normal variables,
+  an $\boldsymbol{X} = (X_{1}, ..., X_{m})^{\top}$ be a vector of m real numbers. Then, the random variable
+  $\sum_{i}^{m} X_{i} Z_{i}^{2}$ is distributed as a weighted sum of chi-squares with parameters
+  $(m, \lambda)$. Its cumulative distribution function (c.d.f.) is denoted by $M_{m}(\cdot; \lambda)$.}
+\end{definition}
+
+Theorem 3.1 from \citet{Voung1989} states the conditions that lead to the two different
+asymptotic distributions for $LR_{N}$. This theorem is reproduced here:
+
+\begin{theorem}[Asymptotic Distribution of the LR Statistic] \label{th:AsymDistLR}
+  \emph{Given assumptions A1-A5 in \citet{Voung1989}:
+  \begin{enumerate}
+    \item If $P^{A}(\cdot | \cdot ; \, \hat{\boldsymbol{\theta}}) = P^{B}(\cdot | \cdot; \, \hat{\boldsymbol{\gamma}})$, then:
+      \begin{itemize}
+        \item[] $2 LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) \overset{D}{\longrightarrow} M_{p+q}(\cdot; \lambda_{o})$
+      \end{itemize}
+      where $\lambda_{o}$ is the vector of p + q (possibly negative) eigenvalues of
+      \begin{equation}
+        \boldsymbol{W} = \begin{bmatrix}
+          -\boldsymbol{G}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}                        & -\boldsymbol{G}(\boldsymbol{\theta}, \boldsymbol{\gamma}) \HI{\boldsymbol{\gamma}} \\
+           \boldsymbol{G}(\boldsymbol{\gamma}, \boldsymbol{\theta}) \HI{\boldsymbol{\theta}}   &  \boldsymbol{G}(\boldsymbol{\gamma}) \HI{\boldsymbol{\gamma}} 
+        \end{bmatrix}
+      \end{equation}
+    \item If $P^{A}(\cdot | \cdot ; \, \hat{\boldsymbol{\theta}}) \neq P^{B}(\cdot | \cdot; \, \hat{\boldsymbol{\gamma}})$, then
+      \begin{equation}
+        N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) - N^{-\frac{1}{2}} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right] \overset{D}{\longrightarrow} N(0, w^{2}_{o})
+      \end{equation}
+  \end{enumerate}
+  }
+\end{theorem}
+
+In the theorem above, $\boldsymbol{G}(\boldsymbol{\theta})$ and $\HI{\boldsymbol{\theta}}$
+have been defined in Equations (\ref{eq:OPG}) and (\ref{eq:Hessian}) while 
+$\boldsymbol{G}(\boldsymbol{\theta}, \, \boldsymbol{\gamma}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\gamma})^\top$.
+
+
+\subsection{The Variance Test}
+
+The first step in comparing model A and model B is to determine whether the
+following relationship holds: $P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) = P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}})$.
+As seen in Theorem (\ref{th:AsymDistLR}), whether $P^{A} = P^{B}$ holds has
+direct implications on the limiting distribution of
+$LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}})$.
+\citet{Voung1989} points out that testing this relationship is equivalent to testing
+whether the variance of the LR statistic is significantly different from zero.
+The variance of the LR statistic evaluated at the psuedo-true parameters values is
+expressed as:
+
+\begin{align*}
+  w_{o}^{2} \equiv & \mathbb{Var} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \\
+   = & \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right]^{2} - \left[ \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \right]^{2}
+\end{align*}
+
+The sample analogue for the population statistic is defined as
+
+\begin{equation}
+  \hat{w}^{2}_{N} \equiv \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right]^{2} - \left[ \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right] \right]^{2}
+\end{equation}
+
+\citet{Voung1989} demonstrates that the sample variance converges almost surely
+to the population psuedo-true variance and gives the limiting distribution in
+Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
+
+\begin{theorem}[Asymptotic Distribution of the Variance Statistics given $w^{2} = 0$] \label{th:AsymDistVar_at_null}
+  \emph{Given assumptions A1-A7 in \citet{Voung1989} and Definition (\ref{def:WeightSum_of_ChiSq})
+  \begin{equation}
+    N \hat{w}^{2}_{N} \overset{D}{\longrightarrow} M_{p+q}(\cdot; \, \lambda^{2}_{o})
+  \end{equation}
+  where $\lambda^{2}_{o}$ is the vector of squares of the p + q eigenvalues $\lambda_{o}$ of matrix $\boldsymbol{W}$.}
+\end{theorem}
+
+For the variance test the null hypothesis is that $w^{2}_{o} = 0$, which is
+equivalent to $H_{0}: P^{A} = P^{B}$. For some significance level $\alpha_{w}$, 
+if we fail to reject the null we can draw the
+conclusion that the two models are observationally equivalent given the data.
+If we do have enough evidence in the data to reject the null, the next step
+is to test for a preference between the two competing models.
+
+
+\subsection{Directional Tests}
+
+For models with an ooverlapping relationship,
+after a rejection of the null hypothesis of the variance test ($H0: P^{A} = P^{B}$),
+Theorem (\ref{th:AsymDistLR}) ensures that the limiting distribution of the
+LR statistic is the normal distribution. With this knowledge and Theorem (5.1)
+from \citet{Voung1989} , it is straightforward to test if the LR statistic
+is statistically different from zero. Theorem (5.1) from \citet{Voung1989}
+is reproduced here:
+
+\begin{theorem}[Model Selection Tests for Strictly Non-Nested Models] \label{th:NonNestAsyLRDist}
+  \emph{
+    Given assumptions A1-A6 in \citet{Voung1989}, if models A and B are strictly
+    non-nested, then:
+    \begin{enumerate}
+      \item Under $H_{0}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} N(0, 1) $  \\
+      \item Under $H_{A}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} +\infty $  \\
+      \item Under $H_{B}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} -\infty $
+    \end{enumerate}
+  }
+\end{theorem}
+
+The null of the model selection test is that of no observational difference
+between the competing models. At some significance level $\alpha_{LR}$,
+a rejection of the null indicates that one model is preferred over the other
+and the sign of the LR statistic indicates which one. Referencing the LR
+statistics definition in Equation (\ref{eq:LR_statistic}), a positive 
+value indicates that model A is preferred over model B and vice-versa for
+a negative value.
+
 
 \section{Marginal Effects} \label{sec:MarginalEffects}
 
@@ -1454,20 +1661,20 @@ for marginal effects were developed and demonstrated on two different datasets.
 \cmidrule(l){2-5}    \cmidrule(l){7-8}     \cmidrule(l){10-15}
 & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
                 \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
-Intercept              &  1.231 & *      &  1.494 & *     &&  1.241 & *     &&  1.225 & *        &  1.260 & *        & -0.040 &        \\
-Age-16                 &  0.032 & *      &  0.068 & *     &&  0.035 & *     &&  0.042 &          &  0.038 & *        &  0.004 &        \\
+Intercept              &  1.231 & *      &  1.423 & *     &&  1.241 & *     &&  1.225 & *        &  1.260 & *        & -0.040 &        \\
+Age-16                 &  0.032 & *      &  0.066 & *     &&  0.035 & *     &&  0.042 &          &  0.038 & *        &  0.004 &        \\
 $\textrm{Age-16}^{2}$  & -0.000 & *      & -0.002 & *     && -0.001 & *     && -0.001 &          & -0.001 & *        & -0.000 &        \\
-YrsEduc                &  0.082 & *      &  0.036 & *     &&  0.076 & *     &&  0.076 & *        &  0.075 & *        &  0.000 &        \\
-Female                 & -0.244 & *      & -0.032 & *     && -0.215 & *     && -0.209 & *        & -0.207 & *        & -0.002 &        \\
-Af Amer                & -0.076 & *      & -0.045 & *     && -0.076 & *     && -0.076 & *        & -0.071 & *        & -0.005 &        \\
-Indian                 & -0.081 & *      &  1.390 & *     && -0.091 & *     && -0.085 & +        & -0.079 & *        & -0.005 &        \\
-Asian                  & -0.045 & *      &  0.036 & *     && -0.032 & *     && -0.024 &          & -0.028 & *        &  0.003 &        \\
-Hisp                   & -0.121 & *      & -0.082 & *     && -0.106 & *     && -0.112 & *        & -0.112 & *        & -0.000 &        \\
-Creativity             & -0.054 & *      & -0.008 & *     && -0.046 & *     && -0.044 & *        & -0.045 & *        &  0.002 &        \\
-Design                 &  0.080 & *      &  0.078 & *     &&  0.082 & *     &&  0.081 & *        &  0.080 & *        &  0.001 &        \\
-Analytics              &  0.133 & *      &  0.112 & *     &&  0.131 & *     &&  0.126 & *        &  0.129 & *        & -0.003 &        \\
-Perceptive             &  0.063 & *      & -0.013 & *     &&  0.058 & *     &&  0.053 & *        &  0.049 & *        &  0.004 &        \\
-Log-Variance           & -1.651 & *      & -2.682 & *     &&  --    &       &&  --    &          &  --    &          &  --    &        \\
+YrsEduc                &  0.082 & *      &  0.042 & *     &&  0.076 & *     &&  0.076 &          &  0.075 & *        &  0.000 &        \\
+Female                 & -0.244 & *      & -0.031 & *     && -0.215 & *     && -0.209 & *        & -0.207 & *        & -0.002 &        \\
+Af Amer                & -0.076 & *      & -0.044 & *     && -0.076 & *     && -0.076 & *        & -0.071 & *        & -0.005 &        \\
+Indian                 & -0.081 & *      & -0.069 & +     && -0.091 & *     && -0.085 & +        & -0.079 & *        & -0.005 &        \\
+Asian                  & -0.045 & *      &  0.053 & +     && -0.032 & *     && -0.024 &          & -0.028 & *        &  0.003 &        \\
+Hisp                   & -0.121 & *      & -0.069 & *     && -0.106 & *     && -0.112 & *        & -0.112 & *        & -0.000 &        \\
+Creativity             & -0.054 & *      & -0.004 &       && -0.046 & *     && -0.044 & *        & -0.045 & *        &  0.002 &        \\
+Design                 &  0.080 & *      &  0.080 & *     &&  0.082 & *     &&  0.081 & *        &  0.080 & *        &  0.001 &        \\
+Analytics              &  0.133 & *      &  0.107 & *     &&  0.131 & *     &&  0.126 & *        &  0.129 & *        & -0.003 &        \\
+Perceptive             &  0.063 & *      & -0.017 & *     &&  0.058 & *     &&  0.053 & *        &  0.049 & *        &  0.004 &        \\
+Log-Variance           & -1.651 & *      & -2.675 & *     &&  --    &       &&  --    &          &  --    &          &  --    &        \\
                 \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
 Share$^{4}$:          &  0.826 &        &  0.174 &       &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
 \cmidrule{1-15}
@@ -1539,19 +1746,19 @@ Share$^{4}$:          &  0.826 &        &  0.174 &       &&  1.000 &       &&  -
 \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
 & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
                 \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-Intercept             &  1.379 & *      &  1.574 & *      &  0.562 & *      &&  1.241 & *     &&  1.367 &          &  1.340 & *        &  0.032 &        \\
+Intercept             &  1.379 & *      &  1.574 & *      &  0.562 & *      &&  1.241 & *     &&  1.367 & +        &  1.335 & *        &  0.032 &        \\
 Age-16                &  0.021 & *      &  0.045 & *      &  0.060 & *      &&  0.035 & *     &&  0.029 &          &  0.027 & *        &  0.002 &        \\
-$\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
+$\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 &        & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
 YrsEduc               &  0.082 & *      &  0.032 & *      &  0.080 & *      &&  0.076 & *     &&  0.074 &          &  0.077 & *        & -0.002 &        \\
-Female                & -0.251 & *      & -0.022 & *      & -0.149 & *      && -0.215 & *     && -0.206 &          & -0.218 & *        &  0.012 &        \\
-Af Amer               & -0.084 & *      & -0.056 & *      & -0.054 & -      && -0.076 & *     && -0.076 &          & -0.078 & *        &  0.002 &        \\
-Indian                & -0.105 & *      & -0.046 & *      &  0.010 &        && -0.091 & *     && -0.091 &          & -0.090 & *        & -0.002 &        \\
-Asian                 & -0.030 & *      &  0.057 & *      & -0.091 & *      && -0.032 & *     && -0.024 &          & -0.025 & *        &  0.001 &        \\
-Hisp                  & -0.136 & *      & -0.061 & *      &  0.071 & +      && -0.106 & *     && -0.107 &          & -0.111 & *        &  0.004 &        \\
-Creativity            & -0.038 & *      & -0.022 & *      & -0.177 & *      && -0.046 & *     && -0.044 &          & -0.047 & *        &  0.003 &        \\
-Design                &  0.080 & *      &  0.080 & *      & -0.037 & *      &&  0.082 & *     &&  0.075 &          &  0.071 & *        &  0.004 &        \\
-Analytics             &  0.123 & *      &  0.110 & *      &  0.196 & *      &&  0.131 & *     &&  0.128 &          &  0.128 & *        &  0.000 &        \\
-Perceptive            &  0.060 & *      & -0.008 & *      &  0.168 & *      &&  0.058 & *     &&  0.057 &          &  0.061 & *        & -0.004 &        \\
+Female                & -0.251 & *      & -0.022 & +      & -0.149 & *      && -0.215 & *     && -0.206 & *        & -0.218 & *        &  0.012 &        \\
+Af Amer               & -0.084 & *      & -0.056 & *      & -0.054 &        && -0.076 & *     && -0.076 &          & -0.078 & *        &  0.002 &        \\
+Indian                & -0.105 & *      & -0.046 &        &  0.010 &        && -0.091 & *     && -0.091 &          & -0.090 & *        & -0.002 &        \\
+Asian                 & -0.030 & *      &  0.057 & -      & -0.091 & -      && -0.032 & *     && -0.024 &          & -0.025 & *        &  0.001 &        \\
+Hisp                  & -0.136 & *      & -0.061 & *      &  0.071 &        && -0.106 & *     && -0.107 &          & -0.111 & *        &  0.004 &        \\
+Creativity            & -0.038 & *      & -0.022 & +      & -0.177 & *      && -0.046 & *     && -0.044 &          & -0.047 & *        &  0.003 &        \\
+Design                &  0.080 & *      &  0.080 & *      & -0.037 &        &&  0.082 & *     &&  0.075 & +        &  0.071 & *        &  0.004 &        \\
+Analytics             &  0.123 & *      &  0.110 & *      &  0.196 & *      &&  0.131 & *     &&  0.128 & *        &  0.128 & *        &  0.000 &        \\
+Perceptive            &  0.060 & *      & -0.008 &        &  0.168 & *      &&  0.058 & *     &&  0.057 &          &  0.061 & *        & -0.004 &        \\
 Log-Variance          & -1.893 & *      & -2.891 & *      & -0.627 & *      &&  --    &       &&  &          &  &          &  &        \\
 \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
 Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
@@ -1623,19 +1830,19 @@ Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  
   \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
   & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
                   \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-  Intercept             &  1.404 & *      &  1.559 & *      &  0.898 & *      &&  1.241 & *     &&  1.393 &          &  1.382 & *        &  0.011 &        \\
+  Intercept             &  1.404 & *      &  1.559 & *      &  0.898 & *      &&  1.241 & *     &&  1.393 & *        &  1.382 & *        &  0.011 &        \\
   Age-16                &  0.020 & *      &  0.050 & *      &  0.044 & *      &&  0.035 & *     &&  0.028 &          &  0.026 & *        &  0.003 &        \\
   $\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
   YrsEduc               &  0.082 & *      &  0.034 & *      &  0.074 & *      &&  0.076 & *     &&  0.073 &          &  0.075 & *        & -0.001 &        \\
-  Female                & -0.257 & *      & -0.034 & *      & -0.131 & *      && -0.215 & *     && -0.209 &          & -0.217 & *        &  0.008 &        \\
+  Female                & -0.257 & *      & -0.034 & *      & -0.131 & *      && -0.215 & *     && -0.209 & *        & -0.217 & *        &  0.008 &        \\
   Af Amer               & -0.086 & *      & -0.048 & *      & -0.041 &        && -0.076 & *     && -0.076 &          & -0.077 & *        &  0.001 &        \\
-  Indian                & -0.113 & *      & -0.057 & *      &  0.043 &        && -0.091 & *     && -0.100 &          & -0.093 & *        & -0.007 &        \\
-  Asian                 & -0.033 & *      &  0.058 & *      & -0.062 & +      && -0.032 & *     && -0.025 &          & -0.023 & *        & -0.001 &        \\
-  Hisp                  & -0.143 & *      & -0.066 & *      &  0.077 & *      && -0.106 & *     && -0.111 &          & -0.114 & *        &  0.003 &        \\
-  Creativity            & -0.042 & *      & -0.021 & *      & -0.136 & *      && -0.046 & *     && -0.043 &          & -0.047 & *        &  0.004 &        \\
-  Design                &  0.080 & *      &  0.068 & *      & -0.048 & *      &&  0.082 & *     &&  0.074 &          &  0.068 & *        &  0.006 &        \\
-  Analytics             &  0.124 & *      &  0.112 & *      &  0.183 & *      &&  0.131 & *     &&  0.128 &          &  0.127 & *        &  0.000 &        \\
-  Perceptive            &  0.063 & *      & -0.003 &        &  0.135 & *      &&  0.058 & *     &&  0.056 &          &  0.061 & *        & -0.004 &        \\
+  Indian                & -0.113 & *      & -0.057 &        &  0.043 &        && -0.091 & *     && -0.100 &          & -0.093 & *        & -0.007 &        \\
+  Asian                 & -0.033 & *      &  0.058 & +      & -0.062 &        && -0.032 & *     && -0.025 &          & -0.023 & +        & -0.001 &        \\
+  Hisp                  & -0.143 & *      & -0.066 & *      &  0.077 &        && -0.106 & *     && -0.111 &          & -0.114 & *        &  0.003 &        \\
+  Creativity            & -0.042 & *      & -0.021 & +      & -0.136 & *      && -0.046 & *     && -0.043 &          & -0.047 & *        &  0.004 &        \\
+  Design                &  0.080 & *      &  0.068 & *      & -0.048 & +      &&  0.082 & *     &&  0.074 & +        &  0.068 & *        &  0.006 &        \\
+  Analytics             &  0.124 & *      &  0.112 & *      &  0.183 & *      &&  0.131 & *     &&  0.128 & *        &  0.127 & *        &  0.000 &        \\
+  Perceptive            &  0.063 & *      & -0.003 &        &  0.135 & *      &&  0.058 & *     &&  0.056 & +        &  0.061 & *        & -0.004 &        \\
   Log-Variance          & -1.895 & *      & -2.791 & *      & -0.622 & *      &&  --    &       &&  &          &  &          &  &        \\
   \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
   Share$^{4}$:          & 0.783  &        & 0.133  &      & 0.084 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
