@@ -84,7 +84,7 @@ progeny <- function(d, nodes)
     if (is(node_well, "NULL")) {
       return(NULL)
     } else {
-      return(sort(c(z, node_well)))
+      return(sort(node_well))
     }
   }
   lapply(d, f_)
@@ -320,7 +320,7 @@ get_expert_densities <- function(x, le)
        cumulative product of the paths from the root node to the
        input node (ie the prior weights for the subtree starting
        from`node`)"
-prior_weights <- function(node, treestr, ln)
+prior_weights <- function(node, ln)
 {
   "prior weights go from root node down"
   gate_path_product("0", node, ln)

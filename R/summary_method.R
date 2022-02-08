@@ -1,5 +1,7 @@
-summary.hme <- function(obj, type=c("experts", "gates", "all"))
+summary.hme <- function(obj, vcv=c("sandwich", "OPG", "hessian"),
+                        type=c("all", "experts", "gates"))
 {
+  vcv <-match.arg(vcv)
   type <- match.arg(type)
   gatebool <- expertbool <- FALSE
   if (type == "all") {
@@ -11,9 +13,17 @@ summary.hme <- function(obj, type=c("experts", "gates", "all"))
   }
   
   # Grab the robust standard errors
-  std_errs <- sqrt(diag(obj$full.vcv$sandwich))
+  if (vcv == "OPG") {
+    std_errs <- sqrt(diag(solve(obj$full.vcv[[vcv]])))
+  } else if (vcv == "hessian") {
+    std_errs <- sqrt(diag(-solve(obj$full.vcv[[vcv]])))
+  } else {
+    std_errs <- sqrt(diag(obj$full.vcv[[vcv]]))
+  }
   
-  # the std_errs vector is not broken up as a list of gate or expert nodes so we must do it
+  
+  # the std_errs vector is not broken up as a list of gate or expert nodes
+  # so we must do it
   
   # Gate std_errs
   depth <- max(sapply(strsplit(obj[["expert.nms"]], "\\."), length))

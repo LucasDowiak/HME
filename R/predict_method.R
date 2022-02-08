@@ -24,11 +24,11 @@ predict.hme <- function(obj, newdata)
   return(pred)
 }
 
-internal_predict <- function(X, Z, tree, expertnames, gatenodes, gatepars,
+internal_predict <- function(X, Z, expertnames, gatenodes, gatepars,
                              expertpars, experttype)
 {
   list_nodes <- napply(gatenodes, par_to_gate_paths, gatepars, Z)
-  prior_exp_wts <- napply(expertnames, prior_weights, tree, list_nodes)
+  prior_exp_wts <- napply(expertnames, prior_weights, list_nodes)
   preds <-  lapply(expertpars, expert_pred, X, experttype)
   return(c(Reduce(`+`, mapply(`*`, preds, prior_exp_wts, SIMPLIFY=FALSE))))
 }

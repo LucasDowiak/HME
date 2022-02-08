@@ -20,6 +20,7 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   nullholdout <- is.null(holdout)
   
   tree <- sort(tree)
+  # TODO: You should be able to tell hme_type by looking at `tree`
   hme_type <- match.arg(hme_type)
   expert_type <- match.arg(expert_type)
   
@@ -44,8 +45,6 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   tree <- sort(tree)
   expert.nodes <- tree[unlist(is_terminal(tree, tree))]
   gate.nodes <- setdiff(tree, expert.nodes)
-  
-  # This needs to be generalized for HMRE
   expert.index <- expert_index(hme_type, tree)
   
   if (is(init_gate_pars, "NULL")) {
@@ -63,13 +62,9 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                                    model=FALSE)
       expert.pars <- napply(expert.pars, function(x) c(x, exp(var(Y))))
       names(expert.pars) <- expert.nodes
-      #expert.pars <- napply(expert.nodes, function(x) c(runif(ncol(X) , -2, 2),
-      #                                                  runif(1, 1, 5)))
     } else {
       expert.pars <- napply(expert.nodes, function(x) runif(ncol(X) , -2, 2))
     }
-    
-    
   } else {
     expert.pars <- init_expert_pars
   }
@@ -103,8 +98,8 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
     logL[ii + 1, ] <- newLL
     parM[ii + 1, ] <- unlist(c(gate.pars, expert.pars))
     if (!nullholdout) {
-      yhat <- internal_predict(Xp, Zp, tree, expert.nodes, gate.nodes,
-                               gate.pars,expert.pars, expert_type)
+      yhat <- internal_predict(Xp, Zp, expert.nodes, gate.nodes,
+                               gate.pars, expert.pars, expert_type)
       errorR[ii + 1, ] <- mean((Yp - yhat)**2)
     }
     if (trace > 0) {
@@ -120,12 +115,20 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
   parM <- parM[apply(!is.na(parM), 1, FUN=all), ]
   errorR <- errorR[!is.na(errorR), , drop=FALSE]
   
-  full.vcv <- sandwich_vcov(gate.nodes,
-                            expert.nodes,
-                            mstep$list_posteriors,
-                            mstep$list_priors,
-                            expert.pars,
-                            Y, X, Z, N)
+  # Create the full score vector of theta = (omega + beta)
+  gate_scores <- napply(gate.nodes, logistic_score, mstep$list_priors, mstep$list_density, Z)
+  expt_scores <- napply(expert.nodes, gaussian_score, expert.pars, mstep$list_priors,
+                        mstep$list_density, Y, X)
+  scores <- do.call(cbind, c(unlist(gate_scores, recursive=FALSE), expt_scores))
+  
+  # gte.nms, exp.nms, ld, ln, gate.pars, exp.pars, Y, X, Z, N
+  # full.vcv <- sandwich_vcov(gate.nodes,
+  #                          expert.nodes,
+  #                          mstep$list_density,
+  #                          mstep$list_priors,
+  #                          gate.pars,
+  #                          expert.pars,
+  #                          Y, X, Z, N)
 
   structure(list(tree=tree,
                  hme.type=hme_type,
@@ -150,7 +153,8 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                  no.of.pars=NN,
                  gate.info.matrix=NA, # deprecated
                  expert.info.matrix=NA, # deprecated
-                 full.vcv=full.vcv,
+                 full.vcv=NULL, # full.vcv,
+                 scores=scores,
                  call_=call_),
             class="hme")
 }

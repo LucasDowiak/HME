@@ -73,7 +73,7 @@ lm_mod <- lm("lnwage ~ age16 + age16sq + yreduc + black + indian + asian + hisp"
 debugonce(hme)
 
 # Wage
-hme_2d <- hme(c("0", "0.1", "0.2"), form="Sepal.Width ~ Petal.Width | Petal.Width",
+hme_2d <- hme(c("0", "0.1", "0.2"), form=form_full,
               data=iris, holdout=NULL, maxiter=1, tolerance=1e-5, trace=0,
               init_gate_pars=hme_iris_2d$gate.pars, init_expert_pars=hme_iris_2d$expert.pars)
 
@@ -96,21 +96,15 @@ hme_iris_3w <- hme(c("0", "0.1", "0.2", "0.3"), form="Sepal.Width ~ Petal.Width 
 
 ME1 <- marginal_effects(hme1)
 # saveRDS(hme1, file="models/*d.RDS")
-hme2 <- hme(c("0",
-              "0.1", "0.2",
-              "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
+hme2 <- hme(c("0", "0.1", "0.2", "0.3"),
+            formula=form_full,
             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             #init_gate_pars = hme2$gate.pars, init_expert_pars = hme2$expert.pars)
 ME2 <- marginal_effects(hme2)
-hme3 <- hme(c("0",
-              "0.1", "0.2",
-              "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
-            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
-            # init_gate_pars = hme3$gate.pars, init_expert_pars = hme3$expert.pars)
+hme3D <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"),
+             formula = form_full,
+             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
+             # init_gate_pars = hme3$gate.pars, init_expert_pars = hme3$expert.pars)
 ME3 <- marginal_effects(hme3)
 hme4 <- hme(c("0",
               "0.1", "0.2",
