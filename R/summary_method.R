@@ -12,7 +12,7 @@ summary.hme <- function(obj, vcv=c("sandwich", "OPG", "hessian"),
     expertbool <- TRUE
   }
   
-  # Grab the robust standard errors
+  # Grab the specified variance-covariance matrix
   if (vcv == "OPG") {
     std_errs <- sqrt(diag(solve(obj$full.vcv[[vcv]])))
   } else if (vcv == "hessian") {

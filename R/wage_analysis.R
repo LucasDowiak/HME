@@ -24,6 +24,7 @@ form_mid <- "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + yreduc + sex 
 
 form_min <- "lnwage ~ age16 + age16sq | age16 + age16sq + yreduc + sex + black + indian + asian + hisp + Creativity + Design + Analytics + Perceptive"
 
+logLik(lm(form_ols, data=dtftrain))
 
 dir("models/")
 mod3d <- readRDS("models/hme_3d_full.RDS")
@@ -87,12 +88,15 @@ hme_3w <- hme(c("0", "0.1", "0.2", "0.3"), form=form_full,
 # Iris
 hme_iris_2d <- hme(c("0", "0.1", "0.2"), form="Sepal.Width ~ Petal.Width | Petal.Width",
                    data=iris, maxiter=75, tolerance=1e-5, trace=0)
+hme_iris_2d$full.vcv <- calculate_sandwich_vcov(hme_iris_2d)
 
 hme_iris_3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), form="Sepal.Width ~ Petal.Width | Petal.Width",
-                   data=iris, maxiter=75, tolerance=1e-5, trace=0)
+                   data=iris, maxiter=250, tolerance=1e-6, trace=0)
+hme_iris_3d$full.vcv <- calculate_sandwich_vcov(hme_iris_3d)
 
 hme_iris_3w <- hme(c("0", "0.1", "0.2", "0.3"), form="Sepal.Width ~ Petal.Width | Petal.Width",
-                   data=iris, maxiter=75, tolerance=1e-5, trace=0)
+                   data=iris, maxiter=250, tolerance=1e-6, trace=0)
+hme_iris_3w$full.vcv <- calculate_sandwich_vcov(hme_iris_3w)
 
 ME1 <- marginal_effects(hme1)
 # saveRDS(hme1, file="models/*d.RDS")
@@ -101,148 +105,43 @@ hme2 <- hme(c("0", "0.1", "0.2", "0.3"),
             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
             #init_gate_pars = hme2$gate.pars, init_expert_pars = hme2$expert.pars)
 ME2 <- marginal_effects(hme2)
-hme3D <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"),
-             formula = form_full,
-             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
+
+
+hme3 <- hme(c("0",
+             "0.1", "0.2", "0.3"),
+             formula = form_mid,
+             data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-4, trace=0)
              # init_gate_pars = hme3$gate.pars, init_expert_pars = hme3$expert.pars)
+hme3$full.vcv <- calculate_sandwich_vcov(hme3)
+vs <- voung_selection(hme3, readRDS("models/hme_5d_full_v2.RDS"))
+str(vs)
+str(hme3$call_)
+saveRDS(hme3, file="models/hme_3w_mid_v2.RDS")
 ME3 <- marginal_effects(hme3)
+
+hme4c <- readRDS("models/hme_4w_full_v2.RDS")
 hme4 <- hme(c("0",
-              "0.1", "0.2",
-              "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
-            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
-            # init_gate_pars = hme4$gate.pars, init_expert_pars = hme4$expert.pars)
+              "0.1", "0.2", "0.3", "0.4"),
+            form_full,
+            data=dtftrain, holdout=dtftest, maxiter=75, tolerance=1e-5, trace=0)
+            # init_gate_pars = hme4c$gate.pars, init_expert_pars = hme4c$expert.pars)
+hme4$full.vcv <- calculate_sandwich_vcov(hme4)
+vs <- voung_selection(hme4, hme4c)
+str(vs)
+str(hme4$call_)
+saveRDS(hme4, file="models/hme_4w_full_v2.RDS")
+
 ME4 <- marginal_effects(hme4)
+
+
 hme5 <- hme(c("0",
-              "0.1", "0.2",
-              "0.1.1", "0.1.2", "0.2.1", "0.2.2", 
-              "0.1.1.1", "0.1.1.2"),
-            "lnwage ~ age16 + age16sq + yreduc | age16 + age16sq + black + indian + asian + hisp + yreduc + Creativity + Design + Analytics + Perceptive",
-            data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-3, trace=1)
-            # init_gate_pars = hme5$gate.pars, init_expert_pars = hme5$expert.pars)
+              "0.1", "0.2", "0.3", "0.4", "0.5"),
+            form_min,
+            data=dtftrain, holdout=dtftest, maxiter=100, tolerance=1e-5, trace=0)
+hme5$full.vcv <- calculate_sandwich_vcov(hme5)
+
 ME5 <- marginal_effects(hme5)
 
 
-
-which.max(sapply(list(hme1, hme2, hme3, hme4, hme5), logLik))
-which.max(sapply(list(hme1, hme2, hme3, hme4, hme5), function(x) max(x$logL)))
-saveRDS(hme2, file="models/hme_3D_5E_Onet_mid.RDS")
-
-which.min(sapply(list(hme1, hme2, hme3, hme4, hme5), function(x) min(x$MSE)))
-hmer <- refactor_hme(hme4)
-saveRDS(hmer, file="models/hme_2D_4E_Onet_mid_r.RDS")
-
-
-rm(list=c(ls(pattern="^hme[1-9]")))
-
-
-
-hme2s <- readRDS("hme_wage_1D_2E.RDS")
-hme3d <- readRDS("hme_wage_2D_3E.RDS")
-hme3w <- readRDS("hme_1D_3E.RDS")
-hme4s <- readRDS("hme_wage_2D_4E.RDS")
-
-
-
-sapply(list(hme2, hme3d, hme3w, hme4), logLik)
-sapply(list(hme1, hme2s, hme3d, hme3w, hme4s), criterion, "bic")
-
-sapply(list(hme1, hme2, hme3, hme4, hme5), logLik)
-
-sapply(list(hme1, hme2, hme3, hme4, hme5), logLik, "bic")
-lapply(list(hme1, hme2, hme3, hme4, hme5), `[[`, "expert.pars")
-
-lapply(list(ME1, ME2, ME3, ME4, ME5), `[[`, "gate_expert_margins")
-
-
-debugonce(grow_the_tree)
-tst <- grow_the_tree(hme_wage_3D)
-
-
-
-grid_ <- seq(0, 5.64, 0.05)
-expert011 <- hme_wage_2D_3E$expert.pars[["0.1.1"]][[1]] + hme_wage_2D_3E$expert.pars[["0.1.1"]][[2]] * grid_ +  hme_wage_2D_3E$expert.pars[["0.1.1"]][[3]] * grid_**2
-expert012 <- hme_wage_2D_3E$expert.pars[["0.1.2"]][[1]] + hme_wage_2D_3E$expert.pars[["0.1.2"]][[2]] * grid_ +  hme_wage_2D_3E$expert.pars[["0.1.2"]][[3]] * grid_**2
-expert02 <- hme_wage_2D_3E$expert.pars[["0.2"]][[1]] + hme_wage_2D_3E$expert.pars[["0.2"]][[2]] * grid_ +  hme_wage_2D_3E$expert.pars[["0.2"]][[3]] * grid_**2
-
-plot(grid_, expert011, lwd=2, type="l", ylim=c(0, 3), col="blue")
-lines(grid_, expert012, lwd=2, col="orange")
-lines(grid_, expert02, lwd=2, col="green")
-grid()
-
-
-
-for (f_ in dir(pattern="min")) {
-  rds <- readRDS(f_)
-  cat(f_, "\n", logLik(rds), "\n", criterion(rds, "aic") / rds$N, "\n")
-  #print(marginal_effects(rds)) 
-}
-
-
-plot_histograms <- function(obj)
-{
-  nms <- obj$expert.nms
-  for (nn in nms) {
-    gpp <- gate_path_product("0", nn, obj$list_priors)
-    share <- sum(gpp) / obj$N
-    tits <- sprintf("%s - Share: %.3f", nn, share)
-    hist(gpp, main=tits, ylab="")
-  }
-}
-
-par(mfrow=c(3,2))
-plot_histograms(readRDS("wages/hme_3D_5E_mid.RDS"))
-
-par(mfrow=c(2,2))
-plot_histograms(readRDS("wages/hme_2D_4E_mid.RDS"))
-
-par(mfrow=c(2,2))
-plot_histograms(readRDS("wages/hme_2D_3E_mid.RDS"))
-
-hme3e <- readRDS("wages/hme_2D_3E_mid.RDS")
-age_ <- seq(0, 49, .25)
-p1 <- hme3e$expert.pars[["0.1.1"]]
-p2 <- hme3e$expert.pars[["0.1.2"]]
-p3 <- hme3e$expert.pars[["0.2"]]
-proj1 <- p1[1] + p1[2] * age_ + p1[3] * age_**2 + p1[4] * 14
-proj2 <- p2[1] + p2[2] * age_ + p2[3] * age_**2 + p2[4] * 14
-proj3 <- p3[1] + p3[2] * age_ + p3[3] * age_**2 + p3[4] * 14
-
-plot(age_, proj2, ylim=c(0, 4), type="l", col="blue", lwd=2,
-     main="Log Wage Equation (Yrs Educ = 14)", ylab="", xlab="age16")
-lines(age_, proj1, col="red", lwd=2)
-lines(age_, proj3, col="purple", lwd=3)
-grid()
-for (ee in hme3e$expert.nms) {
-  p <- hme3e$expert.pars[[ee]]
-  proj <- p[1] + p[2] * age_ + p[3] * age_**2 + p[4] * 14
-  print(summary(proj))
-}
-
-
-
-two_prop_z <- function(DT, bool, variable_name)
-{
-  p1 <- mean(DT[bool, ][[variable_name]])
-  n1 <- DT[bool, .N]
-  
-  p2 <- mean(DT[!bool, ][[variable_name]])
-  n2 <- DT[!bool, .N]
-  
-  p_star <- (p1 * n1 + p2 * n2) / (n1 + n2)
-  numerator <- p1 - p2
-  denominator <- sqrt( p_star * (1 - p_star) * ( 1/n1 + 1/n2 ) )
-  
-  z_score <- numerator / denominator
-  p_value <- 2 * pnorm(-abs(z_score))
-  return(c(z_score=z_score, p_value=p_value))
-}
-
-p1 <- dtftrain[!bool_expt2, mean(yreduc)]
-n1 <- dtftrain[!bool_expt2, .N]
-p2 <- dtftrain[bool_expt2, mean(yreduc)]
-n2 <- dtftrain[bool_expt2, .N]
-two_prop_z(dtftrain, bool_expt2, "hispanic")
 
 

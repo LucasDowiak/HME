@@ -36,8 +36,7 @@ m_step <- function(tree, hme_type, expert_type, Y, X, Z, exp.pars, gat.pars, roo
                          exp.pars, Y, X)
   list_posteriors <- napply(names(gat.pars), posterior_weights,
                             tree, list_priors, list_density)
-  lik <- log_likelihood(tree, list_priors, list_posteriors, list_density,
-                        root_prior)
+  lik <- log_likelihood(tree, list_priors, list_density)
   
   return(list(exp.pars=exp.out, gat.pars=gat.out, loglik=lik,
               list_priors=list_priors, list_posteriors=list_posteriors,

@@ -397,17 +397,11 @@ Qlog_likelihood <- function(treestr, ln, lp, ld, rp)
   sum(unlist(lst))
 }
 
-log_likelihood <- function(treestr, ln, lp, ld, rp)
+log_likelihood <- function(treestr, ln, ld)
 {
   expert.nodes <- treestr[unlist(is_terminal(treestr, treestr))]
-  product_path <- function(node)
-  {
-    gpp <- gate_path_product("0", node, ln)
-    return(rp * gpp * ld[[node]])
-  }
-  lst <- lapply(expert.nodes, product_path)
-  
-  sum(log(Reduce(`+`, lst)))
+  S <- simplify2array(expert_lik_contr(expert.nodes, ld, ln))
+  sum(S)
 }
 
 

@@ -1,12 +1,5 @@
 logLik.hme <- function(obj)
 {
-  m <- c(obj[["logL"]])
-  logL <- m[!is.na(m)]
-  return(logL[length(logL)])
-}
-
-logLik.hme <- function(obj)
-{
   GD1 <- expert_lik_contr(obj$expert.nms, obj$list_density, obj$list_priors)
   sum(simplify2array(GD1))
 }
@@ -17,7 +10,7 @@ criterion <- function(obj, type=c("aic", "bic", "mse"))
   type <- match.arg(type)
   K <- obj[["no.of.pars"]]
   N <- obj[["N"]]
-  L <- logLik(obj) * N
+  L <- logLik(obj)
   
   
   if (type %in% c("aic", "bic")) {
@@ -28,7 +21,8 @@ criterion <- function(obj, type=c("aic", "bic", "mse"))
     }
     out <- (penalty * K - 2 * L) / N
   } else if (type == "mse") {
-    out <- min(obj$MSE)
+    mses <- obj$MSE[!is.na(obj$MSE)]
+    out <- mses[length(mses)]
   }
   return(out)
 }
@@ -66,6 +60,12 @@ voung_selection <- function(hme1, hme2, var_test_alpha=0.05, model_test_alpha=0.
   nm1 <- deparse(substitute(hme1))
   nm2 <- deparse(substitute(hme2))
   stopifnot(all(sapply(list(hme1, hme2), inherits, "hme")))
+  if (is.null(hme1$full.vcv)) {
+    stop(sprintf("The sandwich variance estimator has not been calulcated for %s", hme1))
+  }
+  if (is.null(hme2$full.vcv)) {
+    stop(sprintf("The sandwich variance estimator has not been calulcated for %s", hme2))
+  }
   out <- list(variance_test=NULL, voung_lr_test=NULL)
   
   # Likelihood contributions
@@ -77,10 +77,10 @@ voung_selection <- function(hme1, hme2, var_test_alpha=0.05, model_test_alpha=0.
   LR <- log(lik1 / lik2)
   LRn <- sum(LR)
   if (adjustedLR) {
-    N1 <- ncol(hme1$full.vcv[['OPG']])
-    N2 <- ncol(hme2$full.vcv[['OPG']])
+    p <- hme1$no.of.pars
+    q <- hme2$no.of.pars
     # Uses the Schwarz (1978) correction factor
-    adjusted <- (N1 / 2) * log(hme1$N) - (N2 / 2) * log(hme1$N)
+    adjusted <- (p / 2) * log(hme1$N) - (q / 2) * log(hme1$N)
     LRn <- LRn - adjusted
   }
   
