@@ -11,6 +11,7 @@
 \usepackage{pdflscape}
 %\usepackage{algorithmic}
 %\usepackage{algorithm}
+%\usepackage{algpseudocode}
 \usepackage{graphicx}
 
 % The hessian:
@@ -79,22 +80,25 @@ New York, NY, 10016, \textit{Email: ldowiak@gradcenter.cuny.edu}
 \qquad
 
 \begin{abstract}
+
 In this article, a novel mixture model is studied.
 Named the hierarchical mixture of experts (HME) in the machine learning literature,
 the mixture model utilizes a set of covariates and a tree-based architecture to
 efficiently allocate each observation to the appropriate local regression.
 The nature of the conditional weighting scheme provides the researcher a natural
-interpretation of how the local (and latent) sub-populations are formed. The model is
-demonstrated by estimating a Mincer earning function using census data. Marginal effects,
-robust standard errors, a tree-growing algorithm, and a modest extension are also
-discussed.
+interpretation of how the local (and latent) sub-populations are formed.
+Marginal effects, robust standard errors, and model selection are also discussed.
+The model is demonstrated by estimating a Mincer wage equation using US census
+data and occupational skills data from the Occupational Information Network.
+ 
 
 ˇ\end{abstract}
 
 \vspace{1pt}
 
 \begin{quotation}
-\textbf{Keywords}: Hierarchical mixture of experts, expectation maximization
+\textbf{Keywords}: Hierarchical mixture of experts, expectation maximization,
+mixture models, Mincer wage equation, machine learning
 
 \textbf{JEL Classification}: 
 \end{quotation}
@@ -149,7 +153,8 @@ the model in formal detail. Section \ref{sec:Estimation} discusses the
 expectation-maximization approach to estimation while Section \ref{sec:Inference}
 concerns itself with robust inference of the estimated parameters.
 Section \ref{sec:MarginalEffects} provides detail on how to derive the
-marginal effects of the model's covariates. In Section \ref{sec:SimpleExample},
+marginal effects of the model's covariates and Section \ref{sec:ModelSelection}
+discusses an approach for model selection. In Section \ref{sec:SimpleExample},
 a very simple demonstration of the HME in action is presented with 
 a more economically relevant example of applying the HME model to
 a Mincer wage equation in Section \ref{sec:MincerWageEx}. Section
@@ -261,6 +266,7 @@ to prediction, the authors advocate that their approach makes the HME model
 easier to estimate without overfitting.
 
 \bigskip
+
 
 \section{Model} \label{sec:Model}
 
@@ -384,7 +390,7 @@ models is available. This was the primary insight of \citet{JordanJacobs1993}'s
 original paper.
 
 
-\section{The EM Set-Up} \label{sec:Estimation}
+\section{EM Set-Up} \label{sec:Estimation}
 
 The EM approach to estimating an HME model starts by suggesting that if a
 researcher had perfect information, each input vector $\boldsymbol{x}_{t}$ could be matched
@@ -531,6 +537,7 @@ that are established in \citet{EM_DLR1977}:
   $\boldsymbol{l}(\boldsymbol{\theta}^{*}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \geq \boldsymbol{l}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$
   for all $\boldsymbol{\theta} \in \boldsymbol{\Theta}$.
 \end{enumerate}
+
 
 \section{Inference} \label{sec:Inference}
 
@@ -823,174 +830,6 @@ of two separate experts:
 \end{equation}
 
 
-\section{Model Selection} \label{sec:ModelSelection}
-
-For model discrimination we follow the sequential approach described 
-by \citet{Voung1989} for comparing two models with a potential set of overlapping
-conditional distributions. A few of the author's definitions, equations, and theorems relevant 
-to this article are collected and presented below. Much of the original wording
-and notation remain unchanged though some small alterations have been made to align with the
-notation of this article. 
-
-\bigskip
-
-\citet{Voung1989} centers his work on the likelihood-ratio (LR) framework.
-Suppose that there are two (H)ME models with different functional forms that need
-to be compared. These models will be labeled model A and model B. The log-likelihood
-for model A at the psuedo-true value $\boldsymbol{\theta}^{o}$ is given by
-$\boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$
-which is defined in Equation (\ref{eq:loglikelihood}). In this expression the log-likelhood is
-evaluated at the psuedo-true value $\boldsymbol{\theta}^{o}$. The value
-$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
-is the expectation of the log-likelihood value where the expectation is taken over the
-joint distribution of $(\boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$. Although
-$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
-is unknown, it can be consistently estimated by (1/N) times the log-likelihood
-value evaluated at the quasi-maximum likelihood estimator (MLE). Therefore (1/N) times
-the log-likelihood ratio statistic evaluated at the MLE is a consistent estimator of 
-$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] - \mathbb{E} \left[ \boldsymbol{l}^{B}(\boldsymbol{\gamma}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$.
-The sample analogue for the LR statistic is defined in equation (\ref{eq:LR_statistic}):
-
-\begin{equation} \label{eq:LR_statistic}
-  LR_{N} (\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \equiv  \sum_{t}^{N} \boldsymbol{l}^{A}_{t}(\hat{\boldsymbol{\theta}}) - \boldsymbol{l}^{B}_{t}(\hat{\boldsymbol{\gamma}}) = \sum_{t}^{N} \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) }
-\end{equation}
-
-\citet{Voung1989} characterizes the asymptotic distribution of the $LR_{N}$ statistic under very general
-conditions, covering the cases where the competing models are non-nested, overlapping,
-or nested and whether both, one, or neither model is misspecified.
-The overlapping case is particularly relevant for this article, best exemplified 
-when a M-expert ME model is compared to a M-expert HME model and the probability
-of the two competing models sharing a common set of conditional distributions
-is high. What follows is a sequence proceedure that identifies the limiting
-distribution of the likelihood-ratio statistic expressed in Equation
-(\ref{eq:sample_LR_convergence_to_population_LR}).
-
-\begin{equation} \label{eq:sample_LR_convergence_to_population_LR}
-  \frac{1}{c} LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \overset{a.s.}{\longrightarrow} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right]
-\end{equation}
-
-First, the correct asymptotic distribution of
-$LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$ needs to be 
-identified and its convergence rate ($1/c$). Second, given the correct asymptotic
-distribution, provide a directional test for which model is preferred over
-the other or if they are observationally equivalent given the data.
-For the overlapping model case there are two possible limiting distributions
-for $LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$.
-In one circumstance, the asymptotic distribution is normally distributed. In a second
-circumstance, a weighted sum of chi-squares is the limiting distribution.
-A weighted sum of chi-squares distribution has the following definition:
-
-\begin{definition}[Weighted Sums of Chi-Square Distributions] \label{def:WeightSum_of_ChiSq}
-  \emph{Let $\boldsymbol{Z} = (Z_{1}, ..., Z_{m})^{\top}$ be a vector of m independent standard normal variables,
-  an $\boldsymbol{X} = (X_{1}, ..., X_{m})^{\top}$ be a vector of m real numbers. Then, the random variable
-  $\sum_{i}^{m} X_{i} Z_{i}^{2}$ is distributed as a weighted sum of chi-squares with parameters
-  $(m, \lambda)$. Its cumulative distribution function (c.d.f.) is denoted by $M_{m}(\cdot; \lambda)$.}
-\end{definition}
-
-Theorem 3.1 from \citet{Voung1989} states the conditions that lead to the two different
-asymptotic distributions for $LR_{N}$. This theorem is reproduced here:
-
-\begin{theorem}[Asymptotic Distribution of the LR Statistic] \label{th:AsymDistLR}
-  \emph{Given assumptions A1-A5 in \citet{Voung1989}:
-  \begin{enumerate}
-    \item If $P^{A}(\cdot | \cdot ; \, \hat{\boldsymbol{\theta}}) = P^{B}(\cdot | \cdot; \, \hat{\boldsymbol{\gamma}})$, then:
-      \begin{itemize}
-        \item[] $2 LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) \overset{D}{\longrightarrow} M_{p+q}(\cdot; \lambda_{o})$
-      \end{itemize}
-      where $\lambda_{o}$ is the vector of p + q (possibly negative) eigenvalues of
-      \begin{equation}
-        \boldsymbol{W} = \begin{bmatrix}
-          -\boldsymbol{G}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}                        & -\boldsymbol{G}(\boldsymbol{\theta}, \boldsymbol{\gamma}) \HI{\boldsymbol{\gamma}} \\
-           \boldsymbol{G}(\boldsymbol{\gamma}, \boldsymbol{\theta}) \HI{\boldsymbol{\theta}}   &  \boldsymbol{G}(\boldsymbol{\gamma}) \HI{\boldsymbol{\gamma}} 
-        \end{bmatrix}
-      \end{equation}
-    \item If $P^{A}(\cdot | \cdot ; \, \hat{\boldsymbol{\theta}}) \neq P^{B}(\cdot | \cdot; \, \hat{\boldsymbol{\gamma}})$, then
-      \begin{equation}
-        N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) - N^{-\frac{1}{2}} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right] \overset{D}{\longrightarrow} N(0, w^{2}_{o})
-      \end{equation}
-  \end{enumerate}
-  }
-\end{theorem}
-
-In the theorem above, $\boldsymbol{G}(\boldsymbol{\theta})$ and $\HI{\boldsymbol{\theta}}$
-have been defined in Equations (\ref{eq:OPG}) and (\ref{eq:Hessian}) while 
-$\boldsymbol{G}(\boldsymbol{\theta}, \, \boldsymbol{\gamma}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\gamma})^\top$.
-
-
-\subsection{The Variance Test}
-
-The first step in comparing model A and model B is to determine whether the
-following relationship holds: $P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) = P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}})$.
-As seen in Theorem (\ref{th:AsymDistLR}), whether $P^{A} = P^{B}$ holds has
-direct implications on the limiting distribution of
-$LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}})$.
-\citet{Voung1989} points out that testing this relationship is equivalent to testing
-whether the variance of the LR statistic is significantly different from zero.
-The variance of the LR statistic evaluated at the psuedo-true parameters values is
-expressed as:
-
-\begin{align*}
-  w_{o}^{2} \equiv & \mathbb{Var} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \\
-   = & \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right]^{2} - \left[ \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \right]^{2}
-\end{align*}
-
-The sample analogue for the population statistic is defined as
-
-\begin{equation}
-  \hat{w}^{2}_{N} \equiv \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right]^{2} - \left[ \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right] \right]^{2}
-\end{equation}
-
-\citet{Voung1989} demonstrates that the sample variance converges almost surely
-to the population psuedo-true variance and gives the limiting distribution in
-Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
-
-\begin{theorem}[Asymptotic Distribution of the Variance Statistics given $w^{2} = 0$] \label{th:AsymDistVar_at_null}
-  \emph{Given assumptions A1-A7 in \citet{Voung1989} and Definition (\ref{def:WeightSum_of_ChiSq})
-  \begin{equation}
-    N \hat{w}^{2}_{N} \overset{D}{\longrightarrow} M_{p+q}(\cdot; \, \lambda^{2}_{o})
-  \end{equation}
-  where $\lambda^{2}_{o}$ is the vector of squares of the p + q eigenvalues $\lambda_{o}$ of matrix $\boldsymbol{W}$.}
-\end{theorem}
-
-For the variance test the null hypothesis is that $w^{2}_{o} = 0$, which is
-equivalent to $H_{0}: P^{A} = P^{B}$. For some significance level $\alpha_{w}$, 
-if we fail to reject the null we can draw the
-conclusion that the two models are observationally equivalent given the data.
-If we do have enough evidence in the data to reject the null, the next step
-is to test for a preference between the two competing models.
-
-
-\subsection{Directional Tests}
-
-For models with an ooverlapping relationship,
-after a rejection of the null hypothesis of the variance test ($H0: P^{A} = P^{B}$),
-Theorem (\ref{th:AsymDistLR}) ensures that the limiting distribution of the
-LR statistic is the normal distribution. With this knowledge and Theorem (5.1)
-from \citet{Voung1989} , it is straightforward to test if the LR statistic
-is statistically different from zero. Theorem (5.1) from \citet{Voung1989}
-is reproduced here:
-
-\begin{theorem}[Model Selection Tests for Strictly Non-Nested Models] \label{th:NonNestAsyLRDist}
-  \emph{
-    Given assumptions A1-A6 in \citet{Voung1989}, if models A and B are strictly
-    non-nested, then:
-    \begin{enumerate}
-      \item Under $H_{0}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} N(0, 1) $  \\
-      \item Under $H_{A}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} +\infty $  \\
-      \item Under $H_{B}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} -\infty $
-    \end{enumerate}
-  }
-\end{theorem}
-
-The null of the model selection test is that of no observational difference
-between the competing models. At some significance level $\alpha_{LR}$,
-a rejection of the null indicates that one model is preferred over the other
-and the sign of the LR statistic indicates which one. Referencing the LR
-statistics definition in Equation (\ref{eq:LR_statistic}), a positive 
-value indicates that model A is preferred over model B and vice-versa for
-a negative value.
-
-
 \section{Marginal Effects} \label{sec:MarginalEffects}
 
 Due to the complexity of the model's structure and the ability to 
@@ -1180,6 +1019,192 @@ that fully defines $\frac{\partial \boldsymbol{\Delta}}{\partial \boldsymbol{\th
   Asy.Var \left[ \boldsymbol{ \hat{ \Delta } } \right] = \sum^{M}_{n=1}  \left( \frac{1}{T} \sum^{T}_{t=1} \frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)     \boldsymbol{V}(\boldsymbol{\hat{\theta}})      \left( \frac{1}{T} \sum^{T}_{t=1} \frac{\partial \boldsymbol{\Delta}_{t}}{\partial \boldsymbol{\theta}_{n}} \right)^\top
 \end{equation} 
 
+
+\section{Model Selection} \label{sec:ModelSelection}
+
+For model discrimination we follow the sequential approach described 
+by \citet{Voung1989} for comparing two models with a potential set of overlapping
+conditional distributions. A few of the author's definitions, equations, and theorems relevant 
+to this article are collected and presented below. Much of the original wording
+and notation remain unchanged though some small alterations have been made to align with the
+notation of this article. 
+
+\bigskip
+
+\citet{Voung1989} centers his work on the likelihood-ratio (LR) framework.
+Suppose that there are two (H)ME models with different functional forms that need
+to be compared. These models will be labeled model A and model B and have parameters
+of length p and q, respectively. The log-likelihood
+for model A at the psuedo-true value $\boldsymbol{\theta}^{o}$ is given by
+$\boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$
+which is defined in Equation (\ref{eq:loglikelihood}). The value
+$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
+is the expectation of the log-likelihood value where the expectation is taken over the
+joint distribution of $(\boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$. Although
+$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
+is unknown, it can be consistently estimated by (1/N) times the log-likelihood
+value evaluated at the quasi-maximum likelihood estimator (MLE). Therefore (1/N) times
+the log-likelihood ratio statistic evaluated at the MLE is a consistent estimator of 
+$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] - \mathbb{E} \left[ \boldsymbol{l}^{B}(\boldsymbol{\gamma}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$.
+The sample analogue for the LR statistic is defined in equation (\ref{eq:LR_statistic}):
+
+\begin{equation} \label{eq:LR_statistic}
+  LR_{N} (\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \equiv  \sum_{t}^{N} \boldsymbol{l}^{A}_{t}(\hat{\boldsymbol{\theta}}) - \boldsymbol{l}^{B}_{t}(\hat{\boldsymbol{\gamma}}) = \sum_{t}^{N} \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) }
+\end{equation}
+
+\citet{Voung1989} characterizes the asymptotic distribution of the $LR_{N}$ statistic under very general
+conditions, covering the cases where the competing models are non-nested, overlapping,
+or nested and whether both, one, or neither model is misspecified.
+The overlapping case is particularly relevant for this article, best exemplified 
+when a M-expert ME model is compared to a M-expert HME model and the probability
+of the two competing models sharing a common set of conditional distributions
+is high. What follows is a sequence proceedure that identifies the limiting
+distribution of the likelihood-ratio statistic expressed in Equation
+(\ref{eq:sample_LR_convergence_to_population_LR}).
+
+\begin{equation} \label{eq:sample_LR_convergence_to_population_LR}
+  \frac{1}{c} LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \overset{a.s.}{\longrightarrow} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right]
+\end{equation}
+
+First, the correct asymptotic distribution of
+$LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$ needs to be 
+identified and its convergence rate ($1/c$). Second, given the correct asymptotic
+distribution, provide a directional test for to determine which model is preferred over
+the other or if they are observationally equivalent given the data.
+For the overlapping model case there are two possible limiting distributions
+for $LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$, as indicated
+below. In one circumstance, the asymptotic distribution is normally distributed.
+In a second circumstance, a weighted sum of chi-squares is the limiting distribution.
+A weighted sum of chi-squares distribution has the following definition:
+
+\begin{definition}[Weighted Sums of Chi-Square Distributions] \label{def:WeightSum_of_ChiSq}
+  \emph{Let $\boldsymbol{Z} = (Z_{1}, ..., Z_{m})^{\top}$ be a vector of m independent standard normal variables,
+  and $\boldsymbol{\lambda} = (\lambda_{1}, ..., \lambda_{m})^{\top}$ be a vector of m real numbers. Then, the random variable
+  $\sum_{i}^{m} \lambda_{i} Z_{i}^{2}$ is distributed as a weighted sum of chi-squares with parameters
+  $(m, \boldsymbol{\lambda})$. Its cumulative distribution function (c.d.f.) is denoted by
+  $M_{m}(\cdot; \boldsymbol{\lambda})$.}
+\end{definition}
+
+Theorem 3.1 from \citet{Voung1989} states the conditions that lead to the two different
+asymptotic distributions for $LR_{N}$. This theorem is reproduced here:
+
+\begin{theorem}[Asymptotic Distribution of the LR Statistic] \label{th:AsymDistLR}
+  \emph{Given assumptions A1-A5 in \citet{Voung1989}:
+  \begin{enumerate}
+    \item If $P^{A}(\cdot | \cdot ; \, \boldsymbol{\theta}^{o}) = P^{B}(\cdot | \cdot; \, \boldsymbol{\gamma}^{o})$, then:
+      \begin{itemize}
+        \item[] $2 LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) \overset{D}{\longrightarrow} M_{p+q}(\cdot; \boldsymbol{\lambda}_{o})$
+      \end{itemize}
+      where $\boldsymbol{\lambda}_{o}$ is the vector of p + q (possibly negative) eigenvalues of
+      \begin{equation}
+        \boldsymbol{W} = \begin{bmatrix}
+          -\boldsymbol{G}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}                        & -\boldsymbol{G}(\boldsymbol{\theta}, \boldsymbol{\gamma}) \HI{\boldsymbol{\gamma}} \\
+           \boldsymbol{G}(\boldsymbol{\gamma}, \boldsymbol{\theta}) \HI{\boldsymbol{\theta}}   &  \boldsymbol{G}(\boldsymbol{\gamma}) \HI{\boldsymbol{\gamma}} 
+        \end{bmatrix}
+      \end{equation}
+    \item If $P^{A}(\cdot | \cdot ; \, \boldsymbol{\theta}^{o}) \neq P^{B}(\cdot | \cdot; \, \boldsymbol{\gamma}^{o})$, then
+      \begin{equation}
+        N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) - N^{-\frac{1}{2}} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right] \overset{D}{\longrightarrow} N(0, w^{2}_{o})
+      \end{equation}
+  \end{enumerate}
+  }
+\end{theorem}
+
+In the theorem above, $\boldsymbol{G}(\boldsymbol{\theta})$ and $\HI{\boldsymbol{\theta}}$
+have been defined in Equations (\ref{eq:OPG}) and (\ref{eq:Hessian}) while 
+$\boldsymbol{G}(\boldsymbol{\theta}, \, \boldsymbol{\gamma}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\gamma})^\top$.
+The term $w^{2}_{o}$ also appears in Theorem (\ref{th:AsymDistLR}). This represents
+the psuedo-true variance of the LR statistic and is defined as:
+
+\begin{align*}
+  w_{o}^{2} \equiv & \mathbb{Var} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \\
+   = & \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right]^{2} - \left[ \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \right]^{2}
+\end{align*}
+
+The sample analogue for the population statistic has a straighforward definition:
+
+\begin{equation}
+  \hat{w}^{2}_{N} \equiv \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right]^{2} - \left[ \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right] \right]^{2}
+\end{equation}
+
+\citet{Voung1989} demonstrates that the sample variance converges almost surely
+to the population psuedo-true variance and gives the limiting distribution in
+Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
+
+\begin{theorem}[Asymptotic Distribution of the Variance Statistics given $w^{2} = 0$] \label{th:AsymDistVar_at_null}
+  \emph{Given assumptions A1-A7 in \citet{Voung1989} and Definition (\ref{def:WeightSum_of_ChiSq})
+  \begin{equation}
+    N \hat{w}^{2}_{N} \overset{D}{\longrightarrow} M_{p+q}(\cdot; \, \boldsymbol{\lambda}^{2}_{o})
+  \end{equation}
+  where $\boldsymbol{\lambda}^{2}_{o}$ is the vector of squares of the p + q eigenvalues $\boldsymbol{\lambda}_{o}$ of matrix $\boldsymbol{W}$.}
+\end{theorem}
+
+
+\subsection{The Variance Test}
+
+The first step in comparing model A and model B is to determine whether the
+following relationship holds: $P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) = P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})$.
+As seen in Theorem (\ref{th:AsymDistLR}), whether $P^{A} = P^{B}$ holds has
+direct implications on the limiting distribution of
+$LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}})$.
+\citet{Voung1989} points out that testing this relationship is equivalent to testing
+whether the variance of the LR statistic is significantly different from zero.
+
+For the variance test the null hypothesis is that $w^{2}_{o} = 0$, which is
+equivalent to $H_{0}: P^{A} = P^{B}$. For some significance level $\alpha_{w}$, 
+if we fail to reject the null we can draw the
+conclusion that the two models are observationally equivalent given the data.
+If we do have enough evidence in the data to reject the null, the next step
+is to test for a preference between the two competing models.
+
+
+\subsection{Directional Test}
+
+For models with an overlapping relationship, after a rejection of the null
+hypothesis of the variance test ($H_{0}: P^{A} = P^{B}$), Theorem
+(\ref{th:AsymDistLR}) ensures that the limiting distribution of the
+LR statistic is the normal distribution. With this knowledge and Theorem (5.1)
+from \citet{Voung1989} it is straightforward to test if the LR statistic
+is statistically different from zero. Theorem (5.1) from \citet{Voung1989}
+is reproduced here:
+
+\begin{theorem}[Model Selection Tests for Strictly Non-Nested Models] \label{th:NonNestAsyLRDist}
+  \emph{
+    Given assumptions A1-A6 in \citet{Voung1989}, if models A and B are strictly
+    non-nested, then:
+    \begin{enumerate}
+      \item Under $H_{0}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} N(0, 1) $  \\
+      \item Under $H_{A}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} +\infty $  \\
+      \item Under $H_{B}$: $N^{-\frac{1}{2}} \, LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}}) / \hat{w}_{N} \overset{D}{\longrightarrow} -\infty $
+    \end{enumerate}
+  }
+\end{theorem}
+
+The null of the model selection test is that of no observational difference
+between the competing models. At some significance level $\alpha_{LR}$,
+a rejection of the null indicates that one model is preferred over the other
+and the sign of the LR statistic indicates which one. Referencing the LR
+statistics definition in Equation (\ref{eq:LR_statistic}), a positive 
+value indicates that model A is preferred over model B and vice-versa for
+a negative value.
+
+It is worth pointing out that the size of the HME models can become quite large.
+The class of models investigated in this article have parameter vectors that range
+in length from 21 to 122. To penalize parameter size when weighing competing models,
+a correction factor can be deducted from the LR statistic. This essay uses a correction 
+factor based on the \citet{Schwarz1978} information criterion and provided in \citet{Voung1989}.
+The correction factor is defined in Equation (\ref{eq:Schwarz_correction_factor})
+and the adjusted LR statistic is defined in Equation (\ref{eq:AdjustedLR})
+
+\begin{equation} \label{eq:Schwarz_correction_factor}
+  K_{N}(P^{A}_{\boldsymbol{\theta}}, P^{B}_{\boldsymbol{\gamma}}) = (p / 2) log N - (q / 2) log N
+\end{equation}
+
+\begin{equation} \label{eq:AdjustedLR}
+  LR_{N}^{adj}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) = LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) - K_{N}(P^{A}_{\boldsymbol{\theta}}, P^{B}_{\boldsymbol{\gamma}})
+\end{equation}
+
+
 \section{A Simple Example} \label{sec:SimpleExample}
 
 In order to provide a concrete example of the concepts discussed previously,
@@ -1221,7 +1246,7 @@ resulting in a species-specific estimation of sepal width.
 \end{equation}
 
 Two sets of regressions are run. Since the Versicolor and Virginica species
-can be viewed as one larger cluster, a two-expert ME model is run
+can be viewed as one large cluster, a two-expert ME model is run
 and compared to a benchmark OLS where Versicolor and Virginica are labelled
 as the same species. A second set of regressions are run with three mixture
 experts. When moving to the three expert model, there is now a choice
@@ -1230,14 +1255,15 @@ a gating network with depth two (HME), or we can go wide by keeping the
 depth of the gating network at one (ME). Again, for comparative purposes, a benchmark
 OLS regression is estimated for each species separately. Results are collected in Table \ref{tbl:Iris}.
 Coefficients for local experts in the two expert ME regression match closely with the OLS
-benchmark. The strong separation between the Setosa and Versicolor/Virginica
+benchmark with the exception being the coefficient for Setosa Peta.Width.
+The strong separation between the Setosa and Versicolor/Virginica
 clusters makes it easy for the ME gating network to discriminate between the two using
-just the Petal Width dimension. This task becomes a little more complicated when
+just the Petal Width dimension. This task becomes more complicated when
 considering all three species at the same time since there exists some overlap
 between the Versicolor and Virginica clusters. When comparing the coefficients of the
 local regressions (see Table \ref{tbl:Iris}), the HME architecture clearly
 outperforms the ME architecture. While the ME model does obtain a larger
-log-likelihood value than the OLS estimate, it fails to identify the three
+likelihood value than the OLS estimate, it fails to identify the three
 separate species that are known to exist. The HME model, on the other hand,
 naturally picks up on the three underlying clusters while also providing a superior
 likelihood value. This speaks to one of the major caveats of using this class of model.
@@ -1262,36 +1288,38 @@ over-fit the data at hand.
   
   Setosa \\
   \cmidrule(r){1-1}
-  Const.             & 3.22 & 0.11** & 3.22 & 0.13** && 3.22  & 0.11** & 3.22 & 0.13** & 3.45 & 0.13**       \\
-  Petal.Width        & 0.84 & 0.42*  & 0.95 & 0.49** && 0.84  & 0.41*  & 0.94 & 0.49   & 0.39 & 0.46         \\[0.3cm]
+  Const.             & 3.22 & 0.11 *  & 3.22 & 0.13 *   && 3.22  & 0.11 * & 3.22 & 0.13 * & 2.73  & 0.08 *       \\
+  Petal.Width        & 0.84 & 0.42 *  & 0.95 & 0.49 -   && 0.84  & 0.41 + & 0.84 & 0.49 - & 2.62  & 0.47 *       \\[0.3cm]
   
   Virginica \\
   \cmidrule(r){1-1}
-  Const.             & --   & --     & --   & --     && 1.70  & 0.32** & 1.96 & 0.12** & 3.02 & 0.05**       \\
-  Petal.Width        & --   & --     & --   & --     && 0.63  & 0.16** & 0.50 & 0.06** & 0.21 & 0.31         \\[0.3cm]
+  Const.             & --   & --     & --   & --        && 1.70  & 0.32 * & 1.66 & 0.27 * & 2.13  & 0.09 *       \\
+  Petal.Width        & --   & --     & --   & --        && 0.63  & 0.16 * & 0.63 & 0.13 * & 0.44  & 0.06 *       \\[0.3cm]
   
   Versicolor \\
   \cmidrule(r){1-1}
-  Const.             & --   & --     & --   & --     && 1.37  & 0.29** & 1.15 & 0.12** & 2.13 & 0.09**       \\
-  Petal.Width        & --   & --     & --   & --     && 1.05  & 0.22** & 1.29 & 0.09** & 0.44 & 0.06**       \\[0.3cm]
+  Const.             & --   & --     & --   & --        && 1.37  & 0.29 * & 1.16 & 0.19 * & 3.65  & 0.23 *       \\
+  Petal.Width        & --   & --     & --   & --        && 1.05  & 0.22 * & 1.26 & 0.14 * & -0.15 & 0.73         \\[0.3cm]
 
   Virg + Versi \\
   \cmidrule(r){1-1}
-  Const.             & 2.13 & 0.13** & 2.13 & 0.09** && --    & --     & --   & --     & --   & --       \\
-  Petal.Width        & 0.44 & 0.07** & 0.44 & 0.06** && --    & --     & --   & --     & --   & --       \\[0.3cm]
+  Const.             & 2.13 & 0.13 * & 2.13 & 0.10 *    && --    & --     & --   & --     & --    & --           \\
+  Petal.Width        & 0.44 & 0.07 * & 0.44 & 0.06 *    && --    & --     & --   & --     & --    & --           \\[0.3cm]
 
-  AME \\
+  AME: Petal.Width \\
   \cmidrule(r){1-1}
-  Petal.Width        & 0.57 & --     & 0.49 & --     && 0.84  & --     & 0.57 & --     & 0.62 & --         \\[0.3cm]
+  Gate               & --   & --     & -0.13 & --        && --    & --     & -0.23 & --     & 0.06  & --           \\
+  Expert             & --   & --     &  0.61 & --        && --    & --     &  0.88 & --     & 0.70  & --           \\
+  Total              & 0.57 & --     &  0.49 & --        && 0.84  & --     &  0.66 & --     & 0.76  & --           \\[0.3cm]
 
 
-  Log-Like           & -35.5 & --    & -31.9 & --    && -29.3  & --    & -21.8& --     & -27.8 & -- \\
-  N                  & 150   & --    & 150   & --    && 150    & --    & 150  & --     & 150   & -- \\
+  Log-Like           & -0.24 & --    & 0.97  & --      && -0.20  & --    & 1.08 & --     & 1.01  & --            \\
+  N                  & 150   & --    & 150   & --      && 150    & --    & 150  & --     & 150   & --            \\
 
 	\hline
 		\end{tabular}
 		\begin{tablenotes}
-			\item{\footnotesize ** $p < 0.01$, * $p < 0.05$}
+			\item{\footnotesize Signif. Codes: '*' p $<$ 0.01, '+' p $<$ 0.05, '-' p $<$ 0.1}
 			\item{\footnotesize OLS regressions are modeled using equation (\ref{eq:OLS_iris})}
 			\item{\footnotesize ME regressions are modeled using equation (\ref{eq:HME_iris}) and architecture $\boldsymbol{A}$ from Figure \ref{fig:network_comparison}}
 			\item{\footnotesize HME regressions are modeled using equation (\ref{eq:HME_iris}) and architecture $\boldsymbol{C}$ from Figure \ref{fig:network_comparison}}
@@ -1304,11 +1332,14 @@ over-fit the data at hand.
 \begin{figure}[!ht]
   \includegraphics[width=\textwidth]{Iris_fitted_regressions.jpeg}
   \caption{Comparison of the fitted experts between the ME and HME architectures
-  applied to the Iris dataset. OLS regression estimates are drawn in solid lines.
-  Although the HME and ME both achieve superior log-likelihood values compared to
-  OLS, only the HME is able to identify the three iris species clusters.}
+  applied all three species of the Iris dataset. OLS regression estimates are
+  drawn in solid lines. Although the HME and ME both achieve superior
+  log-likelihood values compared to OLS, only the HME is able to identify the
+  three iris species clusters.}
   \label{fig:Iris_fitted_regressions}
 \end{figure}
+
+\clearpage
 
 
 \section{A Mincer Wage Equation} \label{sec:MincerWageEx}
@@ -1364,17 +1395,17 @@ for every occupation in ONet's index, each attribute is mean centered and
 scaled to have unit variance across all ONet occupations.
 
 
-\begin{figure}[ht!]
+\begin{figure}[t!]
   \includegraphics[width=\textwidth]{Job_characteristic_density.jpeg}
   \caption{Density estimates of ONet job attributes for the Census sample broken down by
   sex. \textbf{Note:} The job attributes have been mean centered and scaled to
   have unit variance at the \textit{occupational} level and not at the observation
-  level with respect to sample.}
+  level with respect to the sample.}
   \label{fig:JobChar_vs_sex}
 \end{figure}
 
 
-\begin{table} \centering
+\begin{table}[t!] \centering
   \caption{Summary Statistics}
   \begin{threeparttable}
     \begin{tabular}[l]{l r r r r}
@@ -1400,15 +1431,15 @@ scaled to have unit variance across all ONet occupations.
   \hline
     \end{tabular}
     \begin{tablenotes}
-      \item{\footnotesize N = 68,642}
+      \item{\footnotesize Summary statistics for the covariates used in the Mincer wage equation. N = 68,642}
     \end{tablenotes} \label{tbl:census_cov_summary}
   \end{threeparttable}
 \end{table}
 
 The total number of individuals in the Census data numbers 105,796.
-After applying the crosswalk, only 75,957 cases remain with complete
+After applying the crosswalk, 75,957 cases remain with complete
 information across both datasets. Of those 75,957, roughly ten percent
-(7,315) are randomly held-out and used as a test set to gauge
+(7,315) are randomly held out and used as a test set to gauge
 out-of-sample forecast performance across model specifications.
 This leaves 68,642 individuals left as a training set. A statistical summary
 of the covariates is provided in Table \ref{tbl:census_cov_summary}.
@@ -1440,7 +1471,54 @@ of interest, years of education, appears solely in the gating network.
   log(wage) = Age \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
-\begin{table} \centering
+For comparative purposes, several different regressions across three
+different dimensions will be estimated: model architectures (ME vs HME), the number of experts,
+and the regression specification (Equations (\ref{eq:full_formula}) -
+(\ref{eq:min_formula})). Model comparison results across these dimensions
+are collected in Tables \ref{tbl:model_comparison} and \ref{tbl:voung_comparison}.
+Table \ref{tbl:model_comparison} reports the standard set of model selection criterion
+including the log-likelihood value at the fitted parameter estimates, the Akaike
+Information Criterion (AIC), the Bayesian Information Criterion (BIC), and the
+predictive mean squared error (MSE) of the model when applied to the hold-out test set.
+Several items are worth mentioning. First, there is a general advantage
+to using the HME structure if the aim is to maximize the
+likelihood value. The HME structure shows consistent improvement
+across specifications over the ME structure, holding the number of experts
+constant. The only exception is the full specification HME with four experts which
+has a lower likelihood value than its ME analogue. This increase in efficiency
+is most likely due to the HME's more refined gating architecture, whose recursive
+partitioning is more effective at finding the next improvement in the parameter
+vector than the single multinomial split in the ME. Second, it is best to give the expert
+regressions as much information as possible. The Full specification clearly outperforms
+the Mid specification, which outperforms the Min specification. If one holds the
+architecture and the number of experts constant, the performance metrics show clear
+improvement as the model specification adds more explanatory variables to the expert
+regressions. Third, for Full specification models, there is
+disagreement among the selection criterion about which model has the best performance.
+If using the log-likelihood or AIC values as the discriminating factor the 5-expert HME
+model is selected. If a heavier penalty term is used for models with a greater number
+of parameters, as is the case with the BIC, the 3-expert HME model would be selected.
+And, finally, if judging by out-of-sample forecast performance using the MSE the 3-expert
+ME model would prevail. This nuance does not hold for the Mid and Min specifications.
+For these cases, the 5-expert HME is the unanimous winner. In Table \ref{tbl:voung_comparison},
+the results for Voung's LR based model comparision tests discussed in Section \ref{sec:ModelSelection}
+are summarized. Overall, the LR based selection tests align with the models selected by the
+BIC and MSE selection criterion with one important caveat: the possibility of two models
+being observationally equivalent. Having a potential outcome of model equivalency
+is what separates the LR based test from the standard selection criterion.
+It provides a more nuanced comparison of the (H)ME models and can help the researcher
+detect when the number of experts in a model starts to exceed the number of latent
+populations in the data. This topic will be expanded upon during the Monte Carlo
+exercises in Section \ref{sec:MonteCarlo}. According to the LR tests, the 3-expert HME
+and ME models perform \emph{equally} well, either being the preferred model
+or observationally equivalent to all other model specifications and architectures.
+Looking at the middle block of tests where the Mid specifications are
+compared to each other, the 4 and 5-expert HME models are jointly favored 
+over the other Mid specifications. The last diagonal block comparing the Min
+specifications to themselves indicates that all three HME models are joint preferred
+over the ME models. 
+
+\begin{table}[b!] \centering
   \caption{Comparing Complexity, Architecture, and Regression Specification}
   \begin{threeparttable}
     {\footnotesize
@@ -1451,40 +1529,48 @@ of interest, years of education, appears solely in the gating network.
 Specification & Architecture  & Experts & Log-Lik & AIC    & BIC    & MSE   \\ 
   \cmidrule{1-7}
 
-Full     &  ME   &    2    & -0.541  & 1.082  & 1.088  & 0.182 \\
-         &  ME   &    3    & -0.526  & 1.053  & 1.062  & 0.182 \\
-         &  ME   &    4    & -0.537  & 1.078  & 1.091  & 0.181 \\
-         &  ME   &    5    & -0.535  & 1.073  & 1.089  & 0.182 \\
-         &  HME  &    3    & -0.525  & 1.052  & 1.061  & 0.182 \\
-         &  HME  &    4    & -0.515  & 1.034  & 1.047  & 0.181 \\
-         &  HME  &    5    & \iu{-0.505}  & \iu{1.015}  & \iu{1.031}  & \iu{0.178} \\
-         &       &         &         &        &        &       \\
-Mid      &  ME   &    2    & -0.560  & 1.120  & 1.123  & 0.185 \\
-         &  ME   &    3    & -0.558  & 1.117  & 1.123  & 0.186 \\
-         &  ME   &    4    & -0.581  & 1.163  & 1.171  & 0.192 \\
-         &  ME   &    5    & -0.590  & 1.182  & 1.192  & 0.199 \\
-         &  HME  &    3    & -0.541  & 1.083  & 1.088  & 0.184 \\
-         &  HME  &    4    & -0.528  & 1.057  & 1.065  & 0.183 \\
-         &  HME  &    5    & \it{-0.519}  & \it{1.039} & \it{1.050}  & \it{0.182} \\
-         &       &         &         &        &        &       \\
-Min      &  ME   &    2    & -0.596  & 1.192  & 1.195  & 0.192 \\
-         &  ME   &    3    & -0.587  & 1.176  & 1.181  & 0.192 \\
-         &  ME   &    4    & -0.629  & 1.260  & 1.268  & 0.211 \\
-         &  ME   &    5    & -0.564  & 1.131  & 1.140  & 0.189 \\
-         &  HME  &    3    & -0.581  & 1.163  & 1.168  & 0.190 \\
-         &  HME  &    4    & -0.546  & 1.094  & 1.101  & 0.182 \\
-         &  HME  &    5    & \it{-0.524}  & \it{1.049}  & \it{1.059}  & \it{0.182} \\
+Full     &  ME   &    2    & 0.703      & -1.404      & -1.399      & 0.1829      \\
+         &  ME   &    3    & 0.718      & -1.434      & -1.425      & \iu{0.1820} \\
+         &  ME   &    4    & 0.716      & -1.429      & -1.416      & 0.1823      \\
+         &  ME   &    5    & 0.715      & -1.426      & -1.410      & 0.1825      \\
+         &  HME  &    3    & 0.719      & -1.436      & \iu{-1.427} & 0.1822      \\
+         &  HME  &    4    & 0.703      & -1.404      & -1.391      & 0.1825      \\
+         &  HME  &    5    & \iu{0.721} & \iu{-1.439} & -1.423      & 0.1824      \\
+         \cmidrule(l){2-7}
+         &  Avg. &         & 0.714      & -1.425      & -1.413      & 0.1824      \\
+         \cmidrule(l){2-7}
+         &       &         &            &             &             &             \\
+Mid      &  ME   &    2    & 0.681      & -1.361      & -1.358      & 0.1852      \\
+         &  ME   &    3    & 0.689      & -1.376      & -1.371      & 0.1858      \\
+         &  ME   &    4    & 0.686      & -1.370      & -1.362      & 0.1948      \\
+         &  ME   &    5    & 0.645      & -1.288      & -1.278      & 0.2187      \\
+         &  HME  &    3    & 0.695      & -1.388      & -1.383      & 0.1838      \\
+         &  HME  &    4    & 0.706      & -1.410      & -1.402      & 0.1838      \\
+         &  HME  &    5    & \it{0.716} & \it{-1.429} & \it{-1.419} & \it{0.1822} \\
+         \cmidrule(l){2-7}
+         &  Avg. &         & 0.688      & -1.375      & -1.367      & 0.1906      \\
+         \cmidrule(l){2-7}
+         &       &         &            &             &             &             \\
+         &       &         &            &             &             &             \\
+Min      &  ME   &    2    & 0.650      & -1.299      & -1.296      & 0.1923      \\
+         &  ME   &    3    & 0.660      & -1.318      & -1.313      & 0.1930      \\
+         &  ME   &    4    & 0.644      & -1.286      & -1.279      & 0.2082      \\
+         &  ME   &    5    & 0.609      & -1.216      & -1.206      & 0.2453      \\
+         &  HME  &    3    & 0.689      & -1.377      & -1.372      & 0.1833      \\
+         &  HME  &    4    & 0.692      & -1.383      & -1.375      & 0.1830      \\
+         &  HME  &    5    & \it{0.702} & \it{-1.403} & \it{-1.393} & \it{0.1823} \\
+         \cmidrule(l){2-7}
+         &  Avg. &         & 0.664      & -1.326      & -1.319      & 0.1982      \\
         \cmidrule(l){1-7}
     \end{tabular}
     }
     \begin{tablenotes}
       \item{\footnotesize \textbf{Note:} Log-Likelihood, AIC, and BIC are divided by the sample size of 68,642.
       Italicized entries are the winning values within specification while underlined entries are the best values across all three specifications.
-      }
-      \item{\footnotesize \textbf{Note:} The MSE is calculated from a hold-out test set with sample size of 7,315}
-      \item{\footnotesize \textbf{Note:} After looking at the results, two themes emerge. \textbf{One}, there is a clear advantage to using the HME structure if the aim is to maximize the likelihood value.
-      The HME structure shows consistent improvement across specifications as the number of experts increases,
-      while the ME struggles to match this consistency. \textbf{Two}, give the expert regressions as much information as possible. The Full specification clearly outperforms the Mid and Min specifications across the board.
+      The MSE is calculated from a hold-out test set with sample size of 7,315}
+      \item{\footnotesize \textbf{Note:} After looking at the results two themes emerge. \textbf{One}, there is a general advantage to using the HME structure if the aim is to maximize the likelihood value.
+      The HME structure shows consistent improvement across specifications over the ME structure, holding the number of experts constant. The only exception is the the full specification with four experts.
+      \textbf{Two}, give the expert regressions as much information as possible. The Full specification clearly outperforms the Mid and Min specifications across the board.
       }
       \item{\footnotesize }
     \end{tablenotes} \label{tbl:model_comparison}
@@ -1492,26 +1578,79 @@ Min      &  ME   &    2    & -0.596  & 1.192  & 1.195  & 0.192 \\
 \end{table}
 
 
-For comparative purposes, several different regressions across three
-different dimensions will be estimated: model architectures (ME vs HME), the number of experts,
-and the regression specification (equations (\ref{eq:full_formula}) -
-(\ref{eq:min_formula})). Table \ref{tbl:model_comparison} presents a view of these
-results across those dimensions. After looking at the results,
-two themes emerge. First, there is a clear advantage to using the HME structure
-if the aim is to maximize the likelihood value. The HME structure shows consistent
-improvement across specifications as the number of experts increase, while the ME
-struggles to improve the likelihood value if there is only one gating split.
-This increase in efficiency is most likely due
-to the HME's more refined gating architecture, whose recursive partitioning is more
-effective at finding the next improvement in the parameter vector than the single
-multinomial split in the ME. As for the second theme, it is best to give the expert
-regressions as much information as possible. The Full specification clearly outperforms
-the Mid specification, which outperforms the Min specification. Referencing Table
-\ref{tbl:model_comparison}, if one holds the architecture and the number of experts
-constant, the performance metrics show clear improvement as the regression specification
-adds more explanatory variables.
+\begin{landscape}
+\begin{table}[t!] \centering
+  \caption{Voung Comparison Results}
+  \begin{threeparttable}
+    {\footnotesize
+    \begin{tabular}[r]{l l l r r r r r r r r r r r r r r r r r r r r r r r}
+    \cmidrule{1-26}
+         &     &         &  \multicolumn{7}{c}{Full}                         &&  \multicolumn{7}{c}{Mid}                          &&  \multicolumn{7}{c}{Min}                         \\
+         &     &         &  \multicolumn{4}{c}{ME} & \multicolumn{3}{c}{HME} &&  \multicolumn{4}{c}{ME} & \multicolumn{3}{c}{HME} && \multicolumn{4}{c}{ME} & \multicolumn{3}{c}{HME} \\
+                            \cmidrule(lr){4-7} \cmidrule(lr){8-10}              \cmidrule(lr){12-15} \cmidrule(lr){16-18}             \cmidrule(lr){20-23} \cmidrule(lr){24-26}
+         &     & Experts & 2   &  3  &  4  &  5  &  3   &  4   &  5          && 2   &  3  &  4  &  5  &  3   &  4   &  5          &&  2  &  3  &  4  &  5  &  3   &  4   &  5         \\
+    \cmidrule{3-26}
+Full     & ME  & 2       &  .  & -1  &  0  & -1  & -1   &  0   &  -1          &&  1  &   1 &  1  &  1  &  1   & -1   &  -1          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
+         & ME  & 3       &  1  &  .  &  1  &  0  &  0   &  1   &   0          &&  1  &   1 &  1  &  1  &  1   &  1   &   0          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
+         & ME  & 4       &  0  & -1  &  .  &  0  & -1   &  0   &   0          &&  0  &   0 &  1  &  1  &  0   & -1   &  -1          &&  1  &  0  &  1  &  1  &  0   &  0   &  0       \\
+         & ME  & 5       &  1  &  0  &  0  &  .  &  0   &  1   &   0          &&  1  &   1 &  1  &  1  &  1   &  1   &  -1          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
+         & HME & 3       &  1  &  0  &  1  &  0  &  .   &  1   &   0          &&  1  &   1 &  1  &  1  &  1   &  1   &   1          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
+         & HME & 4       &  0  & -1  &  0  & -1  & -1   &  .   &  -1          &&  1  &   1 &  1  &  1  &  1   & -1   &  -1          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
+         & HME & 5       &  1  &  0  &  0  &  0  &  0   &  1   &   .          &&  1  &   1 &  1  &  1  &  1   &  0   &   0          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
+         &     &         &     &     &     &     &      &      &              &&     &     &     &     &      &      &              &&     &     &     &     &      &      &          \\
+Mid      & ME  & 2       & -1  & -1  &  0  & -1  & -1   & -1   &  -1          &&  .  &   0 &  1  &  1  & -1   & -1   &  -1          &&  1  &  1  &  1  &  1  & -1   & -1   & -1       \\
+         & ME  & 3       & -1  & -1  &  0  & -1  & -1   & -1   &  -1          &&  0  &   . &  1  &  1  &  0   & -1   &  -1          &&  1  &  0  &  1  &  1  &  0   & -1   &  0       \\
+         & ME  & 4       & -1  & -1  & -1  & -1  & -1   & -1   &  -1          && -1  &  -1 &  .  &  1  & -1   & -1   &  -1          &&  1  &  1  &  1  &  1  & -1   & -1   & -1       \\
+         & ME  & 5       & -1  & -1  & -1  & -1  & -1   & -1   &  -1          && -1  &  -1 & -1  &  .  & -1   & -1   &  -1          && -1  & -1  & -1  &  1  & -1   & -1   & -1       \\
+         & HME & 3       & -1  & -1  &  0  & -1  & -1   & -1   &  -1          &&  1  &   0 &  1  &  1  &  .   & -1   &  -1          &&  1  &  0  &  1  &  1  &  0   &  1   &  0       \\
+         & HME & 4       &  1  & -1  &  1  & -1  & -1   &  1   &   0          &&  1  &   1 &  1  &  1  &  1   &  .   &   0          &&  1  &  1  &  1  &  1  &  1   &  1   &  1       \\
+         & HME & 5       &  1  &  0  &  1  &  1  & -1   &  1   &   0          &&  1  &   1 &  1  &  1  &  1   &  0   &   .          &&  1  &  1  &  1  &  1  &  1   &  1   &  1       \\
+         &     &         &     &     &     &     &      &      &              &&     &     &     &     &      &      &              &&     &     &     &     &      &      &          \\
+Min      & ME  & 2       & -1  & -1  & -1  & -1  & -1   & -1   &  -1          && -1  &  -1 & -1  &  1  & -1   & -1   &  -1          &&  .  &  0  &  1  &  1  & -1   & -1   & -1       \\
+         & ME  & 3       & -1  & -1  &  0  & -1  & -1   & -1   &  -1          && -1  &   0 & -1  &  1  &  0   & -1   &  -1          &&  0  &  .  &  0  &  1  &  0   &  0   &  0       \\
+         & ME  & 4       & -1  & -1  & -1  & -1  & -1   & -1   &  -1          && -1  &  -1 & -1  &  1  & -1   & -1   &  -1          && -1  &  0  &  .  &  1  & -1   & -1   & -1       \\
+         & ME  & 5       & -1  & -1  & -1  & -1  & -1   & -1   & --1          && -1  &  -1 & -1  & -1  & -1   & -1   &  -1          && -1  & -1  & -1  &  .  & -1   & -1   & -1       \\
+         & HME & 3       & -1  & -1  &  0  & -1  & -1   & -1   &  -1          &&  1  &   0 &  1  &  1  &  0   & -1   &  -1          &&  1  &  0  &  1  &  1  &  .   &  0   &  0       \\
+         & HME & 4       & -1  & -1  &  0  & -1  & -1   & -1   &  -1          &&  1  &   1 &  1  &  1  & -1   & -1   &  -1          &&  1  &  0  &  1  &  1  &  0   &  .   &  0       \\
+         & HME & 5       &  0  &  0  &  0  &  0  &  0   &  0   &   0          &&  1  &   0 &  1  &  1  &  0   & -1   &  -1          &&  1  &  0  &  1  &  1  &  0   &  0   &  .       \\
+        \cmidrule(l){1-26}
+    \end{tabular}
+    }
+    \begin{tablenotes}
+      \item{\footnotesize \textbf{Legend:}
+      \begin{itemize}
+        \item 0 :  Models are observationally equivalent
+        \item 1 :  The model in the row is favored
+        \item -1: The model in the column is favored
+      \end{itemize}
+      }
+      \item{\footnotesize \textbf{Note:}
+      A significance level of 5\% was used for both the variance test and
+      the LR test. When comparing models, an adjustment to the LR statistic
+      is made to penalize models with a larger number of parameters. See
+      Equation (\ref{eq:Schwarz_correction_factor}). By looking at the
+      top set of rows, we can see that the Full specification
+      clearly outperforms the Mid and Min specifications as a group.}
+    \end{tablenotes} \label{tbl:voung_comparison}
+  \end{threeparttable}
+\end{table}
+\end{landscape}
 
-\begin{table} \centering
+
+Turning attention to the main variable of focus, Table \ref{tbl:YrsEdu_coef} provides a 
+comparison of the average marginal effect for \textit{YrsEdu} across the same dimensions
+explored for the performance metrics. There is a noticeable change across model specifications.
+Compared to the OLS coefficient of 0.076, the Min specification,
+which includes \textit{YrsEdu} only in the gating network, underestimates the returns
+to education. The Mid specification, which includes \textit{Age} and
+\textit{YrsEdu} in the expert regressions as well as the gating network,
+overestimates the returns to education for all model specifications. The Full specification,
+which has the entire suite of variables in both places, matches the closest
+to the OLS estimate across the estimated models.
+
+
+
+\begin{table}[t!] \centering
   \caption{Returns to Years of Education}
   \begin{threeparttable}
     \begin{tabular}[l]{r r r r r}
@@ -1521,13 +1660,13 @@ adds more explanatory variables.
   Depth & Experts & Min   & Mid   & Full      \\
   \cmidrule{1-5}
 
-  ME      & 2       & 0.051 & 0.082 & 0.076     \\
-  ME      & 3       & 0.051 & 0.081 & 0.074     \\
-  ME      & 4       & 0.039 & 0.085 & 0.075     \\
-  ME      & 5       & 0.063 & 0.095 & 0.076     \\
-  HME     & 3       & 0.063 & 0.080 & 0.073     \\
-  HME     & 4       & 0.063 & 0.078 & 0.073     \\
-  HME     & 5       & 0.068 & 0.075 & 0.069     \\
+  ME      & 2     & 0.051 & 0.082 & 0.076     \\
+  ME      & 3     & 0.051 & 0.080 & 0.074     \\ 
+  ME      & 4     & 0.050 & 0.086 & 0.073     \\
+  ME      & 5     & 0.016 & 0.098 & 0.074     \\
+  HME     & 3     & 0.063 & 0.080 & 0.073     \\
+  HME     & 4     & 0.063 & 0.082 & 0.071     \\
+  HME     & 5     & 0.065 & 0.077 & 0.075     \\
 
   \hline
     \end{tabular}
@@ -1543,33 +1682,21 @@ adds more explanatory variables.
 
 \bigskip
 
-Turning attention to the main variable of focus, Table \ref{tbl:YrsEdu_coef} provides a 
-comparison of the average marginal effect for \textit{YrsEdu} across the same dimensions
-explored for the performance metrics. There is a noticeable change across model specifications.
-Compared to the OLS coefficient of 0.076, the Min specification,
-which includes \textit{YrsEdu} only in the gating network, underestimates the returns
-to education. The Mid specification, which includes \textit{Age} and
-\textit{YrsEdu} in the expert regressions as well as the gating network,
-overestimates the returns to education in all the models except the HME with four
-and five experts. The Full specification, which has the entire suite of
-variables in both places, matches most closely to the OLS estimate across the estimated
-models.
-
-\bigskip
-
-For the Census sample, estimating up to five experts is pretty extreme.
-It is rather unlikely that there exists more than one distinct cluster, let alone two\footnote{Testing if a (H)ME model is even necessary would be a valuable addition to this paper.}.
-Because of this, a deeper analysis of the regression results are only explored
-for the three models that have the least complexity/experts. We first estimate equation (\ref{eq:mincer_equ}) 
-for a two expert model. At this specification, there is no distinction
-between the HME and ME. A three expert model is then estimated for these two
-respective architectures to assess if different conclusions to the estimated
-Mincer equations arise. Results for these regressions are collected in Tables \ref{tbl:2E_full_regressions_results},
-\ref{tbl:3W_full_regressions_results}, and \ref{tbl:3D_full_regressions_results}
-and complimented by Tables \ref{tbl:ME2_sample_comparison}, \ref{tbl:ME3_sample_comparison},
-and \ref{tbl:HME3_sample_comparison}, which provide mean and median values for the subset of individuals
+Given the model selection results in Tables \ref{tbl:model_comparison} and
+\ref{tbl:voung_comparison}, the remainder of this section will focus on exploring
+the details of the full specification regressions for the 2-expert and 3-expert models
+only. Full regression results for the Mincer wage equation (\ref{eq:mincer_equ}) 
+with two experts is presented first in Table \ref{tbl:2E_full_regressions_results}.
+At this specification there is no distinction between the HME and ME.
+Results for the three expert models are then presented for the two
+different architectures (HME vs ME) in Tables \ref{tbl:3W_full_regressions_results} and 
+\ref{tbl:3D_full_regressions_results}. To compliment the regression summaries,
+Tables \ref{tbl:ME2_sample_comparison}, \ref{tbl:ME3_sample_comparison},
+and \ref{tbl:HME3_sample_comparison} provide mean and median values for the subset of individuals
 in the census sample that are attributed to each expert based on the value of
-their posterior weights\footnote{For example, observation $i$ is assigned to expert $j$ if the posterior vector's largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$.}.
+their prior weights\footnote{For example, observation $i$ is assigned to expert $j$
+if the prior weight vector's largest value is the $j$-th index:
+$\argmax \boldsymbol{h}_{i} = h_{ij}$.}.
 
 \bigskip
 
@@ -1639,257 +1766,80 @@ attainment for that group is the highest of the three groups with the median yea
 education equaling a Bachelor's degree. Taken together, the HME models
 suggests there is significant heterogeneity to returns in education over an
 individual's lifetime, across job types, and even by within similar cohorts.
-cohort. 
-
-\section{Conclusion} \label{sec:Conclusion}
-
-In this article, a novel mixture model is explored that borrows equally from the
-economic and deep learning fields. A flexible (and optionally deep) gating network
-is used to learn the latent structure of a dataset and then apply local
-regressions to that latent structure. Robust standard errors and closed form expressions
-for marginal effects were developed and demonstrated on two different datasets. 
-
-
-\begin{landscape}
-\begin{table} \centering
-  \caption{Regression Results: Two-Expert, Full Parameter Specification}
-    \begin{threeparttable}
-      \begin{tabular}[l]{l r l r l c r l c r l r l r l}
-
-\cmidrule{1-15}
-& \multicolumn{4}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
-\cmidrule(l){2-5}    \cmidrule(l){7-8}     \cmidrule(l){10-15}
-& \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
-                \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
-Intercept              &  1.231 & *      &  1.423 & *     &&  1.241 & *     &&  1.225 & *        &  1.260 & *        & -0.040 &        \\
-Age-16                 &  0.032 & *      &  0.066 & *     &&  0.035 & *     &&  0.042 &          &  0.038 & *        &  0.004 &        \\
-$\textrm{Age-16}^{2}$  & -0.000 & *      & -0.002 & *     && -0.001 & *     && -0.001 &          & -0.001 & *        & -0.000 &        \\
-YrsEduc                &  0.082 & *      &  0.042 & *     &&  0.076 & *     &&  0.076 &          &  0.075 & *        &  0.000 &        \\
-Female                 & -0.244 & *      & -0.031 & *     && -0.215 & *     && -0.209 & *        & -0.207 & *        & -0.002 &        \\
-Af Amer                & -0.076 & *      & -0.044 & *     && -0.076 & *     && -0.076 & *        & -0.071 & *        & -0.005 &        \\
-Indian                 & -0.081 & *      & -0.069 & +     && -0.091 & *     && -0.085 & +        & -0.079 & *        & -0.005 &        \\
-Asian                  & -0.045 & *      &  0.053 & +     && -0.032 & *     && -0.024 &          & -0.028 & *        &  0.003 &        \\
-Hisp                   & -0.121 & *      & -0.069 & *     && -0.106 & *     && -0.112 & *        & -0.112 & *        & -0.000 &        \\
-Creativity             & -0.054 & *      & -0.004 &       && -0.046 & *     && -0.044 & *        & -0.045 & *        &  0.002 &        \\
-Design                 &  0.080 & *      &  0.080 & *     &&  0.082 & *     &&  0.081 & *        &  0.080 & *        &  0.001 &        \\
-Analytics              &  0.133 & *      &  0.107 & *     &&  0.131 & *     &&  0.126 & *        &  0.129 & *        & -0.003 &        \\
-Perceptive             &  0.063 & *      & -0.017 & *     &&  0.058 & *     &&  0.053 & *        &  0.049 & *        &  0.004 &        \\
-Log-Variance           & -1.651 & *      & -2.675 & *     &&  --    &       &&  --    &          &  --    &          &  --    &        \\
-                \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
-Share$^{4}$:          &  0.826 &        &  0.174 &       &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
-\cmidrule{1-15}
-      \end{tabular}
-
-      \begin{tablenotes}
-        \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
-        \item Log-Likelihood: ME -0.541, OLS -0.558
-        \item $^{1}$ Fitted coefficients from the two-expert model with the full parameter specification from equation (\ref{eq:full_formula})
-        \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
-        \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
-        \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
-
-      \end{tablenotes} \label{tbl:2E_full_regressions_results}
-
-
-    \end{threeparttable}
-
-\end{table}
-\end{landscape}
-
-
-\begin{table} \centering
-  \caption{Sample Mean Comparison: Two-Expert ME}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l r r r r}
-  \cmidrule{1-5}
-  Share:$^{1}$& \multicolumn{2}{c}{(0.826)} & \multicolumn{2}{c}{(0.174)} \\
-              & Mean & Median & Mean & Median \\
-  \cmidrule{1-5}
-  $\log$ Wage (hr)      &   2.679 &   2.681 &  2.175 &  2.197 \\
-  Age-16                &  25.814 &  25.000 &  6.965 &  7.000 \\
-  $\textrm{Age-16}^{2}$ & 759.812 & 625.000 & 62.478 & 49.000 \\
-  Female                &   0.408 &   0.000 &  0.386 &  0.000 \\
-  Af Amer               &   0.084 &   0.000 &  0.101 &  0.000 \\
-  Indian                &   0.009 &   0.000 &  0.018 &  0.000 \\
-  White                 &   0.778 &   1.000 &  0.698 &  1.000 \\
-  Hispanic              &   0.037 &   0.000 &  0.028 &  0.000 \\
-  Asian                 &   0.091 &   0.000 &  0.155 &  0.000 \\
-  YrsEduc               &  13.916 &  14.000 & 12.974 & 12.000 \\
-  Creative              &  -0.191 &  -0.137 & -0.464 & -0.542 \\
-  Design                &  -0.344 &  -0.535 & -0.442 & -0.635 \\
-  Analytic              &  -0.196 &  -0.247 & -0.499 & -0.550 \\
-  Perceptive            &   0.230 &   0.127 & -0.233 & -0.532 \\
-  \cmidrule{1-5}
-  N                     &      -- &  58,939 &     -- &  9,703 \\
-  \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item{\footnotesize $^{1}$ The share is calculated by summing the 
-      posterior weights across observations for each expert.}
-      \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-      in the census sample that are classified based on the value of their posterior weights.
-      For example, observation $i$ is assigned to expert $j$ if the posterior vector's
-      largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
-    \end{tablenotes} \label{tbl:ME2_sample_comparison}
-  \end{threeparttable}
-\end{table}
-
-
-\begin{landscape}
-\begin{table} \centering
-  \caption{Regression Results: Wide Three-Expert, Full Parameter Specification}
-    \begin{threeparttable}
-      \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
-
-\cmidrule{1-17}
-& \multicolumn{6}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
-\cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
-& \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
-                \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-Intercept             &  1.379 & *      &  1.574 & *      &  0.562 & *      &&  1.241 & *     &&  1.367 & +        &  1.335 & *        &  0.032 &        \\
-Age-16                &  0.021 & *      &  0.045 & *      &  0.060 & *      &&  0.035 & *     &&  0.029 &          &  0.027 & *        &  0.002 &        \\
-$\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 &        & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
-YrsEduc               &  0.082 & *      &  0.032 & *      &  0.080 & *      &&  0.076 & *     &&  0.074 &          &  0.077 & *        & -0.002 &        \\
-Female                & -0.251 & *      & -0.022 & +      & -0.149 & *      && -0.215 & *     && -0.206 & *        & -0.218 & *        &  0.012 &        \\
-Af Amer               & -0.084 & *      & -0.056 & *      & -0.054 &        && -0.076 & *     && -0.076 &          & -0.078 & *        &  0.002 &        \\
-Indian                & -0.105 & *      & -0.046 &        &  0.010 &        && -0.091 & *     && -0.091 &          & -0.090 & *        & -0.002 &        \\
-Asian                 & -0.030 & *      &  0.057 & -      & -0.091 & -      && -0.032 & *     && -0.024 &          & -0.025 & *        &  0.001 &        \\
-Hisp                  & -0.136 & *      & -0.061 & *      &  0.071 &        && -0.106 & *     && -0.107 &          & -0.111 & *        &  0.004 &        \\
-Creativity            & -0.038 & *      & -0.022 & +      & -0.177 & *      && -0.046 & *     && -0.044 &          & -0.047 & *        &  0.003 &        \\
-Design                &  0.080 & *      &  0.080 & *      & -0.037 &        &&  0.082 & *     &&  0.075 & +        &  0.071 & *        &  0.004 &        \\
-Analytics             &  0.123 & *      &  0.110 & *      &  0.196 & *      &&  0.131 & *     &&  0.128 & *        &  0.128 & *        &  0.000 &        \\
-Perceptive            &  0.060 & *      & -0.008 &        &  0.168 & *      &&  0.058 & *     &&  0.057 &          &  0.061 & *        & -0.004 &        \\
-Log-Variance          & -1.893 & *      & -2.891 & *      & -0.627 & *      &&  --    &       &&  &          &  &          &  &        \\
-\cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
-\cmidrule{1-17}
-      \end{tabular}
-
-      \begin{tablenotes}
-        \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
-        \item Log-Likelihood: ME -0.526, OLS -0.558
-        \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
-        \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
-        \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
-        \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
-
-      \end{tablenotes} \label{tbl:3W_full_regressions_results}
-
-
-    \end{threeparttable}
-
-\end{table}
-\end{landscape}
-
-
-\begin{table} \centering
-  \caption{Sample Mean Comparison: Wide Three-Expert HME}
-  \begin{threeparttable}
-    \begin{tabular}[l]{l r r r r r r}
-  \cmidrule{1-7}
-  Share:$^{1}$& \multicolumn{2}{c}{(0.809)} & \multicolumn{2}{c}{(0.111)} & \multicolumn{2}{c}{(0.080)} \\
-              & Mean & Median & Mean & Median & Mean & Median \\
-  \cmidrule{1-7}
-  $\log$ Wage (hr)      &   2.664 &   2.667 &  2.106 &  2.096 &   2.549 &   2.221 \\
-  Age-16                &  24.916 &  24.000 &  5.830 &  6.000 &  27.827 &  28.000 \\
-  $\textrm{Age-16}^{2}$ & 722.355 & 576.000 & 41.789 & 36.000 & 904.103 & 784.000 \\
-  Female                &   0.420 &   0.000 &  0.301 &  0.000 &   0.250 &   0.000 \\
-  Af Amer               &   0.090 &   0.000 &  0.060 &  0.000 &   0.064 &   0.000 \\
-  Indian                &   0.010 &   0.000 &  0.012 &  0.000 &   0.010 &   0.000 \\
-  Hispanic              &   0.036 &   0.000 &  0.020 &  0.000 &   0.102 &   0.000 \\
-  Asian                 &   0.100 &   0.000 &  0.114 &  0.000 &   0.045 &   0.000 \\
-  YrsEduc               &  13.802 &  14.000 & 13.101 & 12.000 &  15.837 &  16.000 \\
-  Creative              &  -0.209 &  -0.141 & -0.422 & -0.456 &  -0.195 &  -0.282 \\
-  Design                &  -0.344 &  -0.535 & -0.387 & -0.535 &  -0.765 &  -0.860 \\
-  Analytic              &  -0.218 &  -0.264 & -0.472 & -0.412 &  -0.072 &   0.049 \\
-  Perceptive            &   0.177 &   0.127 & -0.122 & -0.455 &   0.851 &   0.877 \\
-  \cmidrule{1-7}
-  N                     &      -- &  60,396 &     -- &  6,603 &      -- &   1,643 \\
-  \hline
-    \end{tabular}
-    \begin{tablenotes}
-      \item{\footnotesize $^{1}$ The share is calculated by summing the 
-      posterior weights across observations for each expert.}
-      \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-      in the census sample that are classified based on the value of their posterior weights.
-      For example, observation $i$ is assigned to expert $j$ if the posterior vector's
-      largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
-    \end{tablenotes} \label{tbl:ME3_sample_comparison}
-  \end{threeparttable}
-\end{table}
+cohort.
 
 
 \begin{landscape}
   \begin{table} \centering
-    \caption{Regression Results: Deep Three-Expert, Full Parameter Specification}
+    \caption{Regression Results: Two-Expert, Full Parameter Specification}
       \begin{threeparttable}
-        \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
+        \begin{tabular}[l]{l r l r l c r l c r l r l r l}
   
-  \cmidrule{1-17}
-  & \multicolumn{6}{c}{HME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{HME Marginal Effects$^{3}$} \\
-  \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
-  & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
-                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-  Intercept             &  1.404 & *      &  1.559 & *      &  0.898 & *      &&  1.241 & *     &&  1.393 & *        &  1.382 & *        &  0.011 &        \\
-  Age-16                &  0.020 & *      &  0.050 & *      &  0.044 & *      &&  0.035 & *     &&  0.028 &          &  0.026 & *        &  0.003 &        \\
-  $\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
-  YrsEduc               &  0.082 & *      &  0.034 & *      &  0.074 & *      &&  0.076 & *     &&  0.073 &          &  0.075 & *        & -0.001 &        \\
-  Female                & -0.257 & *      & -0.034 & *      & -0.131 & *      && -0.215 & *     && -0.209 & *        & -0.217 & *        &  0.008 &        \\
-  Af Amer               & -0.086 & *      & -0.048 & *      & -0.041 &        && -0.076 & *     && -0.076 &          & -0.077 & *        &  0.001 &        \\
-  Indian                & -0.113 & *      & -0.057 &        &  0.043 &        && -0.091 & *     && -0.100 &          & -0.093 & *        & -0.007 &        \\
-  Asian                 & -0.033 & *      &  0.058 & +      & -0.062 &        && -0.032 & *     && -0.025 &          & -0.023 & +        & -0.001 &        \\
-  Hisp                  & -0.143 & *      & -0.066 & *      &  0.077 &        && -0.106 & *     && -0.111 &          & -0.114 & *        &  0.003 &        \\
-  Creativity            & -0.042 & *      & -0.021 & +      & -0.136 & *      && -0.046 & *     && -0.043 &          & -0.047 & *        &  0.004 &        \\
-  Design                &  0.080 & *      &  0.068 & *      & -0.048 & +      &&  0.082 & *     &&  0.074 & +        &  0.068 & *        &  0.006 &        \\
-  Analytics             &  0.124 & *      &  0.112 & *      &  0.183 & *      &&  0.131 & *     &&  0.128 & *        &  0.127 & *        &  0.000 &        \\
-  Perceptive            &  0.063 & *      & -0.003 &        &  0.135 & *      &&  0.058 & *     &&  0.056 & +        &  0.061 & *        & -0.004 &        \\
-  Log-Variance          & -1.895 & *      & -2.791 & *      & -0.622 & *      &&  --    &       &&  &          &  &          &  &        \\
-  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-  Share$^{4}$:          & 0.783  &        & 0.133  &      & 0.084 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
-  \cmidrule{1-17}
+  \cmidrule{1-15}
+  & \multicolumn{4}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
+  \cmidrule(l){2-5}    \cmidrule(l){7-8}     \cmidrule(l){10-15}
+  & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
+                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
+  Intercept              &  1.231 & *      &  1.423 & *     &&  1.241 & *     &&  1.225 & *        &  1.260 & *        & -0.040 &        \\
+  Age-16                 &  0.032 & *      &  0.066 & *     &&  0.035 & *     &&  0.042 &          &  0.038 & *        &  0.004 &        \\
+  $\textrm{Age-16}^{2}$  & -0.000 & *      & -0.002 & *     && -0.001 & *     && -0.001 &          & -0.001 & *        & -0.000 &        \\
+  YrsEduc                &  0.082 & *      &  0.042 & *     &&  0.076 & *     &&  0.076 &          &  0.075 & *        &  0.000 &        \\
+  Female                 & -0.244 & *      & -0.031 & *     && -0.215 & *     && -0.209 & *        & -0.207 & *        & -0.002 &        \\
+  Af Amer                & -0.076 & *      & -0.044 & *     && -0.076 & *     && -0.076 & *        & -0.071 & *        & -0.005 &        \\
+  Indian                 & -0.081 & *      & -0.069 & +     && -0.091 & *     && -0.085 & +        & -0.079 & *        & -0.005 &        \\
+  Asian                  & -0.045 & *      &  0.053 & +     && -0.032 & *     && -0.024 &          & -0.028 & *        &  0.003 &        \\
+  Hisp                   & -0.121 & *      & -0.069 & *     && -0.106 & *     && -0.112 & *        & -0.112 & *        & -0.000 &        \\
+  Creativity             & -0.054 & *      & -0.004 &       && -0.046 & *     && -0.044 & *        & -0.045 & *        &  0.002 &        \\
+  Design                 &  0.080 & *      &  0.080 & *     &&  0.082 & *     &&  0.081 & *        &  0.080 & *        &  0.001 &        \\
+  Analytics              &  0.133 & *      &  0.107 & *     &&  0.131 & *     &&  0.126 & *        &  0.129 & *        & -0.003 &        \\
+  Perceptive             &  0.063 & *      & -0.017 & *     &&  0.058 & *     &&  0.053 & *        &  0.049 & *        &  0.004 &        \\
+  Log-Variance           & -1.651 & *      & -2.675 & *     &&  --    &       &&  --    &          &  --    &          &  --    &        \\
+                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
+  Share$^{4}$:           &  0.826 &        &  0.174 &       &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+  \cmidrule{1-15}
         \end{tabular}
   
         \begin{tablenotes}
           \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
-          \item Log-Likelihood: HME -0.525, OLS -0.558
-          \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
+          \item Log-Likelihood: ME -0.541, OLS -0.558
+          \item $^{1}$ Fitted coefficients from the two-expert model with the full parameter specification from equation (\ref{eq:full_formula})
           \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
           \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
           \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
   
-        \end{tablenotes} \label{tbl:3D_full_regressions_results}
+        \end{tablenotes} \label{tbl:2E_full_regressions_results}
   
   
       \end{threeparttable}
   
   \end{table}
   \end{landscape}
-
-
+  
+  
   \begin{table} \centering
-    \caption{Sample Mean Comparison: Deep Three-Expert HME}
+    \caption{Sample Mean Comparison: Two-Expert ME}
     \begin{threeparttable}
-      \begin{tabular}[l]{l r r r r r r}
-    \cmidrule{1-7}
-    Share:$^{1}$& \multicolumn{2}{c}{(0.783)} & \multicolumn{2}{c}{(0.133)} & \multicolumn{2}{c}{(0.084)} \\
-                & Mean & Median & Mean & Median & Mean & Median \\
-    \cmidrule{1-7}
-    $\log$ Wage (hr)      &   2.683 &   2.676 &  2.137 &  2.140 &   2.432 &   2.075 \\
-    Age-16                &  25.523 &  25.000 &  6.494 &  7.000 &  26.913 &  27.000 \\
-    $\textrm{Age-16}^{2}$ & 746.250 & 625.000 & 50.858 & 49.000 & 873.924 & 729.000 \\
-    Female                &   0.414 &   0.000 &  0.358 &  0.000 &   0.313 &   0.000 \\
-    Af Amer               &   0.088 &   0.000 &  0.073 &  0.000 &   0.075 &   0.000 \\
-    Indian                &   0.010 &   0.000 &  0.016 &  0.000 &   0.018 &   0.000 \\
-    White                 &   0.770 &   1.000 &  0.753 &  1.000 &   0.749 &   1.000 \\
-    Hispanic              &   0.036 &   0.000 &  0.027 &  0.000 &   0.101 &   0.000 \\
-    Asian                 &   0.096 &   0.000 &  0.131 &  0.000 &   0.057 &   0.000 \\
-    YrsEduc               &  13.846 &  14.000 & 13.077 & 12.000 &  15.378 &  16.000 \\
-    Creative              &  -0.198 &  -0.137 & -0.444 & -0.508 &  -0.201 &  -0.282 \\
-    Design                &  -0.330 &  -0.530 & -0.477 & -0.635 &  -0.757 &  -0.859 \\
-    Analytic              &  -0.206 &  -0.253 & -0.471 & -0.412 &  -0.161 &  -0.007 \\
-    Perceptive            &   0.185 &   0.127 & -0.082 & -0.308 &   0.756 &   0.877 \\
-    \cmidrule{1-7}
-    N                     &      -- &  58,429 &     -- &  8,674 &      -- &   1,539 \\
+      \begin{tabular}[l]{l r r r r}
+    \cmidrule{1-5}
+    Share:$^{1}$& \multicolumn{2}{c}{(0.826)} & \multicolumn{2}{c}{(0.174)} \\
+                & Mean & Median & Mean & Median \\
+    \cmidrule{1-5}
+    $\log$ Wage (hr)      &   2.679 &   2.681 &  2.175 &  2.197 \\
+    Age-16                &  25.814 &  25.000 &  6.965 &  7.000 \\
+    $\textrm{Age-16}^{2}$ & 759.812 & 625.000 & 62.478 & 49.000 \\
+    Female                &   0.408 &   0.000 &  0.386 &  0.000 \\
+    Af Amer               &   0.084 &   0.000 &  0.101 &  0.000 \\
+    Indian                &   0.009 &   0.000 &  0.018 &  0.000 \\
+    White                 &   0.778 &   1.000 &  0.698 &  1.000 \\
+    Hispanic              &   0.037 &   0.000 &  0.028 &  0.000 \\
+    Asian                 &   0.091 &   0.000 &  0.155 &  0.000 \\
+    YrsEduc               &  13.916 &  14.000 & 12.974 & 12.000 \\
+    Creative              &  -0.191 &  -0.137 & -0.464 & -0.542 \\
+    Design                &  -0.344 &  -0.535 & -0.442 & -0.635 \\
+    Analytic              &  -0.196 &  -0.247 & -0.499 & -0.550 \\
+    Perceptive            &   0.230 &   0.127 & -0.233 & -0.532 \\
+    \cmidrule{1-5}
+    N                     &      -- &  58,939 &     -- &  9,703 \\
     \hline
       \end{tabular}
       \begin{tablenotes}
@@ -1899,9 +1849,476 @@ Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  
         in the census sample that are classified based on the value of their posterior weights.
         For example, observation $i$ is assigned to expert $j$ if the posterior vector's
         largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
-      \end{tablenotes} \label{tbl:HME3_sample_comparison}
+      \end{tablenotes} \label{tbl:ME2_sample_comparison}
     \end{threeparttable}
   \end{table}
+  
+  
+  \begin{landscape}
+  \begin{table} \centering
+    \caption{Regression Results: Wide Three-Expert, Full Parameter Specification}
+      \begin{threeparttable}
+        \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
+  
+  \cmidrule{1-17}
+  & \multicolumn{6}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
+  \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
+  & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
+                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+  Intercept             &  1.379 & *      &  1.574 & *      &  0.562 & *      &&  1.241 & *     &&  1.367 & +        &  1.335 & *        &  0.032 &        \\
+  Age-16                &  0.021 & *      &  0.045 & *      &  0.060 & *      &&  0.035 & *     &&  0.029 &          &  0.027 & *        &  0.002 &        \\
+  $\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 &        & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
+  YrsEduc               &  0.082 & *      &  0.032 & *      &  0.080 & *      &&  0.076 & *     &&  0.074 &          &  0.077 & *        & -0.002 &        \\
+  Female                & -0.251 & *      & -0.022 & +      & -0.149 & *      && -0.215 & *     && -0.206 & *        & -0.218 & *        &  0.012 &        \\
+  Af Amer               & -0.084 & *      & -0.056 & *      & -0.054 &        && -0.076 & *     && -0.076 &          & -0.078 & *        &  0.002 &        \\
+  Indian                & -0.105 & *      & -0.046 &        &  0.010 &        && -0.091 & *     && -0.091 &          & -0.090 & *        & -0.002 &        \\
+  Asian                 & -0.030 & *      &  0.057 & -      & -0.091 & -      && -0.032 & *     && -0.024 &          & -0.025 & *        &  0.001 &        \\
+  Hisp                  & -0.136 & *      & -0.061 & *      &  0.071 &        && -0.106 & *     && -0.107 &          & -0.111 & *        &  0.004 &        \\
+  Creativity            & -0.038 & *      & -0.022 & +      & -0.177 & *      && -0.046 & *     && -0.044 &          & -0.047 & *        &  0.003 &        \\
+  Design                &  0.080 & *      &  0.080 & *      & -0.037 &        &&  0.082 & *     &&  0.075 & +        &  0.071 & *        &  0.004 &        \\
+  Analytics             &  0.123 & *      &  0.110 & *      &  0.196 & *      &&  0.131 & *     &&  0.128 & *        &  0.128 & *        &  0.000 &        \\
+  Perceptive            &  0.060 & *      & -0.008 &        &  0.168 & *      &&  0.058 & *     &&  0.057 &          &  0.061 & *        & -0.004 &        \\
+  Log-Variance          & -1.893 & *      & -2.891 & *      & -0.627 & *      &&  --    &       &&  &          &  &          &  &        \\
+  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+  Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+  \cmidrule{1-17}
+        \end{tabular}
+  
+        \begin{tablenotes}
+          \item Signif. Codes: *: p $<$ 0.01, + p $<$ 0.05, - p $<$ 0.1
+          \item Log-Likelihood: ME -0.526, OLS -0.558
+          \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
+          \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
+          \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
+          \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
+  
+        \end{tablenotes} \label{tbl:3W_full_regressions_results}
+  
+  
+      \end{threeparttable}
+  
+  \end{table}
+  \end{landscape}
+  
+  
+  \begin{table} \centering
+    \caption{Sample Mean Comparison: Wide Three-Expert HME}
+    \begin{threeparttable}
+      \begin{tabular}[l]{l r r r r r r}
+    \cmidrule{1-7}
+    Share:$^{1}$& \multicolumn{2}{c}{(0.809)} & \multicolumn{2}{c}{(0.111)} & \multicolumn{2}{c}{(0.080)} \\
+                & Mean & Median & Mean & Median & Mean & Median \\
+    \cmidrule{1-7}
+    $\log$ Wage (hr)      &   2.664 &   2.667 &  2.106 &  2.096 &   2.549 &   2.221 \\
+    Age-16                &  24.916 &  24.000 &  5.830 &  6.000 &  27.827 &  28.000 \\
+    $\textrm{Age-16}^{2}$ & 722.355 & 576.000 & 41.789 & 36.000 & 904.103 & 784.000 \\
+    Female                &   0.420 &   0.000 &  0.301 &  0.000 &   0.250 &   0.000 \\
+    Af Amer               &   0.090 &   0.000 &  0.060 &  0.000 &   0.064 &   0.000 \\
+    Indian                &   0.010 &   0.000 &  0.012 &  0.000 &   0.010 &   0.000 \\
+    Hispanic              &   0.036 &   0.000 &  0.020 &  0.000 &   0.102 &   0.000 \\
+    Asian                 &   0.100 &   0.000 &  0.114 &  0.000 &   0.045 &   0.000 \\
+    YrsEduc               &  13.802 &  14.000 & 13.101 & 12.000 &  15.837 &  16.000 \\
+    Creative              &  -0.209 &  -0.141 & -0.422 & -0.456 &  -0.195 &  -0.282 \\
+    Design                &  -0.344 &  -0.535 & -0.387 & -0.535 &  -0.765 &  -0.860 \\
+    Analytic              &  -0.218 &  -0.264 & -0.472 & -0.412 &  -0.072 &   0.049 \\
+    Perceptive            &   0.177 &   0.127 & -0.122 & -0.455 &   0.851 &   0.877 \\
+    \cmidrule{1-7}
+    N                     &      -- &  60,396 &     -- &  6,603 &      -- &   1,643 \\
+    \hline
+      \end{tabular}
+      \begin{tablenotes}
+        \item{\footnotesize $^{1}$ The share is calculated by summing the 
+        posterior weights across observations for each expert.}
+        \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
+        in the census sample that are classified based on the value of their posterior weights.
+        For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+        largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+      \end{tablenotes} \label{tbl:ME3_sample_comparison}
+    \end{threeparttable}
+  \end{table}
+  
+  
+  \begin{landscape}
+    \begin{table} \centering
+      \caption{Regression Results: Deep Three-Expert, Full Parameter Specification}
+        \begin{threeparttable}
+          \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
+    
+    \cmidrule{1-17}
+    & \multicolumn{6}{c}{HME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{HME Marginal Effects$^{3}$} \\
+    \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
+    & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
+                    \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+    Intercept             &  1.404 & *      &  1.559 & *      &  0.898 & *      &&  1.241 & *     &&  1.393 & *        &  1.382 & *        &  0.011 &        \\
+    Age-16                &  0.020 & *      &  0.050 & *      &  0.044 & *      &&  0.035 & *     &&  0.028 &          &  0.026 & *        &  0.003 &        \\
+    $\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
+    YrsEduc               &  0.082 & *      &  0.034 & *      &  0.074 & *      &&  0.076 & *     &&  0.073 &          &  0.075 & *        & -0.001 &        \\
+    Female                & -0.257 & *      & -0.034 & *      & -0.131 & *      && -0.215 & *     && -0.209 & *        & -0.217 & *        &  0.008 &        \\
+    Af Amer               & -0.086 & *      & -0.048 & *      & -0.041 &        && -0.076 & *     && -0.076 &          & -0.077 & *        &  0.001 &        \\
+    Indian                & -0.113 & *      & -0.057 &        &  0.043 &        && -0.091 & *     && -0.100 &          & -0.093 & *        & -0.007 &        \\
+    Asian                 & -0.033 & *      &  0.058 & +      & -0.062 &        && -0.032 & *     && -0.025 &          & -0.023 & +        & -0.001 &        \\
+    Hisp                  & -0.143 & *      & -0.066 & *      &  0.077 &        && -0.106 & *     && -0.111 &          & -0.114 & *        &  0.003 &        \\
+    Creativity            & -0.042 & *      & -0.021 & +      & -0.136 & *      && -0.046 & *     && -0.043 &          & -0.047 & *        &  0.004 &        \\
+    Design                &  0.080 & *      &  0.068 & *      & -0.048 & +      &&  0.082 & *     &&  0.074 & +        &  0.068 & *        &  0.006 &        \\
+    Analytics             &  0.124 & *      &  0.112 & *      &  0.183 & *      &&  0.131 & *     &&  0.128 & *        &  0.127 & *        &  0.000 &        \\
+    Perceptive            &  0.063 & *      & -0.003 &        &  0.135 & *      &&  0.058 & *     &&  0.056 & +        &  0.061 & *        & -0.004 &        \\
+    Log-Variance          & -1.895 & *      & -2.791 & *      & -0.622 & *      &&  --    &       &&  &          &  &          &  &        \\
+    \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
+    Share$^{4}$:          & 0.783  &        & 0.133  &      & 0.084 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+    \cmidrule{1-17}
+          \end{tabular}
+    
+          \begin{tablenotes}
+            \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
+            \item Log-Likelihood: HME -0.525, OLS -0.558
+            \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
+            \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
+            \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
+            \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
+    
+          \end{tablenotes} \label{tbl:3D_full_regressions_results}
+    
+    
+        \end{threeparttable}
+    
+    \end{table}
+    \end{landscape}
+  
+  
+    \begin{table} \centering
+      \caption{Sample Mean Comparison: Deep Three-Expert HME}
+      \begin{threeparttable}
+        \begin{tabular}[l]{l r r r r r r}
+      \cmidrule{1-7}
+      Share:$^{1}$& \multicolumn{2}{c}{(0.783)} & \multicolumn{2}{c}{(0.133)} & \multicolumn{2}{c}{(0.084)} \\
+                  & Mean & Median & Mean & Median & Mean & Median \\
+      \cmidrule{1-7}
+      $\log$ Wage (hr)      &   2.683 &   2.676 &  2.137 &  2.140 &   2.432 &   2.075 \\
+      Age-16                &  25.523 &  25.000 &  6.494 &  7.000 &  26.913 &  27.000 \\
+      $\textrm{Age-16}^{2}$ & 746.250 & 625.000 & 50.858 & 49.000 & 873.924 & 729.000 \\
+      Female                &   0.414 &   0.000 &  0.358 &  0.000 &   0.313 &   0.000 \\
+      Af Amer               &   0.088 &   0.000 &  0.073 &  0.000 &   0.075 &   0.000 \\
+      Indian                &   0.010 &   0.000 &  0.016 &  0.000 &   0.018 &   0.000 \\
+      White                 &   0.770 &   1.000 &  0.753 &  1.000 &   0.749 &   1.000 \\
+      Hispanic              &   0.036 &   0.000 &  0.027 &  0.000 &   0.101 &   0.000 \\
+      Asian                 &   0.096 &   0.000 &  0.131 &  0.000 &   0.057 &   0.000 \\
+      YrsEduc               &  13.846 &  14.000 & 13.077 & 12.000 &  15.378 &  16.000 \\
+      Creative              &  -0.198 &  -0.137 & -0.444 & -0.508 &  -0.201 &  -0.282 \\
+      Design                &  -0.330 &  -0.530 & -0.477 & -0.635 &  -0.757 &  -0.859 \\
+      Analytic              &  -0.206 &  -0.253 & -0.471 & -0.412 &  -0.161 &  -0.007 \\
+      Perceptive            &   0.185 &   0.127 & -0.082 & -0.308 &   0.756 &   0.877 \\
+      \cmidrule{1-7}
+      N                     &      -- &  58,429 &     -- &  8,674 &      -- &   1,539 \\
+      \hline
+        \end{tabular}
+        \begin{tablenotes}
+          \item{\footnotesize $^{1}$ The share is calculated by summing the 
+          posterior weights across observations for each expert.}
+          \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
+          in the census sample that are classified based on the value of their posterior weights.
+          For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+          largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+        \end{tablenotes} \label{tbl:HME3_sample_comparison}
+      \end{threeparttable}
+    \end{table}
+  
+
+\clearpage
+
+
+\section{Monte Carlo Exercise} \label{sec:MonteCarlo}
+
+As a final exercise, a series of simulation exercises are designed to better
+understand the practical behavior of the (H)ME models as the relative size and
+heterogeneity of the sub-populations change, changes in the strength of 
+association between the variables in the model, and misspecification of the number
+of experts. Both experiments will use the same monte carlo framework discussed
+below. All experts will have the following function form. Each local expert
+regression will have two dependent variables $(X, Z)$ and normally distributed
+error terms. 
+
+\begin{equation} \label{eq:MC_regression_eq}
+    y_{i,t} = \beta_{i}^{c} + \beta_{i}^{x}  x_{t} + \beta_{i}^{z}  z_{t} + \varepsilon_{i,t}
+\end{equation}
+
+\begin{equation} \label{eq:MC_regression_errors}
+    \varepsilon_{i,t} \thicksim N(0, \sigma^{2}_{i})
+\end{equation}
+
+Recall from Section \ref{sec:Inference} that the variance parameter is not estimated directly. Rather, a transform is used to remove the non-zero constraint. This transform is defined as $\phi_{i} = \log(\sigma^{2}_{i})$. The monte carlo exercise will follow this convention when setting parameters that govern the underlying data generating process. The random variable $X$ will be destributed as a standard normal:
+
+\begin{equation} \label{eq:MC_X_distribution}
+    X \thicksim N(0, 1)
+\end{equation}
+
+The random variable $Z$ will be correlated with $X$ in the following manner:
+
+\begin{equation} \label{eq:MC_XZ_correlation}
+    Z = \Phi \left( \frac{(X + \rho X_{1})}{\sqrt{1 + \rho^{2}}} \right)
+\end{equation}
+
+where $X_{1}$ is also sampled from a standard normal distribution independent of $X$. The function $\Phi$ is the CDF of the standard normal. The strength of the correlation will be governed by parameter $\rho$. Smaller values of $\rho$ will lead to a more tightly coupled relationship. Given the definitions in Equations (\ref{eq:MC_X_distribution}) and (\ref{eq:MC_XZ_correlation}) the joint distribution of $(X, Z)$ will have a mean vector: $\boldsymbol{\mu} = (0, 0.5)$. After the sample has been created, the probability of membership to each sub-population is then calculated as a function of Z. The logistic function will be used estimate these probabilities:
+
+\begin{equation} \label{eq:general_logistic}
+    P(z) = \frac{1}{1 + \exp\{\alpha (c - z)\}}
+\end{equation}
+
+In this version of the logistic function, the parameter $c$ governs the location of the mid-point while $\alpha$ controls the severity of the slope at the mid-point. The HME will use the gating node to split on the $Z$ covariate and then run the regression in Equation (\ref{eq:MC_regression_eq}). Using the formula notation in this essay the HME regression equation is summarized in Equation (\ref{eq:MC_hme_formula}).
+
+\begin{equation} \label{eq:MC_hme_formula}
+    Y = X + Z \,\,|\,\, Z
+\end{equation}
+
+\subsection{Experiment One}
+
+The first experiment will examine the variability of the estimated model parameters across monte carlo samples and compare the standard deviation of the converged parameter values to the standard errors produced by the three available variance-covariance matrices (outer-product-of-the-gradient, the hessian, and the sandwich estimator). A baseline sampling model will be established and 1000 monte carlo samples will be draw from that proceedure. Each sample will have 1000 observations. A 2-expert ME model will be fit on each sample and the converged parameter estimates and their standared errors will be recorded. This process will then be repeated at different values for the parameters governing the association between X and Z and for the parameters that govern the probabilities of group membership. For the baseline model, sampling and modeling parameters are choosen to the following.f
+
+\begin{itemize}
+    \item $\rho = 1$,\; $c = 0.5$,\; $\alpha = 8$
+    \item $\beta_{1}^{0} = 1.2$, \; $\beta_{1}^{1} = 1.5$, \; $\beta_{1}^{2} = 0.5$, \; $\phi_{1} = -3.218876$
+    \item $\beta_{2}^{0} = 0.8$, \; $\beta_{2}^{1} = 2.0$, \; $\beta_{2}^{2} = 1.1$, \; $\phi_{2} = -3.429597$
+\end{itemize}
+
+Three experiments will be run:
+
+\begin{enumerate}
+    \item The homogeneity of each sub-population will be altered by selecting different values of the slope parameter ($\alpha$) in the logistic function described in Equation (\ref{eq:general_logistic}). Larger values of $\alpha$ lead to a sharper delineation in probabilities (along the Z-axis) of membership between the two sub-populations while values close to zero lead to an equal probability of belonging each sub-group, regardless of the value of Z. Analysis will be run at the following values: $\alpha = [125, 25, 8, 4, 2, 1, 0.01]$. The left side of Figure \ref{fig:MC_logistic_pars} shows the logistic curve with different values of $\alpha$.
+    
+    \item The relative size of the two sub-populations can be controlled by manipulating the mid-point parameter ($c$) of the logistic function. At the baseline value of 0.5, every monte carlo sample will have roughly equal proportions of the two groups. Analysis will be run at the following values: $c = [0, 0.1, 0.2, 0.3, 0.4, 0.5]$. The right side of Figure \ref{fig:MC_logistic_pars} shows the logistic curve with different values of $c$.
+  
+    \item The strength of association between $X_{1}$ and $Z$ is controlled by $\rho$ in Equation (\ref{eq:MC_XZ_correlation}). Values closer to zero lead to a more tighly coupled relationship while values farther from zero introduce more noise between $X_{1}$ and $Z$. Analysis will be run at the following values: $\rho = [0.125, 0.25, 0.5, 1, 2, 4]$. Figure \ref{fig:MC_rho} shows the different samples of $(X, Z)$ drawn with different values of $\rho$.
+\end{enumerate}
+
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=\textwidth]{MonteCarlo_logistic_parameters.jpeg}
+  \caption{The effect of different parameter values for the logistic function. On the left the is the slope ($\alpha$) parameter, which regulates how homogenous the two sub-groups are. To the right the mid-point parameter ($c$). which indicates the value of $Z$ where there is an equal chance of belonging to either sub-population. A bolded line represents the baseline values of $\alpha = 8$ and $c = 0.5$.}
+  \label{fig:MC_logistic_pars}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=\textwidth]{MonteCarlo_rho.jpeg}
+    \caption{The effect of different values of $\rho$ on the strength of association between the joint distribution of $(X_{1}, Z)$. The baseline model sets $\rho = 1$.} 
+    \label{fig:MC_rho}
+\end{figure}
+
+The results of the first experiment are presented in two ways. First, we plot the comparisons between the standard deviation of the fitted parameter estimates against the average standard error of the parameter estimates resulting from each fitted model. Three different average standard error values are calculated, one for each of the three variance-covariance matrices described in Section \ref{sec:Inference}. These results are summarized in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho}. The main take-away from these figures is agreement between the standard deviation of the parameter values with the average standard error, regardless of the variance-covariance estimator used, for every parameter except the log-variance. Surprisingly, for $\phi_{i}$, the OPG estimator is the only estimator that produces standard errors in-line with the standard deviation of the estimated log-variance while the sandwich estimator's estimates are the most biased towards zero. This pattern is consistent across the three simulation parameters that are being altered: $\rho$, c, and $\alpha$. It is not immediately clear the reason behind this discrepency and the accuracy of the the OPG estimator over the Hessian and Sandwich estimators. 
+
+\bigskip
+
+A second summary of the monte carlo exercise is provided in Tables \ref{tbl:coverage_ratio_c} - \ref{tbl:coverage_ratio_rho}. These tables provide the coverage probability that the true parameter values underpinning the DGP are contained in a confidence interval produced by each model's fitted parameter vector and variance-covariance estimator. The nominal coverage proability is set at 95\% and the percentages in the table are the proportion of times the confidence interval failed to capture the true parameter value. The general pattern captured in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho} holds here as well: coverage ratios for the regression parameters ($\boldsymbol{\beta_{i}}$) hew closely to the nomial fail rate of 5\% across variance estimators but are drasticly inflated for the log-variance parameters ($\phi_{i}$). The value of this view is its demonstration of the size of the impact of using an inappropriate variance estimator for this simulation study. For the Hessian estimator, the 95\% confidence intervals fail to capture the true parameter value from 18 to 23 percent of the time. This ratio jumps to a range of 39 to 47 percent of the time if the Sandwich estimator is used.
+
+
+\subsection{Experiment Two}
+
+Two different monte carlo exercises will be run. First, a simulation
+exercise is designed to study paramater variability of the fitted 
+parameter values $\hat{\boldsymbol{\theta}}$. Interest is of the parameter estimates to their true underlying values as the number of experts grows beyond the true number of latent sub-populations in the data. The impact of this overidentification on the ability of Voung's LR test to discriminate between potential models is of particular interest. The experiments are designed in the following manner. First, the number of latent sub-populations is set at $n$ for $n \in \{2, 3, 4, 5\}$. Second, 
+
+\begin{equation} \label{eq:MC_generic_regression}
+  y_{t} = \beta_{0} + \beta_{1} * X_{t} + \beta_{2} * Z_{t} + \varepsilon_{t}
+\end{equation}
+
+Referencing Table \ref{tbl:monte_carlo_voung_results}, when the data
+generating process has two sub-populations, all estimtated  models are equivalent according to Voung's LR tests. This is due to the fact that models with more than two experts continue to split the two individual heterogeneous populations into smaller but homogenous sub-groups groups with similar regressions to groups from the same sub-population.
+
+
+\begin{figure}[t!]
+  \includegraphics[width=\textwidth]{MonteCarlo_results_c.jpeg}
+  \caption{More captions to come}
+  \label{fig:MonteCarlo_results_c}
+\end{figure}
+
+
+\begin{figure}[t!]
+  \includegraphics[width=\textwidth]{MonteCarlo_results_alpha.jpeg}
+  \caption{More captions to come}
+  \label{fig:MonteCarlo_results_alpha}
+\end{figure}
+
+
+\begin{figure}[t!]
+  \includegraphics[width=\textwidth]{MonteCarlo_results_rho.jpeg}
+  \caption{More captions to come}
+  \label{fig:MonteCarlo_results_rho}
+\end{figure}
+
+\begin{table}[b!] \centering
+  \caption{Simulated Coverage Probability: c}
+  \begin{threeparttable}
+    {\footnotesize
+    \begin{tabular}[r]{l l l r r r r r r r r}
+  \hline
+Std Err Type & Value & $\beta_{1}^{c}$ & $\beta_{1}^{x}$ & $\beta_{1}^{z}$ & $\phi_{1}$ & $\beta_{2}^{c}$ & $\beta_{2}^{x}$ & $\beta_{2}^{z}$ & $\phi_{2}$ \\ 
+  \hline
+
+Sandwich  & 0.0 & 0.075 & 0.064 & 0.075 & 0.488 & 0.057 & 0.052 & 0.057 & 0.380 \\
+          & 0.1 & 0.064 & 0.067 & 0.071 & 0.479 & 0.053 & 0.049 & 0.050 & 0.377 \\
+          & 0.2 & 0.057 & 0.059 & 0.061 & 0.437 & 0.063 & 0.052 & 0.056 & 0.382 \\
+          & 0.3 & 0.051 & 0.057 & 0.060 & 0.458 & 0.054 & 0.058 & 0.045 & 0.417 \\
+          & 0.4 & 0.050 & 0.056 & 0.048 & 0.425 & 0.065 & 0.073 & 0.059 & 0.422 \\
+          & 0.5 & 0.051 & 0.051 & 0.058 & 0.444 & 0.057 & 0.050 & 0.054 & 0.424 \\
+          &     &       &       &       &       &       &       &       &       \\
+Hessian   & 0.0 & 0.075 & 0.061 & 0.070 & 0.263 & 0.060 & 0.045 & 0.056 & 0.211 \\
+          & 0.1 & 0.060 & 0.064 & 0.060 & 0.252 & 0.052 & 0.049 & 0.048 & 0.197 \\
+          & 0.2 & 0.058 & 0.058 & 0.051 & 0.229 & 0.061 & 0.054 & 0.055 & 0.189 \\
+          & 0.3 & 0.047 & 0.052 & 0.046 & 0.234 & 0.054 & 0.056 & 0.044 & 0.208 \\
+          & 0.4 & 0.050 & 0.060 & 0.048 & 0.216 & 0.069 & 0.070 & 0.062 & 0.234 \\
+          & 0.5 & 0.051 & 0.054 & 0.057 & 0.240 & 0.049 & 0.054 & 0.049 & 0.222 \\
+          &     &       &       &       &       &       &       &       &       \\
+OPG       & 0.0 & 0.066 & 0.050 & 0.062 & 0.048 & 0.054 & 0.042 & 0.056 & 0.062 \\
+          & 0.1 & 0.054 & 0.049 & 0.061 & 0.055 & 0.051 & 0.045 & 0.051 & 0.048 \\
+          & 0.2 & 0.056 & 0.054 & 0.046 & 0.050 & 0.060 & 0.057 & 0.053 & 0.052 \\
+          & 0.3 & 0.047 & 0.048 & 0.044 & 0.058 & 0.053 & 0.052 & 0.043 & 0.062 \\
+          & 0.4 & 0.042 & 0.058 & 0.045 & 0.051 & 0.063 & 0.065 & 0.059 & 0.058 \\
+          & 0.5 & 0.047 & 0.055 & 0.050 & 0.053 & 0.046 & 0.053 & 0.043 & 0.062 \\
+  \hline
+    \end{tabular}
+    }
+    \begin{tablenotes}
+      \item{\footnotesize One minus the coverage probability for logistic parameter c. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_c}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$.}
+    \end{tablenotes} \label{tbl:coverage_ratio_c}
+  \end{threeparttable}
+\end{table}
+
+
+\begin{table}[b!] \centering
+  \caption{Simulated Coverage Probability: $\alpha$}
+  \begin{threeparttable}
+    {\footnotesize
+    \begin{tabular}[r]{l l r r r r r r r r}
+  \hline
+Std Err Type & Value & $\beta_{1}^{c}$ & $\beta_{1}^{x}$ & $\beta_{1}^{z}$ & $\phi_{1}$ & $\beta_{2}^{c}$ & $\beta_{2}^{x}$ & $\beta_{2}^{z}$ & $\phi_{2}$ \\ 
+  \hline
+
+Sandwich  & 0.01 & 0.063 & 0.047 & 0.053 & 0.487 & 0.047 & 0.052 & 0.052 & 0.449 \\
+          &    1 & 0.045 & 0.046 & 0.045 & 0.458 & 0.050 & 0.062 & 0.060 & 0.464 \\
+          &    2 & 0.055 & 0.047 & 0.050 & 0.466 & 0.053 & 0.059 & 0.055 & 0.472 \\
+          &    4 & 0.054 & 0.064 & 0.054 & 0.433 & 0.064 & 0.061 & 0.048 & 0.422 \\
+          &    8 & 0.051 & 0.051 & 0.058 & 0.444 & 0.057 & 0.050 & 0.054 & 0.424 \\
+          &   25 & 0.045 & 0.043 & 0.047 & 0.380 & 0.046 & 0.044 & 0.041 & 0.361 \\
+          &  125 & 0.053 & 0.057 & 0.060 & 0.349 & 0.047 & 0.059 & 0.050 & 0.355 \\
+          &      &       &       &       &       &       &       &       &       \\
+Hessian   & 0.01 & 0.062 & 0.046 & 0.056 & 0.252 & 0.047 & 0.051 & 0.051 & 0.247 \\
+          &    1 & 0.045 & 0.044 & 0.045 & 0.236 & 0.049 & 0.063 & 0.056 & 0.239 \\
+          &    2 & 0.051 & 0.045 & 0.056 & 0.224 & 0.053 & 0.061 & 0.055 & 0.237 \\
+          &    4 & 0.053 & 0.055 & 0.049 & 0.212 & 0.063 & 0.059 & 0.045 & 0.230 \\
+          &    8 & 0.051 & 0.054 & 0.057 & 0.240 & 0.049 & 0.054 & 0.049 & 0.222 \\
+          &   25 & 0.047 & 0.041 & 0.045 & 0.210 & 0.042 & 0.043 & 0.039 & 0.179 \\
+          &  125 & 0.052 & 0.055 & 0.052 & 0.181 & 0.047 & 0.059 & 0.054 & 0.185 \\
+          &      &       &       &       &       &       &       &       &       \\
+OPG       & 0.01 & 0.058 & 0.044 & 0.055 & 0.045 & 0.049 & 0.050 & 0.048 & 0.052 \\
+          &    1 & 0.043 & 0.042 & 0.046 & 0.051 & 0.052 & 0.060 & 0.045 & 0.056 \\
+          &    2 & 0.050 & 0.041 & 0.056 & 0.042 & 0.054 & 0.059 & 0.055 & 0.049 \\
+          &    4 & 0.053 & 0.054 & 0.046 & 0.056 & 0.055 & 0.053 & 0.047 & 0.044 \\
+          &    8 & 0.047 & 0.055 & 0.050 & 0.053 & 0.046 & 0.053 & 0.043 & 0.062 \\
+          &   25 & 0.044 & 0.041 & 0.046 & 0.078 & 0.040 & 0.037 & 0.037 & 0.047 \\
+          &  125 & 0.050 & 0.056 & 0.051 & 0.053 & 0.045 & 0.051 & 0.050 & 0.061 \\
+  \hline
+    \end{tabular}
+    }
+    \begin{tablenotes}
+      \item{\footnotesize One minus the coverage probability for logistic parameter c. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_alpha}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$}
+    \end{tablenotes} \label{tbl:coverage_ratio_alpha}
+  \end{threeparttable}
+\end{table}
+
+
+\begin{table}[b!] \centering
+  \caption{Simulated Coverage Probability: $\rho$}
+  \begin{threeparttable}
+    {\footnotesize
+    \begin{tabular}[r]{l l r r r r r r r r}
+  \hline
+Std Err Type & Value & $\beta_{1}^{c}$ & $\beta_{1}^{x}$ & $\beta_{1}^{z}$ & $\phi_{1}$ & $\beta_{2}^{c}$ & $\beta_{2}^{x}$ & $\beta_{2}^{z}$ & $\phi_{2}$ \\ 
+  \hline
+
+Sandwich  & 0.125 & 0.062 & 0.069 & 0.062 & 0.432 & 0.065 & 0.055 & 0.059 & 0.425 \\
+          &  0.25 & 0.060 & 0.055 & 0.063 & 0.457 & 0.057 & 0.048 & 0.053 & 0.390 \\
+          &   0.5 & 0.053 & 0.051 & 0.055 & 0.417 & 0.063 & 0.049 & 0.057 & 0.417 \\
+          &     1 & 0.051 & 0.051 & 0.058 & 0.444 & 0.057 & 0.050 & 0.054 & 0.424 \\
+          &     2 & 0.066 & 0.057 & 0.060 & 0.380 & 0.056 & 0.052 & 0.054 & 0.418 \\
+          &     4 & 0.052 & 0.043 & 0.063 & 0.428 & 0.067 & 0.060 & 0.065 & 0.421 \\
+          &       &       &       &       &       &       &       &       &       \\
+Hessian   & 0.125 & 0.058 & 0.057 & 0.059 & 0.220 & 0.065 & 0.052 & 0.060 & 0.225 \\
+          &  0.25 & 0.059 & 0.055 & 0.061 & 0.240 & 0.057 & 0.046 & 0.050 & 0.191 \\
+          &   0.5 & 0.053 & 0.049 & 0.054 & 0.218 & 0.058 & 0.048 & 0.052 & 0.205 \\
+          &     1 & 0.051 & 0.054 & 0.057 & 0.240 & 0.049 & 0.054 & 0.049 & 0.222 \\
+          &     2 & 0.066 & 0.056 & 0.062 & 0.194 & 0.055 & 0.049 & 0.052 & 0.205 \\
+          &     4 & 0.053 & 0.040 & 0.057 & 0.212 & 0.068 & 0.061 & 0.066 & 0.227 \\
+          &       &       &       &       &       &       &       &       &       \\
+OPG       & 0.125 & 0.045 & 0.047 & 0.052 & 0.047 & 0.062 & 0.055 & 0.055 & 0.068 \\
+          &  0.25 & 0.062 & 0.052 & 0.059 & 0.068 & 0.055 & 0.044 & 0.050 & 0.047 \\
+          &   0.5 & 0.046 & 0.047 & 0.053 & 0.055 & 0.059 & 0.050 & 0.049 & 0.047 \\
+          &     1 & 0.047 & 0.055 & 0.050 & 0.053 & 0.046 & 0.053 & 0.043 & 0.062 \\
+          &     2 & 0.063 & 0.053 & 0.061 & 0.044 & 0.043 & 0.050 & 0.049 & 0.060 \\
+          &     4 & 0.050 & 0.038 & 0.051 & 0.036 & 0.071 & 0.053 & 0.058 & 0.063 \\
+  \hline
+    \end{tabular}
+    }
+    \begin{tablenotes}
+      \item{\footnotesize One minus the coverage probability for logistic parameter c. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_rho}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$.}
+    \end{tablenotes} \label{tbl:coverage_ratio_rho}
+  \end{threeparttable}
+\end{table}
+
+\begin{table}[t!] \centering
+  \caption{Monte Carlo Simulation and the Voung LR Test}
+  \begin{threeparttable}
+    \begin{tabular}[l]{r r r r r r r}
+              &         &       &       &       &       &          \\
+      \multicolumn{7}{c}{Dataset 1: Two Population Groups}                    \\
+      \hline
+      Arch    &         & ME    & HME   & ME    & HME   & ME       \\
+              & Experts & 2     & 3     & 3     & 4     & 4        \\
+              \hline
+      ME      & 2       & .     & 0     & 0     & 0     & 0        \\
+      HME     & 3       & 0     & .     & 0     & 0     & 0        \\
+      ME      & 3       & 0     & 0     & .     & 0     & 0        \\
+      HME     & 4       & 0     & 0     & 0     & .     & 0        \\
+      ME      & 4       & 0     & 0     & 0     & 0     & .        \\
+      \hline
+              &         &       &       &       &       &          \\
+      \multicolumn{7}{c}{Dataset 2: Three Population Groups}                  \\
+      \hline
+      Arch    &         & ME    & HME   & ME    & HME   & ME       \\
+              & Experts & 2     & 3     & 3     & 4     & 4        \\
+              \hline
+      ME      & 2       & .     & -1    & -1    & -1    & -1       \\
+      HME     & 3       & 1     & .     & 0     & 0     & 0        \\
+      ME      & 3       & 1     & 0     & .     & 0     & 0        \\
+      HME     & 4       & 1     & 0     & 0     & .     & 0        \\
+      ME      & 4       & 1     & 0     & 0     & 0     & .        \\
+      \hline
+              &         &       &       &       &       &          \\
+      \multicolumn{7}{c}{Dataset 3: Four Population Groups}                   \\
+      \hline
+      Arch    &         & ME    & HME   & ME    & HME   & ME       \\
+              & Experts & 2     & 3     & 3     & 4     & 4        \\
+      \hline
+      ME      & 2       & .     & -1    & -1    & -1    & -1       \\
+      HME     & 3       & 1     & .     & 0     & -1    & 0        \\
+      ME      & 3       & 1     & 0     & .     & 0     & 0        \\
+      HME     & 4       & 1     & 1     & 0     & .     & 1        \\
+      ME      & 4       & 1     & 0     & 0     & -1    & .        \\
+      \hline
+    \end{tabular}
+    \begin{tablenotes}
+      \item{\footnotesize This table summarizes the comparision of varying (H)ME models estimated on a three different datasets with a known structure. A value of 1 indicates the model in the row is favored, -1 indicates the model in the column is favored, and 0 indicates equivalency of the models.}
+    \end{tablenotes} \label{tbl:monte_carlo_voung_results}
+  \end{threeparttable}
+\end{table}
+
+
+\clearpage
+
+\section{Conclusion} \label{sec:Conclusion}
+
+In this article, a novel mixture model is explored that borrows equally from the economic and deep learning fields. A flexible (and optionally deep) gating network is used to learn the latent structure of a dataset and then apply local regressions to that latent structure. Robust standard errors and closed form expressions for marginal effects were developed and demonstrated on two different datasets. 
+
 
 
 \clearpage
