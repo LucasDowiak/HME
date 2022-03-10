@@ -84,7 +84,7 @@ progeny <- function(d, nodes)
     if (is(node_well, "NULL")) {
       return(NULL)
     } else {
-      return(sort(c(z, node_well)))
+      return(sort(node_well))
     }
   }
   lapply(d, f_)
@@ -320,7 +320,7 @@ get_expert_densities <- function(x, le)
        cumulative product of the paths from the root node to the
        input node (ie the prior weights for the subtree starting
        from`node`)"
-prior_weights <- function(node, treestr, ln)
+prior_weights <- function(node, ln)
 {
   "prior weights go from root node down"
   gate_path_product("0", node, ln)
@@ -397,17 +397,11 @@ Qlog_likelihood <- function(treestr, ln, lp, ld, rp)
   sum(unlist(lst))
 }
 
-log_likelihood <- function(treestr, ln, lp, ld, rp)
+log_likelihood <- function(treestr, ln, ld)
 {
   expert.nodes <- treestr[unlist(is_terminal(treestr, treestr))]
-  product_path <- function(node)
-  {
-    gpp <- gate_path_product("0", node, ln)
-    return(rp * gpp * ld[[node]])
-  }
-  lst <- lapply(expert.nodes, product_path)
-  
-  sum(log(Reduce(`+`, lst)))
+  S <- simplify2array(expert_lik_contr(expert.nodes, ld, ln))
+  sum(S)
 }
 
 
