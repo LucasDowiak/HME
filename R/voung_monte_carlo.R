@@ -43,7 +43,19 @@ sample_experts <- function(X, scale=1, mid=0.5)
 }
 
 
-sample_experts3 <- function(X)
+sample_multinomial <- function(X, Om)
+{
+  k <- length(Om)
+  W <- vector("list", length=k)
+  for (e in seq_len(k)) {
+    W[[e]] <- exp(cbind(1, X[,2]) %*% Om[[e]])
+  }
+  W <- do.call(cbind, W)
+  apply(W, 1, function(x) sample.int(k, 1, prob=x))
+}
+
+
+generate_data3 <- function(X)
 {
   # Should we switch this be dependent on the X variable?
   wt1 <- logit(X[, 2], scale=-8, mid=0.25)
@@ -72,10 +84,10 @@ generate_data <- function(n, B, rho=1, scale=1, mid=0.5)
 }
 
 
-generate_data3 <- function(n, B, rho=1)
+generate_multinomial <- function(n, B, Om, rho=1)
 {
   M <- generate_obs(n, rho=rho)
-  experts <- sample_experts3(M)
+  experts <- sample_multinomial(M, Om=Om)
   M <- cbind(M, NA, NA)
   colnames(M) <- c("x", "z", "y", "expert")
   
@@ -180,6 +192,7 @@ N <- 1000
 # from the paper phi = log(var) which implies that sd = sqrt(exp(phi))
 Betas <- list(c(c=1.2, x=1.5, z=0.5, phi=-3.218876), # 0.2 
               c(c=0.8, x=2.0, z=1.1, phi=-3.429597)) # 0.18
+
 calc_KL_divergence(Betas, TRUE)
 
 DEF_rho <- 1
@@ -233,7 +246,7 @@ lapply(split(DT, DT$expert), summary)
 plot(density(DT[DT$expert == 1, "y"]))
 lines(density(DT[DT$expert == 2, "y"]))
 lines(density(DT[DT$expert == 3, "y"]))
-
+lines(density(DT[DT$expert == 4, "y"]))
 
 
 # --------------------------- Standard Error Means --------------------------- #
@@ -484,192 +497,51 @@ for (r in Rhos) {
 }
 
 
-# --------------- Simulate Data for 2-experts --------------- #
-
-Betas <- list(c(c=1.2, x=1.5, z=0.5, phi=-3.218876), # 0.2 
-              c(c=0.8, x=2.0, z=1.1, phi=-3.429597)) # 0.18
-
-DT <- generate_data(2000, Betas, rho=DEF_rho, scale=DEF_scale, mid=DEF_mid)
-
-tstHME2 <- hme(c("0", "0.1", "0.2"),  y ~ x + z | z, data=DT)
-tstHME2$full.vcv <- calculate_sandwich_vcov(tstHME2)
-
-tstHME3w <- hme(c("0", "0.1", "0.2", "0.3"), y ~ x + z | z, data=DT)
-tstHME3w$full.vcv <- calculate_sandwich_vcov(tstHME3w)
-
-tstHME3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), y ~ x + z | z, data=DT)
-tstHME3d$full.vcv <- calculate_sandwich_vcov(tstHME3d)
-
-tstHME4w <- hme(c("0", "0.1", "0.2", "0.3", "0.4"),
-                y ~ x + z | z, data=DT)
-tstHME4w$full.vcv <- calculate_sandwich_vcov(tstHME4w)
-
-tstHME4d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2", "0.2.1", "0.2.2"),
-                y ~ x + z | z, data=DT)
-tstHME4d$full.vcv <- calculate_sandwich_vcov(tstHME4d)
-
-# Min-Mad for uniform distributions Z ~ U[min, max]
-U1 <- c(-2, 0.2)
-U2 <- c(-0.2, 2)
-
-# Normally distributed random variable X ~ N[mu, sd^{2}]
-mu1 <- 1
-sd1 <- 0.2
-
-mu2 <- -0.5
-sd2 <- 0.15
-
-# Regression Coefficients
-beta1 <- c(1.2,  1.5, 1.2)
-beta2 <- c(-0.5, 2.0, 0.5)
-
-# Expected value for regressions (for validity checks)
-m1_mean <- beta1[1] + beta1[2] * mu1 + beta1[3] * mean(U1)
-m2_mean <- beta2[1] + beta2[2] * mu2 + beta2[3] * mean(U2)
-
-# Mixture weights for sampling from the two populations
-wts <- c(0.5, 0.5)
-experts <- sample(1:2 , N, prob=wts, replace=TRUE)
-
-
-M <- matrix(NA, nrow=N, ncol=4, dimnames = list(NULL, c("y", "x", "z", "experts")))
-for (i in seq_along(experts)) {
-  if (experts[i] == 1) {
-    z <- runif(1, min=U1[1], max=U1[2])
-    x <- rnorm(1, mean=mu1)
-    y <- beta1[1] + beta1[2] * x + beta1[3] * z + rnorm(1, sd=sd1)
-  } else if (experts[i] == 2) {
-    z <- runif(1, min=U2[1], max=U2[2])
-    x <- rnorm(1, mean=mu2)
-    y <- beta2[1] + beta2[2] * x + beta2[3] * z + rnorm(1, sd=sd2)
-  }
-  M[i,] <- c(y, x, z, experts[i])
-}
-dtf2 <- as.data.frame(M)
-
-dtf2 <- generate_data(1000, Betas, rho=DEF_rho, scale=DEF_scale, mid=DEF_mid)
-
-tstHME2 <- hme(c("0", "0.1", "0.2"),  y ~ x + z | z, data=dtf2)
-tstHME2$full.vcv <- calculate_sandwich_vcov(tstHME2)
-
-tstHME3w <- hme(c("0", "0.1", "0.2", "0.3"), y ~ x + z | z, data=dtf2)
-tstHME3w$full.vcv <- calculate_sandwich_vcov(tstHME3w)
-
-tstHME3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), y ~ x + z | z, data=dtf2)
-tstHME3d$full.vcv <- calculate_sandwich_vcov(tstHME3d)
-
-tstHME4w <- hme(c("0", "0.1", "0.2", "0.3", "0.4"),
-                y ~ x + z | z, data=dtf2)
-tstHME4w$full.vcv <- calculate_sandwich_vcov(tstHME4w)
-
-tstHME4d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2", "0.2.1", "0.2.2"),
-                y ~ x + z | z, data=dtf2)
-tstHME4d$full.vcv <- calculate_sandwich_vcov(tstHME4d)
-
-
-
-# modnms <- list.files(".", pattern="2e")
-modnms <- ls(pattern="HME")
-R <- matrix(NA, nrow=5, ncol=5, dimnames=list(modnms, modnms))
-
-for (m in modnms) {
-  mod1 <- get(m)
-  for (n in modnms) {
-    if (m == n)
-      next
-    mod2 <- get(n)
-    vs <- voung_selection(mod1, mod2)
-    r <- report_result(vs)
-    R[m, n] <- r
-    R[n, m] <- r * -1
-  }
-}
-
-for (m in ls(pattern="HME")) {
-  saveRDS(get(m), file=paste0("models/simulations/cross_experts/", sprintf("%s_2e.RDS", m)))
-}
-
-
-
-
-# --------------- Simulate Data for 3-experts --------------- #
+# -------------- Simulate Data for Expert Over-expert Evaluation -------------- #
 
 Betas <- list(c(c=1.2, x=1.5, z=0.5, phi=-3.218876), # 0.2 
               c(c=0.8, x=2.0, z=1.1, phi=-3.429597), # 0.18
-              c(c=0.4, x=0.8, z=2.0, phi=-3.543914)) # 0.17
+              c(c=0.4, x=0.8, z=2.0, phi=-3.543914), # 0.17
+              c(c=1.5, x=0.5, z=0.8, phi=-3.321462)) # 0.19
+Omega <- list(c(-4, 6),
+              c(2, -6),
+              c(6, -18),
+              c(-15, 20))
 
-DT <- generate_data3(2000, Betas, rho=DEF_rho)
+N <- 4
+DT <- generate_multinomial(2000, Betas[1:N], Omega[1:N], rho=DEF_rho)
+with(DT, plot(z, x, col=expert))
+legend("bottomright", legend=paste0("E", 1:4), col=1:4, pch=1)
+table(DT$expert)
+
 
 tstHME2 <- hme(c("0", "0.1", "0.2"),  y ~ x + z | z, data=DT)
 tstHME2$full.vcv <- calculate_sandwich_vcov(tstHME2)
 
-tstHME3w <- hme(c("0", "0.1", "0.2", "0.3"), y ~ x + z | z, data=DT)
+st_betas <- Betas[c(1, 3, 4)]
+names(st_betas) <- c("0.1", "0.2", "0.3")
+tstHME3w <- hme(c("0", "0.1", "0.2", "0.3"), y ~ x + z | z, data=DT,
+                init_expert_pars = st_betas, maxiter=10)
 tstHME3w$full.vcv <- calculate_sandwich_vcov(tstHME3w)
 
-tstHME3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), y ~ x + z | z, data=DT)
+names(st_betas) <- c("0.2", "0.1.1", "0.1.2")
+tstHME3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), y ~ x + z | z, data=DT,
+                init_expert_pars = st_betas)
 tstHME3d$full.vcv <- calculate_sandwich_vcov(tstHME3d)
 
-tstHME4w <- hme(c("0", "0.1", "0.2", "0.3", "0.4"),
-                y ~ x + z | z, data=DT)
+
+st_betas <- Betas[c(1, 2, 4, 3)]
+names(st_betas) <- c("0.1", "0.2", "0.3", "0.4")
+tstHME4w <- hme(c("0", "0.1", "0.2", "0.3", "0.4"),  y ~ x + z | z, data=DT,
+                init_expert_pars = st_betas, maxiter=3)
 tstHME4w$full.vcv <- calculate_sandwich_vcov(tstHME4w)
 
+names(st_betas) <- c("0.1.1", "0.1.2", "0.2.1", "0.2.2")
 tstHME4d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2", "0.2.1", "0.2.2"),
-                y ~ x + z | z, data=DT)
+                y ~ x + z | z, data=DT, init_expert_pars = st_betas)
 tstHME4d$full.vcv <- calculate_sandwich_vcov(tstHME4d)
 
-# Min-Mad for uniform distributions Z ~ U[min, max]
-U1 <- c(-3.0, -0.8)
-U2 <- c(-1.1, 1.1)
-U3 <- c(0.8, 3.0)
 
-# Normally distributed random variable X ~ N[mu, sd^{2}]
-mu1 <- 1
-sd1 <- 0.2
-
-mu2 <- -0.5
-sd2 <- 0.15
-
-mu3 <- -2
-sd3 <- 0.25
-
-# Regression Coefficients
-beta1 <- c(1.2,  1.5, 1.2)
-beta2 <- c(-0.5, 2.0, 0.5)
-beta3 <- c(0.5, 1.0, 1.4)
-
-# Expected value for regressions (for validity checks)
-m1_mean <- beta1[1] + beta1[2] * mu1 + beta1[3] * mean(U1)
-m2_mean <- beta2[1] + beta2[2] * mu2 + beta2[3] * mean(U2)
-m3_mean <- beta3[1] + beta3[2] * mu3 + beta3[3] * mean(U3)
-
-# Mixture weights for sampling from the two populations
-wts <- c(0.4, 0.2, 0.4)
-experts <- sample(1:3 , N, prob=wts, replace=TRUE)
-
-
-M <- matrix(NA, nrow=N, ncol=4, dimnames = list(NULL, c("y", "x", "z", "experts")))
-for (i in seq_along(experts)) {
-  if (experts[i] == 1) {
-    z <- runif(1, min=U1[1], max=U1[2])
-    x <- rnorm(1, mean=mu1)
-    y <- beta1[1] + beta1[2] * x + beta1[3] * z + rnorm(1, sd=sd1)
-  } else if (experts[i] == 2) {
-    z <- runif(1, min=U2[1], max=U2[2])
-    x <- rnorm(1, mean=mu2)
-    y <- beta2[1] + beta2[2] * x + beta2[3] * z + rnorm(1, sd=sd2)
-  } else if (experts[i] == 3) {
-    z <- runif(1, min=U3[1], max=U3[2])
-    x <- rnorm(1, mean=mu3)
-    y <- beta3[1] + beta3[2] * x + beta3[3] * z + rnorm(1, sd=sd3)
-  }
-  M[i,] <- c(y, x, z, experts[i])
-}
-dtf3 <- as.data.frame(M)
-
-
-
-
-setwd("~/Git/hme/models/simulations")
 modnms <- ls(pattern="tstHME")
 R <- matrix(NA, nrow=5, ncol=5, dimnames=list(modnms, modnms))
 
@@ -689,116 +561,42 @@ for (m in modnms) {
 R
 
 for (m in ls(pattern="HME")) {
-  saveRDS(get(m), file=paste0("models/simulations/", sprintf("%s_3e.RDS", m)))
+  saveRDS(get(m), file=paste0("models/simulations/cross_experts/", sprintf("%s_%de.RDS", m, N)))
 }
 
 
+# -------------- Graph the cross-expert results -------------- #
 
+modnms <- c("tstHME2_2e.RDS",  "tstHME2_3e.RDS", "tstHME2_4e.RDS")
+mods <- lapply(modnms, function(x) readRDS(paste0("models/simulations/cross_experts/", x)))
+names(mods) <- modnms
 
-# --------------- Simulate Data for 4-experts --------------- #
-
-# Min-Mad for uniform distributions Z ~ U[min, max]
-U1 <- c(-5.0, -2.0)
-U2 <- c(-2.3, 0.3)
-U3 <- c(-0.3, 2.3)
-U4 <- c(2.0, 5.0)
-
-# Normally distributed random variable X ~ N[mu, sd^{2}]
-mu1 <- 1
-sd1 <- 0.2
-
-mu2 <- -0.5
-sd2 <- 0.15
-
-mu3 <- -2
-sd3 <- 0.25
-
-mu4 <- 1.5
-sd4 <- 0.1
-
-# Regression Coefficients
-beta1 <- c(1.2,  1.5, 1.2)
-beta2 <- c(-0.5, 2.0, 0.5)
-beta3 <- c(0.5, 1.0, 1.4)
-beta4 <- c(2, -0.5, -0.2)
-
-# Expected value for regressions (for validity checks)
-m1_mean <- beta1[1] + beta1[2] * mu1 + beta1[3] * mean(U1)
-m2_mean <- beta2[1] + beta2[2] * mu2 + beta2[3] * mean(U2)
-m3_mean <- beta3[1] + beta3[2] * mu3 + beta3[3] * mean(U3)
-m4_mean <- beta4[1] + beta4[2] * mu4 + beta4[3] * mean(U4)
-
-# Mixture weights for sampling from the two populations
-wts <- c(0.2, 0.3, 0.2, 0.3)
-experts <- sample(1:4 , N, prob=wts, replace=TRUE)
-
-
-M <- matrix(NA, nrow=N, ncol=4, dimnames = list(NULL, c("y", "x", "z", "experts")))
-for (i in seq_along(experts)) {
-  if (experts[i] == 1) {
-    z <- runif(1, min=U1[1], max=U1[2])
-    x <- rnorm(1, mean=mu1)
-    y <- beta1[1] + beta1[2] * x + beta1[3] * z + rnorm(1, sd=sd1)
-  } else if (experts[i] == 2) {
-    z <- runif(1, min=U2[1], max=U2[2])
-    x <- rnorm(1, mean=mu2)
-    y <- beta2[1] + beta2[2] * x + beta2[3] * z + rnorm(1, sd=sd2)
-  } else if (experts[i] == 3) {
-    z <- runif(1, min=U3[1], max=U3[2])
-    x <- rnorm(1, mean=mu3)
-    y <- beta3[1] + beta3[2] * x + beta3[3] * z + rnorm(1, sd=sd3)
-  } else if (experts[i] == 4) {
-    z <- runif(1, min=U4[1], max=U4[2])
-    x <- rnorm(1, mean=mu4)
-    y <- beta4[1] + beta4[2] * x + beta4[3] * z + rnorm(1, sd=sd4)
-}
-  M[i,] <- c(y, x, z, experts[i])
-}
-dtf4 <- as.data.frame(M)
-
-
-
-tstHME2 <- hme(c("0", "0.1", "0.2"),  y ~ x + z | z, data=dtf4)
-tstHME2$full.vcv <- calculate_sandwich_vcov(tstHME2)
-
-tstHME3w <- hme(c("0", "0.1", "0.2", "0.3"), y ~ x + z | z, data=dtf4)
-tstHME3w$full.vcv <- calculate_sandwich_vcov(tstHME3w)
-
-tstHME3d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2"), y ~ x + z | z, data=dtf4)
-tstHME3d$full.vcv <- calculate_sandwich_vcov(tstHME3d)
-
-p <- list(c(0.5295934, 1.0201592, 1.3773716, -3.1564334),
-          c(2.0105381, -0.4958222, -0.2063141, -4.6219006),
-          c(-0.2334332, 1.7700516, 0.8757132, -1.7011371),
-          c(-0.5215640, 0.6370529, 1.5763299, -2.4689268))
-names(p) <- paste0("0.", 1:4)
-tstHME4w <- hme(c("0", "0.1", "0.2", "0.3", "0.4"), y ~ x + z | z, data=dtf4,
-                init_expert_pars = p)
-tstHME4w$full.vcv <- calculate_sandwich_vcov(tstHME4w)
-
-tstHME4d <- hme(c("0", "0.1", "0.2", "0.1.1", "0.1.2", "0.2.1", "0.2.2"),
-                y ~ x + z | z, data=dtf4)
-tstHME4d$full.vcv <- calculate_sandwich_vcov(tstHME4d)
-
-setwd("~/Git/hme/models/simulations")
-modnms <- list.files(".", pattern="4e")
-R <- matrix(NA, nrow=5, ncol=5, dimnames=list(modnms, modnms))
-
-for (m in modnms) {
-  mod1 <- readRDS(m)
-  for (n in modnms) {
-    if (m == n)
-      next
-    mod2 <- readRDS(n)
-    vs <- voung_selection(mod1, mod2)
-    r <- report_result(vs)
-    R[m, n] <- r
-    R[n, m] <- r * -1
+plot_densities <- function(X, tit="")
+{
+  dts <- split(X, f=X$expert)
+  D <- lapply(dts, function(x) density(x$y))
+  N <- length(D)
+  yrange <- range(unlist(lapply(D, function(x) x$y)))
+  xrange <- range(unlist(lapply(D, function(x) x$x)))
+  yrange <- c(0, 1.02 * yrange[2])
+  plot(density(X[X$expert == 1, "y"]), ylim=yrange, xlim=xrange, main=tit,
+       xlab=sprintf("%d - Sub-populations", N), ylab="", col=1)
+  for (ii in 2:length(D)) {
+    lines(density(X[X$expert == ii, "y"]), col=ii)
   }
+  grid()
 }
 
-R
-
-for (m in ls(pattern="HME")) {
-  saveRDS(get(m), file=paste0("models/simulations/", sprintf("%s_4e.RDS", m)))
+par(mfcol=c(2, 3))
+for (n in 2:4) {
+  DT <- generate_multinomial(2000, Betas[1:n], Omega[1:n], rho=DEF_rho)
+  with(DT, plot(z, x, col=expert, pch=1:n, cex=0.25, main="(X, Z) Joint Dist.")); grid()
+  plot_densities(DT, "Density: y")
 }
+
+
+
+legend("bottomright", legend=paste0("E", 1:4), col=1:4, pch=1)
+
+
+

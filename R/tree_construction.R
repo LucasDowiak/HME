@@ -61,10 +61,10 @@ voung_selection <- function(hme1, hme2, var_test_alpha=0.05, model_test_alpha=0.
   nm2 <- deparse(substitute(hme2))
   stopifnot(all(sapply(list(hme1, hme2), inherits, "hme")))
   if (is.null(hme1$full.vcv)) {
-    stop(sprintf("The sandwich variance estimator has not been calulcated for %s", hme1))
+    stop(sprintf("The sandwich variance estimator has not been calulcated for %s", nm1))
   }
   if (is.null(hme2$full.vcv)) {
-    stop(sprintf("The sandwich variance estimator has not been calulcated for %s", hme2))
+    stop(sprintf("The sandwich variance estimator has not been calulcated for %s", nm2))
   }
   out <- list(variance_test=NULL, voung_lr_test=NULL)
   
@@ -133,7 +133,7 @@ voung_selection <- function(hme1, hme2, var_test_alpha=0.05, model_test_alpha=0.
   
   if (!variance_test$reject_null) {
     cat(sprintf("Variance Test: Failed to reject the null of zero variance - %s.\n", variance_test$null))
-    cat(sprintf("The available data can not discriminate between model %s and model %s", nm1, nm2))
+    cat(sprintf("The available data can not discriminate between model %s and model %s\n\n", nm1, nm2))
     return(out)
     
   } else {

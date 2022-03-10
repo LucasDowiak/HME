@@ -76,8 +76,9 @@ fitted_expert <- function(expert, X, expert.pars, expert_type)
 
 
 
-marginal_effects <- function(obj)
+marginal_effects <- function(obj, vcv=c("sandwich", "hessian", "OPG"))
 {
+  vcv <- match.arg(vcv)
   expt.nms <- c(obj[["expert.pars.nms"]])
   gate.nms <- obj[["gate.pars.nms"]]
   expert.type <- obj[["expert.type"]]
@@ -87,8 +88,16 @@ marginal_effects <- function(obj)
   gates <- obj[["gate.nodes"]]
   ln <- obj[["list_priors"]]
   tree <- obj[["tree"]]
-  VCV <- obj[["full.vcv"]][["sandwich"]]
   N <- obj[["N"]]
+  
+  # Grab the specified variance-covariance matrix
+  if (vcv == "OPG") {
+    VCV <- solve(obj$full.vcv[[vcv]])
+  } else if (vcv == "hessian") {
+    VCV <- -solve(obj$full.vcv[[vcv]])
+  } else {
+    VCV <- obj$full.vcv[[vcv]]
+  }
   
   # Venn-Diagram of expert and gate variable names
   expt.nms <- setdiff(expt.nms, "Dispersion")
