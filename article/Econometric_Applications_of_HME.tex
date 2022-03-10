@@ -1228,8 +1228,6 @@ in the gating network ($\boldsymbol{Z}$).
   \label{fig:Iris_dataset}
 \end{figure}
 
-
-
 \begin{equation} \label{eq:HME_iris}
     sepal.width_{i} = \beta_{0} + \beta_{1} * petal.width_{i} + \varepsilon_{i} \enspace | \enspace \omega_{0} + \omega_{1} * petal.width_{i}
 \end{equation}
@@ -1319,7 +1317,7 @@ over-fit the data at hand.
 	\hline
 		\end{tabular}
 		\begin{tablenotes}
-			\item{\footnotesize Signif. Codes: '*' p $<$ 0.01, '+' p $<$ 0.05, '-' p $<$ 0.1}
+			\item{\footnotesize Signif. Codes: 0 '*' 0.01 '+' 0.05 '-' 0.1 ' ' 1}
 			\item{\footnotesize OLS regressions are modeled using equation (\ref{eq:OLS_iris})}
 			\item{\footnotesize ME regressions are modeled using equation (\ref{eq:HME_iris}) and architecture $\boldsymbol{A}$ from Figure \ref{fig:network_comparison}}
 			\item{\footnotesize HME regressions are modeled using equation (\ref{eq:HME_iris}) and architecture $\boldsymbol{C}$ from Figure \ref{fig:network_comparison}}
@@ -1587,7 +1585,7 @@ Min      &  ME   &    2    & 0.650      & -1.299      & -1.296      & 0.1923    
     \cmidrule{1-26}
          &     &         &  \multicolumn{7}{c}{Full}                         &&  \multicolumn{7}{c}{Mid}                          &&  \multicolumn{7}{c}{Min}                         \\
          &     &         &  \multicolumn{4}{c}{ME} & \multicolumn{3}{c}{HME} &&  \multicolumn{4}{c}{ME} & \multicolumn{3}{c}{HME} && \multicolumn{4}{c}{ME} & \multicolumn{3}{c}{HME} \\
-                            \cmidrule(lr){4-7} \cmidrule(lr){8-10}              \cmidrule(lr){12-15} \cmidrule(lr){16-18}             \cmidrule(lr){20-23} \cmidrule(lr){24-26}
+        \cmidrule(l){4-7} \cmidrule(lr){8-10}              \cmidrule(l){12-15} \cmidrule(l){16-18}             \cmidrule(l){20-23} \cmidrule(l){24-26}
          &     & Experts & 2   &  3  &  4  &  5  &  3   &  4   &  5          && 2   &  3  &  4  &  5  &  3   &  4   &  5          &&  2  &  3  &  4  &  5  &  3   &  4   &  5         \\
     \cmidrule{3-26}
 Full     & ME  & 2       &  .  & -1  &  0  & -1  & -1   &  0   &  -1          &&  1  &   1 &  1  &  1  &  1   & -1   &  -1          &&  1  &  1  &  1  &  1  &  1   &  1   &  0       \\
@@ -1773,45 +1771,43 @@ cohort.
   \begin{table} \centering
     \caption{Regression Results: Two-Expert, Full Parameter Specification}
       \begin{threeparttable}
-        \begin{tabular}[l]{l r l r l c r l c r l r l r l}
+        \tabcolsep=0.11cm
+        \begin{tabular}[l]{l r l l r l l c r l c r l l r l l r l l}
   
-  \cmidrule{1-15}
-  & \multicolumn{4}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
-  \cmidrule(l){2-5}    \cmidrule(l){7-8}     \cmidrule(l){10-15}
-  & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
-                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
-  Intercept              &  1.231 & *      &  1.423 & *     &&  1.241 & *     &&  1.225 & *        &  1.260 & *        & -0.040 &        \\
-  Age-16                 &  0.032 & *      &  0.066 & *     &&  0.035 & *     &&  0.042 &          &  0.038 & *        &  0.004 &        \\
-  $\textrm{Age-16}^{2}$  & -0.000 & *      & -0.002 & *     && -0.001 & *     && -0.001 &          & -0.001 & *        & -0.000 &        \\
-  YrsEduc                &  0.082 & *      &  0.042 & *     &&  0.076 & *     &&  0.076 &          &  0.075 & *        &  0.000 &        \\
-  Female                 & -0.244 & *      & -0.031 & *     && -0.215 & *     && -0.209 & *        & -0.207 & *        & -0.002 &        \\
-  Af Amer                & -0.076 & *      & -0.044 & *     && -0.076 & *     && -0.076 & *        & -0.071 & *        & -0.005 &        \\
-  Indian                 & -0.081 & *      & -0.069 & +     && -0.091 & *     && -0.085 & +        & -0.079 & *        & -0.005 &        \\
-  Asian                  & -0.045 & *      &  0.053 & +     && -0.032 & *     && -0.024 &          & -0.028 & *        &  0.003 &        \\
-  Hisp                   & -0.121 & *      & -0.069 & *     && -0.106 & *     && -0.112 & *        & -0.112 & *        & -0.000 &        \\
-  Creativity             & -0.054 & *      & -0.004 &       && -0.046 & *     && -0.044 & *        & -0.045 & *        &  0.002 &        \\
-  Design                 &  0.080 & *      &  0.080 & *     &&  0.082 & *     &&  0.081 & *        &  0.080 & *        &  0.001 &        \\
-  Analytics              &  0.133 & *      &  0.107 & *     &&  0.131 & *     &&  0.126 & *        &  0.129 & *        & -0.003 &        \\
-  Perceptive             &  0.063 & *      & -0.017 & *     &&  0.058 & *     &&  0.053 & *        &  0.049 & *        &  0.004 &        \\
-  Log-Variance           & -1.651 & *      & -2.675 & *     &&  --    &       &&  --    &          &  --    &          &  --    &        \\
-                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){7-8} \cmidrule(l){10-11} \cmidrule(l){12-13} \cmidrule(l){14-15}
-  Share$^{4}$:           &  0.826 &        &  0.174 &       &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
-  \cmidrule{1-15}
+  \hline
+  & \multicolumn{6}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{9}{c}{ME Marginal Effects$^{3}$} \\
+  \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-20}
+  & Coef.  & $^{[S]}$ & $^{[O]}$ &  Coef. & $^{[S]}$ & $^{[O]}$  && \multicolumn{2}{c}{Coef.} && Both   & $^{[S]}$ & $^{[O]}$ & Experts & $^{[S]}$ & $^{[O]}$ & Gates  & $^{[S]}$ & $^{[O]}$ \\
+                  \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){9-10} \cmidrule(l){12-14} \cmidrule(l){15-17} \cmidrule(l){18-20}
+  Intercept              &  1.231 & *   & *   &  1.423 & *   & *    &&  1.241 & *     &&  1.225 & *   & *    &  1.260  & *   & *   & -0.040 &     &   \\
+  Age-16                 &  0.032 & *   & *   &  0.066 & *   & *    &&  0.035 & *     &&  0.042 &     &      &  0.038  & *   & *   &  0.004 &     &   \\
+  $\textrm{Age-16}^{2}$  & -0.000 & *   & *   & -0.002 & *   & *    && -0.001 & *     && -0.001 &     &      & -0.001  & *   & *   & -0.000 &     &   \\
+  YrsEduc                &  0.082 & *   & *   &  0.042 & *   & *    &&  0.076 & *     &&  0.076 &     &      &  0.075  & *   & *   &  0.000 &     &   \\
+  Female                 & -0.244 & *   & *   & -0.031 & *   & *    && -0.215 & *     && -0.209 & *   & *    & -0.207  & *   & *   & -0.002 &     &   \\
+  Af Amer                & -0.076 & *   & *   & -0.044 & *   & *    && -0.076 & *     && -0.076 & *   & *    & -0.071  & *   & *   & -0.005 &     &   \\
+  Indian                 & -0.081 & *   & *   & -0.069 & -   & *    && -0.091 & *     && -0.085 & +   & -    & -0.079  & *   & *   & -0.005 &     &   \\
+  Asian                  & -0.045 & *   & +   &  0.053 & -   & +    && -0.032 & *     && -0.024 &     &      & -0.028  & *   & *   &  0.003 &     &   \\
+  Hisp                   & -0.121 & *   & *   & -0.069 & *   & *    && -0.106 & *     && -0.112 & *   & *    & -0.112  & *   & *   & -0.000 &     &   \\
+  Creativity             & -0.054 & *   & *   & -0.004 &     &      && -0.046 & *     && -0.044 & *   & *    & -0.045  & *   & *   &  0.002 &     &   \\
+  Design                 &  0.080 & *   & *   &  0.080 & *   & *    &&  0.082 & *     &&  0.081 & *   & *    &  0.080  & *   & *   &  0.001 &     &   \\
+  Analytics              &  0.133 & *   & *   &  0.107 & *   & *    &&  0.131 & *     &&  0.126 & *   & *    &  0.129  & *   & *   & -0.003 &     &   \\
+  Perceptive             &  0.063 & *   & *   & -0.017 & *   & *    &&  0.058 & *     &&  0.053 & *   & *    &  0.049  & *   & *   &  0.004 &     &   \\
+  Log-Variance           & -1.651 & *   & *   & -2.675 & *   & *    &&  --    &       &&  --    &     &      &  --     &     &     &  --    &     &   \\
+                  \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){9-10} \cmidrule(l){12-14} \cmidrule(l){15-17} \cmidrule(l){18-20}
+  Share$^{4}$:           &  0.826 &     &     &  0.174 &     &      &&  1.000 &       &&  --    &     &      &  --     &     &     &  --    &     &   \\
+  \hline
         \end{tabular}
-  
         \begin{tablenotes}
-          \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
-          \item Log-Likelihood: ME -0.541, OLS -0.558
+          \item Signif. Codes: 0 '*' 0.01 '+', 0.05 '-' 0.1 ' ' 1
+          \item Log-Likelihood: ME 0.703, OLS -0.558
+          \item $^{[S]}$: Standard errors based on the sandwich variance estimator
+          \item $^{[O]}$: Standard errors based on the OPG variance estimator
           \item $^{1}$ Fitted coefficients from the two-expert model with the full parameter specification from equation (\ref{eq:full_formula})
           \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
           \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
           \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
-  
         \end{tablenotes} \label{tbl:2E_full_regressions_results}
-  
-  
       \end{threeparttable}
-  
   \end{table}
   \end{landscape}
   
@@ -1858,45 +1854,44 @@ cohort.
   \begin{table} \centering
     \caption{Regression Results: Wide Three-Expert, Full Parameter Specification}
       \begin{threeparttable}
-        \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
+        \tabcolsep=0.11cm
+        \begin{tabular}[l]{l r l l r l l r l l c r l c r l l r l l r l l}
   
-  \cmidrule{1-17}
-  & \multicolumn{6}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{ME Marginal Effects$^{3}$} \\
-  \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
-  & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
-                  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-  Intercept             &  1.379 & *      &  1.574 & *      &  0.562 & *      &&  1.241 & *     &&  1.367 & +        &  1.335 & *        &  0.032 &        \\
-  Age-16                &  0.021 & *      &  0.045 & *      &  0.060 & *      &&  0.035 & *     &&  0.029 &          &  0.027 & *        &  0.002 &        \\
-  $\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 &        & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
-  YrsEduc               &  0.082 & *      &  0.032 & *      &  0.080 & *      &&  0.076 & *     &&  0.074 &          &  0.077 & *        & -0.002 &        \\
-  Female                & -0.251 & *      & -0.022 & +      & -0.149 & *      && -0.215 & *     && -0.206 & *        & -0.218 & *        &  0.012 &        \\
-  Af Amer               & -0.084 & *      & -0.056 & *      & -0.054 &        && -0.076 & *     && -0.076 &          & -0.078 & *        &  0.002 &        \\
-  Indian                & -0.105 & *      & -0.046 &        &  0.010 &        && -0.091 & *     && -0.091 &          & -0.090 & *        & -0.002 &        \\
-  Asian                 & -0.030 & *      &  0.057 & -      & -0.091 & -      && -0.032 & *     && -0.024 &          & -0.025 & *        &  0.001 &        \\
-  Hisp                  & -0.136 & *      & -0.061 & *      &  0.071 &        && -0.106 & *     && -0.107 &          & -0.111 & *        &  0.004 &        \\
-  Creativity            & -0.038 & *      & -0.022 & +      & -0.177 & *      && -0.046 & *     && -0.044 &          & -0.047 & *        &  0.003 &        \\
-  Design                &  0.080 & *      &  0.080 & *      & -0.037 &        &&  0.082 & *     &&  0.075 & +        &  0.071 & *        &  0.004 &        \\
-  Analytics             &  0.123 & *      &  0.110 & *      &  0.196 & *      &&  0.131 & *     &&  0.128 & *        &  0.128 & *        &  0.000 &        \\
-  Perceptive            &  0.060 & *      & -0.008 &        &  0.168 & *      &&  0.058 & *     &&  0.057 &          &  0.061 & *        & -0.004 &        \\
-  Log-Variance          & -1.893 & *      & -2.891 & *      & -0.627 & *      &&  --    &       &&  &          &  &          &  &        \\
-  \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-  Share$^{4}$:          & 0.809  &        & 0.111  &      & 0.080 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
-  \cmidrule{1-17}
+  \hline
+  & \multicolumn{9}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{9}{c}{ME Marginal Effects$^{3}$} \\
+  \cmidrule(l){2-10}    \cmidrule(l){12-13}     \cmidrule(l){15-23}
+  & Coef.  & $^{[S]}$ & $^{[O]}$ &  Coef. & $^{[S]}$ & $^{[O]}$ & Coef.  & $^{[S]}$ & $^{[O]}$  && \multicolumn{2}{c}{Coef.} && Both   & $^{[S]}$ & $^{[O]}$ & Experts & $^{[S]}$ & $^{[O]}$ & Gates  & $^{[S]}$ & $^{[O]}$ \\
+                        \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
+  Intercept             &  1.379 & * & * &  1.574 & *  & * &  0.562 & *  & * &&  1.241 & *     &&  1.367 & + & *    &  1.335 & *  & *   &  0.032 &   &     \\
+  Age-16                &  0.021 & * & * &  0.045 & *  & * &  0.060 & *  & * &&  0.035 & *     &&  0.029 &   &      &  0.027 & *  & *   &  0.002 &   &     \\
+  $\textrm{Age-16}^{2}$ & -0.000 & * & * & -0.001 &    & + & -0.001 & *  & * && -0.001 & *     && -0.000 &   &      & -0.000 & *  & *   &  0.000 &   &     \\
+  YrsEduc               &  0.082 & * & * &  0.032 & *  & * &  0.080 & *  & * &&  0.076 & *     &&  0.074 &   &      &  0.077 & *  & *   & -0.002 &   &     \\
+  Female                & -0.251 & * & * & -0.022 & +  & + & -0.149 & *  & * && -0.215 & *     && -0.206 & * & *    & -0.218 & *  & *   &  0.012 &   &     \\
+  Af Amer               & -0.084 & * & * & -0.056 & *  & * & -0.054 &    &   && -0.076 & *     && -0.076 &   & +    & -0.078 & *  & *   &  0.002 &   &     \\
+  Indian                & -0.105 & * & * & -0.046 &    &   &  0.010 &    &   && -0.091 & *     && -0.091 &   &      & -0.090 & *  & *   & -0.002 &   &     \\
+  Asian                 & -0.030 & * & * &  0.057 & -  & - & -0.091 & -  &   && -0.032 & *     && -0.024 &   &      & -0.025 & +  & +   &  0.001 &   &     \\
+  Hisp                  & -0.136 & * & * & -0.061 & *  & * &  0.071 &    &   && -0.106 & *     && -0.107 &   & *    & -0.111 & *  & *   &  0.004 &   &     \\
+  Creativity            & -0.038 & * & * & -0.022 & +  & + & -0.177 & *  & * && -0.046 & *     && -0.044 &   & -    & -0.047 & *  & *   &  0.003 &   &     \\
+  Design                &  0.080 & * & * &  0.080 & *  & * & -0.037 &    & - &&  0.082 & *     &&  0.075 & - & +    &  0.071 & *  & *   &  0.004 &   &     \\
+  Analytics             &  0.123 & * & * &  0.110 & *  & * &  0.196 & *  & * &&  0.131 & *     &&  0.128 & * & *    &  0.128 & *  & *   &  0.000 &   &     \\
+  Perceptive            &  0.060 & * & * & -0.008 &    & * &  0.168 & *  & * &&  0.058 & *     &&  0.057 &   & -    &  0.061 & *  & *   & -0.004 &   &     \\
+  Log-Variance          & -1.893 & * & * & -2.891 & *  & * & -0.627 & *  & * &&  --    &       &&        &   &      &        &    &     &        &   &     \\
+                        \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
+  Share$^{4}$:          & 0.811  &   &   & 0.110  &    &   &  0.080 &    &   &&  1.000 &       &&  --    &   &      &  --    &    &     &  --    &   &     \\
+  \hline
         \end{tabular}
-  
         \begin{tablenotes}
-          \item Signif. Codes: *: p $<$ 0.01, + p $<$ 0.05, - p $<$ 0.1
-          \item Log-Likelihood: ME -0.526, OLS -0.558
+          \item Signif. Codes: 0 '*' 0.01 '+', 0.05 '-' 0.1 ' ' 1
+          \item Log-Likelihood: ME 0.718, OLS -0.558
+          \item $^{[S]}$: Standard errors based on the sandwich variance estimator
+          \item $^{[O]}$: Standard errors based on the OPG variance estimator
           \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
           \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
           \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
           \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
   
         \end{tablenotes} \label{tbl:3W_full_regressions_results}
-  
-  
       \end{threeparttable}
-  
   \end{table}
   \end{landscape}
   
@@ -1942,35 +1937,38 @@ cohort.
     \begin{table} \centering
       \caption{Regression Results: Deep Three-Expert, Full Parameter Specification}
         \begin{threeparttable}
-          \begin{tabular}[l]{l r l r l r l c r l c r l r l r l}
-    
-    \cmidrule{1-17}
-    & \multicolumn{6}{c}{HME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{6}{c}{HME Marginal Effects$^{3}$} \\
-    \cmidrule(l){2-7}    \cmidrule(l){9-10}     \cmidrule(l){12-17}
-    & \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.} &  \multicolumn{2}{c}{Coef.}  && \multicolumn{2}{c}{Coef.} && \multicolumn{2}{c}{Both}    &  \multicolumn{2}{c}{Experts}  &  \multicolumn{2}{c}{Gates} \\
-                    \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-    Intercept             &  1.404 & *      &  1.559 & *      &  0.898 & *      &&  1.241 & *     &&  1.393 & *        &  1.382 & *        &  0.011 &        \\
-    Age-16                &  0.020 & *      &  0.050 & *      &  0.044 & *      &&  0.035 & *     &&  0.028 &          &  0.026 & *        &  0.003 &        \\
-    $\textrm{Age-16}^{2}$ & -0.000 & *      & -0.001 & *      & -0.001 & *      && -0.001 & *     && -0.000 &          & -0.000 & *        &  0.000 &        \\
-    YrsEduc               &  0.082 & *      &  0.034 & *      &  0.074 & *      &&  0.076 & *     &&  0.073 &          &  0.075 & *        & -0.001 &        \\
-    Female                & -0.257 & *      & -0.034 & *      & -0.131 & *      && -0.215 & *     && -0.209 & *        & -0.217 & *        &  0.008 &        \\
-    Af Amer               & -0.086 & *      & -0.048 & *      & -0.041 &        && -0.076 & *     && -0.076 &          & -0.077 & *        &  0.001 &        \\
-    Indian                & -0.113 & *      & -0.057 &        &  0.043 &        && -0.091 & *     && -0.100 &          & -0.093 & *        & -0.007 &        \\
-    Asian                 & -0.033 & *      &  0.058 & +      & -0.062 &        && -0.032 & *     && -0.025 &          & -0.023 & +        & -0.001 &        \\
-    Hisp                  & -0.143 & *      & -0.066 & *      &  0.077 &        && -0.106 & *     && -0.111 &          & -0.114 & *        &  0.003 &        \\
-    Creativity            & -0.042 & *      & -0.021 & +      & -0.136 & *      && -0.046 & *     && -0.043 &          & -0.047 & *        &  0.004 &        \\
-    Design                &  0.080 & *      &  0.068 & *      & -0.048 & +      &&  0.082 & *     &&  0.074 & +        &  0.068 & *        &  0.006 &        \\
-    Analytics             &  0.124 & *      &  0.112 & *      &  0.183 & *      &&  0.131 & *     &&  0.128 & *        &  0.127 & *        &  0.000 &        \\
-    Perceptive            &  0.063 & *      & -0.003 &        &  0.135 & *      &&  0.058 & *     &&  0.056 & +        &  0.061 & *        & -0.004 &        \\
-    Log-Variance          & -1.895 & *      & -2.791 & *      & -0.622 & *      &&  --    &       &&  &          &  &          &  &        \\
-    \cmidrule(l){2-3} \cmidrule(l){4-5} \cmidrule(l){6-7} \cmidrule(l){9-10} \cmidrule(l){12-13} \cmidrule(l){14-15} \cmidrule(l){16-17}
-    Share$^{4}$:          & 0.783  &        & 0.133  &      & 0.084 &           &&  1.000 &       &&  --    &          &  --    &          &  --    &        \\
+          \tabcolsep=0.11cm
+          \begin{tabular}[l]{l r l l r l l r l l c r l c r l l r l l r l l}
+  
+            \hline
+            & \multicolumn{9}{c}{ME Regressions$^{1}$} &&  \multicolumn{2}{c}{OLS$^{2}$} && \multicolumn{9}{c}{ME Marginal Effects$^{3}$} \\
+            \cmidrule(l){2-10}    \cmidrule(l){12-13}     \cmidrule(l){15-23}
+            & Coef.  & $^{[S]}$ & $^{[O]}$ &  Coef. & $^{[S]}$ & $^{[O]}$ & Coef.  & $^{[S]}$ & $^{[O]}$  && \multicolumn{2}{c}{Coef.} && Both   & $^{[S]}$ & $^{[O]}$ & Experts & $^{[S]}$ & $^{[O]}$ & Gates  & $^{[S]}$ & $^{[O]}$ \\
+            \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
+    Intercept             &  1.404 & * & *   &  1.559 & * & *   &  0.898 & * & *   &&  1.241 & *     &&  1.393 & * & *     &  1.382 & * & *     &  0.011 &  \\
+    Age-16                &  0.020 & * & *   &  0.050 & * & *   &  0.044 & * & *   &&  0.035 & *     &&  0.028 &   &       &  0.026 & * & *     &  0.003 &  \\
+    $\textrm{Age-16}^{2}$ & -0.000 & * & *   & -0.001 & * & *   & -0.001 & * & *   && -0.001 & *     && -0.000 &   &       & -0.000 & * & *     &  0.000 &  \\
+    YrsEduc               &  0.082 & * & *   &  0.034 & * & *   &  0.074 & * & *   &&  0.076 & *     &&  0.073 &   &       &  0.075 & * & *     & -0.001 &  \\
+    Female                & -0.257 & * & *   & -0.034 & * & *   & -0.131 & * & *   && -0.215 & *     && -0.209 & * & *     & -0.217 & * & *     &  0.008 &  \\
+    Af Amer               & -0.086 & * & *   & -0.048 & * & *   & -0.041 &   &     && -0.076 & *     && -0.076 &   &       & -0.077 & * & *     &  0.001 &  \\
+    Indian                & -0.113 & * & *   & -0.057 &   & -   &  0.043 &   &     && -0.091 & *     && -0.100 &   &       & -0.093 & * & *     & -0.007 &  \\
+    Asian                 & -0.033 & * & *   &  0.058 & + & +   & -0.062 &   &     && -0.032 & *     && -0.025 &   &       & -0.023 & + & +     & -0.001 &  \\
+    Hisp                  & -0.143 & * & *   & -0.066 & * & *   &  0.077 &   &     && -0.106 & *     && -0.111 &   &       & -0.114 & * & *     &  0.003 &  \\
+    Creativity            & -0.042 & * & *   & -0.021 & + & *   & -0.136 & * & *   && -0.046 & *     && -0.043 &   &       & -0.047 & * & *     &  0.004 &  \\
+    Design                &  0.080 & * & *   &  0.068 & * & *   & -0.048 & + & +   &&  0.082 & *     &&  0.074 & + & +     &  0.068 & * & *     &  0.006 &  \\
+    Analytics             &  0.124 & * & *   &  0.112 & * & *   &  0.183 & * & *   &&  0.131 & *     &&  0.128 & * & *     &  0.127 & * & *     &  0.000 &  \\
+    Perceptive            &  0.063 & * & *   & -0.003 &   &     &  0.135 & * & *   &&  0.058 & *     &&  0.056 & + & +     &  0.061 & * & *     & -0.004 &  \\
+    Log-Variance          & -1.895 & * & *   & -2.791 & * & *   & -0.622 & * & *   &&  --    &       &&        &   &       &        &   &       &        &  \\
+    \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
+    Share$^{4}$:          & 0.783  &   &     & 0.133  &   &     & 0.084  &   &     &&  1.000 &       &&  --    &   &       &  --    &   &       &  --    &  \\
     \cmidrule{1-17}
           \end{tabular}
     
           \begin{tablenotes}
-            \item Signif. Codes: 0.01 '*', 0.05 '+', 0.1 '-'
-            \item Log-Likelihood: HME -0.525, OLS -0.558
+            \item Signif. Codes: 0 '*' 0.01 '+', 0.05 '-' 0.1 ' ' 1
+            \item Log-Likelihood: HME 0.719, OLS -0.558
+            \item $^{[S]}$: Standard errors based on the sandwich variance estimator
+            \item $^{[O]}$: Standard errors based on the OPG variance estimator
             \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
             \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
             \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
@@ -2028,14 +2026,7 @@ cohort.
 
 \section{Monte Carlo Exercise} \label{sec:MonteCarlo}
 
-As a final exercise, a series of simulation exercises are designed to better
-understand the practical behavior of the (H)ME models as the relative size and
-heterogeneity of the sub-populations change, changes in the strength of 
-association between the variables in the model, and misspecification of the number
-of experts. Both experiments will use the same monte carlo framework discussed
-below. All experts will have the following function form. Each local expert
-regression will have two dependent variables $(X, Z)$ and normally distributed
-error terms. 
+As a final exercise, a series of simulation exercises are designed to better understand the practical behavior of the (H)ME models as the relative size and heterogeneity of the sub-populations change, changes in the strength of association between the variables in the model, and misspecification of the number of experts. Both experiments will use the same monte carlo framework discussed below to generate the data but will differ slightly in how the observations are allocated to one expert or another. All experts will have the following function form. Each local expert regression will have two dependent variables $(X, Z)$ and normally distributed error terms. 
 
 \begin{equation} \label{eq:MC_regression_eq}
     y_{i,t} = \beta_{i}^{c} + \beta_{i}^{x}  x_{t} + \beta_{i}^{z}  z_{t} + \varepsilon_{i,t}
@@ -2057,13 +2048,7 @@ The random variable $Z$ will be correlated with $X$ in the following manner:
     Z = \Phi \left( \frac{(X + \rho X_{1})}{\sqrt{1 + \rho^{2}}} \right)
 \end{equation}
 
-where $X_{1}$ is also sampled from a standard normal distribution independent of $X$. The function $\Phi$ is the CDF of the standard normal. The strength of the correlation will be governed by parameter $\rho$. Smaller values of $\rho$ will lead to a more tightly coupled relationship. Given the definitions in Equations (\ref{eq:MC_X_distribution}) and (\ref{eq:MC_XZ_correlation}) the joint distribution of $(X, Z)$ will have a mean vector: $\boldsymbol{\mu} = (0, 0.5)$. After the sample has been created, the probability of membership to each sub-population is then calculated as a function of Z. The logistic function will be used estimate these probabilities:
-
-\begin{equation} \label{eq:general_logistic}
-    P(z) = \frac{1}{1 + \exp\{\alpha (c - z)\}}
-\end{equation}
-
-In this version of the logistic function, the parameter $c$ governs the location of the mid-point while $\alpha$ controls the severity of the slope at the mid-point. The HME will use the gating node to split on the $Z$ covariate and then run the regression in Equation (\ref{eq:MC_regression_eq}). Using the formula notation in this essay the HME regression equation is summarized in Equation (\ref{eq:MC_hme_formula}).
+where $X_{1}$ is also sampled from a standard normal distribution independent of $X$. The function $\Phi$ is the CDF of the standard normal. The strength of the correlation will be governed by parameter $\rho$. Smaller values of $\rho$ will lead to a more tightly coupled relationship. Given the definitions in Equations (\ref{eq:MC_X_distribution}) and (\ref{eq:MC_XZ_correlation}) the joint distribution of $(X, Z)$ will have a mean vector: $\boldsymbol{\mu} = (0, 0.5)$. The HME will use the gating node to split on the $Z$ covariate and then run the regression in Equation (\ref{eq:MC_regression_eq}). Using the formula notation in this essay the HME regression equation is summarized in Equation (\ref{eq:MC_hme_formula}).
 
 \begin{equation} \label{eq:MC_hme_formula}
     Y = X + Z \,\,|\,\, Z
@@ -2071,12 +2056,20 @@ In this version of the logistic function, the parameter $c$ governs the location
 
 \subsection{Experiment One}
 
-The first experiment will examine the variability of the estimated model parameters across monte carlo samples and compare the standard deviation of the converged parameter values to the standard errors produced by the three available variance-covariance matrices (outer-product-of-the-gradient, the hessian, and the sandwich estimator). A baseline sampling model will be established and 1000 monte carlo samples will be draw from that proceedure. Each sample will have 1000 observations. A 2-expert ME model will be fit on each sample and the converged parameter estimates and their standared errors will be recorded. This process will then be repeated at different values for the parameters governing the association between X and Z and for the parameters that govern the probabilities of group membership. For the baseline model, sampling and modeling parameters are choosen to the following.f
+
+
+The first experiment will examine the variability of the estimated model parameters across monte carlo samples and compare the standard deviation of the converged parameter values to the standard errors produced by the three available variance-covariance matrices (the outer-product-of-the-gradient, the hessian, and the sandwich estimator). The baseline sampling procedure discussed above will be used to create 1000 monte carlo samples. Each sample will have 1000 observations. After the sample has been created, the probability of membership to each sub-population is then calculated as a function of Z. The logistic function will be used estimate these probabilities:
+
+\begin{equation} \label{eq:general_logistic}
+    P(z) = \frac{1}{1 + \exp\{\alpha (c - z)\}}
+\end{equation}
+
+In this version of the logistic function, the parameter $c$ governs the location of the mid-point while $\alpha$ controls the severity of the slope at the mid-point. A 2-expert ME model will be fit on each sample and the converged parameter estimates and their standared errors will be recorded. This process will then be repeated at different values for the parameters governing the association between X and Z and for the parameters that govern the probabilities of group membership. For the baseline model, the sampling and modeling parameters are set to the values below:
 
 \begin{itemize}
-    \item $\rho = 1$,\; $c = 0.5$,\; $\alpha = 8$
-    \item $\beta_{1}^{0} = 1.2$, \; $\beta_{1}^{1} = 1.5$, \; $\beta_{1}^{2} = 0.5$, \; $\phi_{1} = -3.218876$
-    \item $\beta_{2}^{0} = 0.8$, \; $\beta_{2}^{1} = 2.0$, \; $\beta_{2}^{2} = 1.1$, \; $\phi_{2} = -3.429597$
+    \item Simulation Parameters: $\rho = 1$,\; $c = 0.5$,\; $\alpha = 8$
+    \item Expert One Parameters: $\beta_{1}^{c} = 1.2$, \; $\beta_{1}^{x} = 1.5$, \; $\beta_{1}^{z} = 0.5$, \; $\phi_{1} = -3.218876$
+    \item Expert Two Parameters: $\beta_{2}^{c} = 0.8$, \; $\beta_{2}^{x} = 2.0$, \; $\beta_{2}^{z} = 1.1$, \; $\phi_{2} = -3.429597$
 \end{itemize}
 
 Three experiments will be run:
@@ -2109,22 +2102,7 @@ The results of the first experiment are presented in two ways. First, we plot th
 
 \bigskip
 
-A second summary of the monte carlo exercise is provided in Tables \ref{tbl:coverage_ratio_c} - \ref{tbl:coverage_ratio_rho}. These tables provide the coverage probability that the true parameter values underpinning the DGP are contained in a confidence interval produced by each model's fitted parameter vector and variance-covariance estimator. The nominal coverage proability is set at 95\% and the percentages in the table are the proportion of times the confidence interval failed to capture the true parameter value. The general pattern captured in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho} holds here as well: coverage ratios for the regression parameters ($\boldsymbol{\beta_{i}}$) hew closely to the nomial fail rate of 5\% across variance estimators but are drasticly inflated for the log-variance parameters ($\phi_{i}$). The value of this view is its demonstration of the size of the impact of using an inappropriate variance estimator for this simulation study. For the Hessian estimator, the 95\% confidence intervals fail to capture the true parameter value from 18 to 23 percent of the time. This ratio jumps to a range of 39 to 47 percent of the time if the Sandwich estimator is used.
-
-
-\subsection{Experiment Two}
-
-Two different monte carlo exercises will be run. First, a simulation
-exercise is designed to study paramater variability of the fitted 
-parameter values $\hat{\boldsymbol{\theta}}$. Interest is of the parameter estimates to their true underlying values as the number of experts grows beyond the true number of latent sub-populations in the data. The impact of this overidentification on the ability of Voung's LR test to discriminate between potential models is of particular interest. The experiments are designed in the following manner. First, the number of latent sub-populations is set at $n$ for $n \in \{2, 3, 4, 5\}$. Second, 
-
-\begin{equation} \label{eq:MC_generic_regression}
-  y_{t} = \beta_{0} + \beta_{1} * X_{t} + \beta_{2} * Z_{t} + \varepsilon_{t}
-\end{equation}
-
-Referencing Table \ref{tbl:monte_carlo_voung_results}, when the data
-generating process has two sub-populations, all estimtated  models are equivalent according to Voung's LR tests. This is due to the fact that models with more than two experts continue to split the two individual heterogeneous populations into smaller but homogenous sub-groups groups with similar regressions to groups from the same sub-population.
-
+A second summary of the monte carlo exercise is provided in Tables \ref{tbl:coverage_ratio_c} - \ref{tbl:coverage_ratio_rho}. These tables provide the coverage probability that the true parameter values underpinning the DGP are contained in a confidence interval produced by each model's fitted parameter vector and variance-covariance estimator. The nominal coverage proability is set at 95\% and the percentages in the table are the proportion of times the confidence interval failed to capture the true parameter value. The general pattern captured in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho} holds here as well: coverage ratios for the regression parameters ($\boldsymbol{\beta_{i}}$) hew closely to the nomial fail rate of 5\% across variance estimators but are drasticly inflated for the log-variance parameters ($\phi_{i}$). The value of this view is its demonstration of the practical impact of using an inappropriate variance estimator for this simulation study. For the Hessian estimator, the 95\% confidence intervals fail to capture the true parameter values of $\phi_{i}$ from 18 to 23 percent of the time. This ratio jumps to a range of 39 to 47 percent of the time if the Sandwich estimator is used. 
 
 \begin{figure}[t!]
   \includegraphics[width=\textwidth]{MonteCarlo_results_c.jpeg}
@@ -2146,8 +2124,9 @@ generating process has two sub-populations, all estimtated  models are equivalen
   \label{fig:MonteCarlo_results_rho}
 \end{figure}
 
+
 \begin{table}[b!] \centering
-  \caption{Simulated Coverage Probability: c}
+  \caption{Simulated Coverage Probability: Mid-point c}
   \begin{threeparttable}
     {\footnotesize
     \begin{tabular}[r]{l l l r r r r r r r r}
@@ -2186,7 +2165,7 @@ OPG       & 0.0 & 0.066 & 0.050 & 0.062 & 0.048 & 0.054 & 0.042 & 0.056 & 0.062 
 
 
 \begin{table}[b!] \centering
-  \caption{Simulated Coverage Probability: $\alpha$}
+  \caption{Simulated Coverage Probability: Slope $\alpha$}
   \begin{threeparttable}
     {\footnotesize
     \begin{tabular}[r]{l l r r r r r r r r}
@@ -2221,14 +2200,14 @@ OPG       & 0.01 & 0.058 & 0.044 & 0.055 & 0.045 & 0.049 & 0.050 & 0.048 & 0.052
     \end{tabular}
     }
     \begin{tablenotes}
-      \item{\footnotesize One minus the coverage probability for logistic parameter c. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_alpha}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$}
+      \item{\footnotesize One minus the coverage probability for logistic parameter $\alpha$. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_alpha}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$}
     \end{tablenotes} \label{tbl:coverage_ratio_alpha}
   \end{threeparttable}
 \end{table}
 
 
 \begin{table}[b!] \centering
-  \caption{Simulated Coverage Probability: $\rho$}
+  \caption{Simulated Coverage Probability: Association $\rho$}
   \begin{threeparttable}
     {\footnotesize
     \begin{tabular}[r]{l l r r r r r r r r}
@@ -2260,50 +2239,86 @@ OPG       & 0.125 & 0.045 & 0.047 & 0.052 & 0.047 & 0.062 & 0.055 & 0.055 & 0.06
     \end{tabular}
     }
     \begin{tablenotes}
-      \item{\footnotesize One minus the coverage probability for logistic parameter c. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_rho}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$.}
+      \item{\footnotesize One minus the coverage probability for association  parameter $\rho$. For 1000 simulated samples, the proportions in the table indicate how often the constructed 95\% confidence intervals fail to captures the true parameter value. This table corresponds to Figure \ref{fig:MonteCarlo_results_rho}. $CI_{0.95} = \hat\beta \, \pm \, 1.96 SE_{\hat{\beta}}$.}
     \end{tablenotes} \label{tbl:coverage_ratio_rho}
   \end{threeparttable}
 \end{table}
 
+
+\clearpage
+
+\subsection{Experiment Two} \label{subsec:ExperimentTwo}
+
+A second experiment is designed to gauge the behavior and performance of the Voung LR test and it's ability to correctly discriminate between different (H)ME models when the number experts in the model does not match the true number of latent sub-populations in the data. The simulation has the following structure. The baseline sampling procedure described in Section \ref{sec:MonteCarlo} will be used to create three different samples. A new probability model will then be used to allocate observations into two, three, and four groups -- one for each of the three samples. For each of the newly created samples, a 2, 3, and 4-expert ME and HME model will be fit to the data and each fitted model will be compared to the others with Voung's LR test, producing a table similar to Table \ref{tbl:voung_comparison}. A multinomial logistic regression (as described in Equation \ref{eq:softmax}) will be used to create the probabilities of group membership and, like the logistic function in Equation \ref{eq:general_logistic}, the probabilities of group membership is based on the variable $Z$ and an intercept term. The coefficients for the sampling and regression experts will be set to the following: 
+
+\begin{itemize}
+  \item Simulation Parameters: $\rho = 1$
+  \item Expert One Parameters: \, $\beta_{1}^{c} = 1.2$, \; $\beta_{1}^{x} = 1.5$, \; $\beta_{1}^{z} = 0.5$, \; $\phi_{1} = -3.218876$
+  \item Expert Two Parameters: \, $\beta_{2}^{c} = 0.8$, \; $\beta_{2}^{x} = 2.0$, \; $\beta_{2}^{z} = 1.1$, \; $\phi_{2} = -3.429597$
+  \item Expert Three Parameters: $\beta_{3}^{c} = 0.4$, \; $\beta_{3}^{x} = 0.8$, \; $\beta_{3}^{z} = 2.0$, \; $\phi_{3} = -3.543914$
+  \item Expert Four Parameters: \, $\beta_{4}^{c} = 1.5$, \; $\beta_{4}^{x} = 0.5$, \; $\beta_{4}^{z} = 0.8$, \; $\phi_{4} = -3.321462$
+\end{itemize}
+
+The parameters for the multinomial logistic regression are set to:
+
+\begin{itemize}
+  \item Multinomial One Parameters: \, $\omega_{1}^{c} = -4$, \; $\omega_{1}^{z} = 6$
+  \item Multinomial Two Parameters: \, $\omega_{2}^{c} = -2$, \; $\omega_{2}^{z} = -6$
+  \item Multinomial Three Parameters: $\omega_{3}^{c} = 6$, \; $\omega_{3}^{z} = 18$
+  \item Multinomial Four Parameters: \, $\omega_{4}^{c} = -15$, \; $\omega_{4}^{z} = 20$
+\end{itemize}
+
+The identification restricting requiring $\boldsymbol{\omega}_{4} = 0$ is ignored. For the sample with two sub-populations, the first two parameter vectors for the regressions and multinomial splits are used. For the three sub-population sample, parameters vectors one through three are used. All vectors are used for the sample with four sub-populations. Figure \ref{fig:MonteCarlo_cross_experts} provides a visual reference for the sub-populations that are formed as a result of the sampling approach and the distribution of the dependent variable conditioned on the appropriate group membership.
+
+\bigskip 
+
+Table \ref{tbl:monte_carlo_voung_results} collects the results of the experiment. When the data generating process has two sub-populations, all estimated models are equivalent according to Voung's LR tests. This is due to the fact that models with more than two experts continue to split the two individual heterogeneous populations into smaller but homogenous groups with similar regression parameters estimated estimated for each one. The results become more nuanced as attention is turned to the sample with three sub-populations. There are several items worth pointing out. First, the 2-expert ME model is the least preferred amongst all the candidate models. The value of it's log-likelihood is signifcantly lower than the competing models with three and four experts. Second, the HME models are preferred over the ME models when keeping for the number of experts constant. This provides more support to the idea that the recursive gating structure of the HME model is more efficient at discovering the latent structure of a given dataset than the ME models which must partition the data all at once using a single multinomial split. Third, the 3-expert and 4-expert HME models are considered equivalent according to the Voung LR test. The same determiniation holds for the 3 and 4-expert ME models as well. Again, the idea here is similar to what is observed for the sample with two sub-populations: the extra expert has a fitted parameter vector that aligns closely with another expert in the model and applied to observations in the same sub-population. Results for the sample with four sub-populations is complicated and speaks to the difficulty of the (H)ME architecture to pull apart sub-groups that share considerable overlap both in the domain of the joint-distribution of $(X, Z)$ and their conditional distributions. Although there are four sub-groups in the simulated data, the 3-expert HME model is clearly preferred according to the LR test and the log-likelihood values. From Figure \ref{fig:MonteCarlo_cross_experts}, the fourth expert (in light blue) has it's entire mass contained in an interval of $y$ ([1.8, 4]) that also is highly associated with values of $y$ for the first sub-population (in black). The noise in the data has become too great for the model to distinguish without additional covariates.
+
+\begin{figure}[t!]
+  \includegraphics[width=\textwidth]{MonteCarlo_cross_experts_data.jpeg}
+  \caption{Samples drawn from the process described in Subsection \ref{subsec:ExperimentTwo}. Each column is a sample with a different number of sub-populations. The top figures plot the observations and their group membership. The bottom figures are density estimations of the dependent variable $y$, broken out by sub-population.}
+  \label{fig:MonteCarlo_cross_experts}
+\end{figure}
+
 \begin{table}[t!] \centering
   \caption{Monte Carlo Simulation and the Voung LR Test}
   \begin{threeparttable}
-    \begin{tabular}[l]{r r r r r r r}
-              &         &       &       &       &       &          \\
-      \multicolumn{7}{c}{Dataset 1: Two Population Groups}                    \\
+    \begin{tabular}[l]{r r r r r r r r}
+              &         &       &       &       &       &     &          \\
+      \multicolumn{8}{c}{Two Population Groups}               \\
       \hline
-      Arch    &         & ME    & HME   & ME    & HME   & ME       \\
-              & Experts & 2     & 3     & 3     & 4     & 4        \\
+      Arch    &         & ME    & HME   & ME    & HME   & ME  & Log-Lik  \\
+              & Experts & 2     & 3     & 3     & 4     & 4   &          \\
               \hline
-      ME      & 2       & .     & 0     & 0     & 0     & 0        \\
-      HME     & 3       & 0     & .     & 0     & 0     & 0        \\
-      ME      & 3       & 0     & 0     & .     & 0     & 0        \\
-      HME     & 4       & 0     & 0     & 0     & .     & 0        \\
-      ME      & 4       & 0     & 0     & 0     & 0     & .        \\
+      ME      & 2       & .     & 0     & 0     & 0     & 0   & 1.383    \\
+      HME     & 3       & 0     & .     & 0     & 0     & 0   & 1.382    \\
+      ME      & 3       & 0     & 0     & .     & 0     & 0   & 1.387    \\
+      HME     & 4       & 0     & 0     & 0     & .     & 0   & 1.389    \\
+      ME      & 4       & 0     & 0     & 0     & 0     & .   & 1.385    \\
       \hline
-              &         &       &       &       &       &          \\
-      \multicolumn{7}{c}{Dataset 2: Three Population Groups}                  \\
+              &         &       &       &       &       &     &         \\
+      \multicolumn{8}{c}{Three Population Groups}            \\
       \hline
-      Arch    &         & ME    & HME   & ME    & HME   & ME       \\
-              & Experts & 2     & 3     & 3     & 4     & 4        \\
+      Arch    &         & ME    & HME   & ME    & HME   & ME  & Log-Lik \\
+              & Experts & 2     & 3     & 3     & 4     & 4   &         \\
               \hline
-      ME      & 2       & .     & -1    & -1    & -1    & -1       \\
-      HME     & 3       & 1     & .     & 0     & 0     & 0        \\
-      ME      & 3       & 1     & 0     & .     & 0     & 0        \\
-      HME     & 4       & 1     & 0     & 0     & .     & 0        \\
-      ME      & 4       & 1     & 0     & 0     & 0     & .        \\
+      ME      & 2       & .     & -1    & -1    & -1    & -1  & 1.074   \\
+      HME     & 3       & 1     & .     & 1     & 0     & 1   & 1.269   \\
+      ME      & 3       & 1     & -1    & .     & -1    & 0   & 1.202   \\
+      HME     & 4       & 1     & 0     & 1     & .     & 1   & 1.267   \\
+      ME      & 4       & 1     & -1    & 0     & -1    & .   & 1.207   \\
       \hline
-              &         &       &       &       &       &          \\
-      \multicolumn{7}{c}{Dataset 3: Four Population Groups}                   \\
+              &         &       &       &       &       &     &         \\
+      \multicolumn{8}{c}{Four Population Groups}             \\
       \hline
-      Arch    &         & ME    & HME   & ME    & HME   & ME       \\
-              & Experts & 2     & 3     & 3     & 4     & 4        \\
+      Arch    &         & ME    & HME   & ME    & HME   & ME  & Log-Lik \\
+              & Experts & 2     & 3     & 3     & 4     & 4   &         \\
       \hline
-      ME      & 2       & .     & -1    & -1    & -1    & -1       \\
-      HME     & 3       & 1     & .     & 0     & -1    & 0        \\
-      ME      & 3       & 1     & 0     & .     & 0     & 0        \\
-      HME     & 4       & 1     & 1     & 0     & .     & 1        \\
-      ME      & 4       & 1     & 0     & 0     & -1    & .        \\
+      ME      & 2       & .     & -1    & -1    & -1    & -1  & 0.633   \\
+      HME     & 3       & 1     & .     & 1     &  1    & 1   & 1.133   \\
+      ME      & 3       & 1     & -1    & .     & -1    & -1  & 0.798   \\
+      HME     & 4       & 1     & -1    & 1     & .     & 1   & 1.008   \\
+      ME      & 4       & 1     & -1    & 1     & -1    & .   & 0.890   \\
       \hline
     \end{tabular}
     \begin{tablenotes}
@@ -2312,12 +2327,11 @@ OPG       & 0.125 & 0.045 & 0.047 & 0.052 & 0.047 & 0.062 & 0.055 & 0.055 & 0.06
   \end{threeparttable}
 \end{table}
 
-
 \clearpage
 
 \section{Conclusion} \label{sec:Conclusion}
 
-In this article, a novel mixture model is explored that borrows equally from the economic and deep learning fields. A flexible (and optionally deep) gating network is used to learn the latent structure of a dataset and then apply local regressions to that latent structure. Robust standard errors and closed form expressions for marginal effects were developed and demonstrated on two different datasets. 
+In this article, a novel mixture model is explored that borrows equally from the economic and deep learning fields. A flexible gating network is used to learn the latent structure of a sample and then apply local regressions to that latent structure. Robust inference and closed form expressions for marginal effects were developed and demonstrated on two different datasets. Methods for model selection are also explored and demonstrated on these two dataset as well. Several simulation studies were also carried out to better understand the behaviour of the competing gating architectures and how they perform on samples with varying degrees of heterogeneity.
 
 
 
