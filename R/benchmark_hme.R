@@ -60,7 +60,7 @@ hme <- function(tree, formula, hme_type=c("hme", "hmre"),
                                    data=data,
                                    family=gaussian,
                                    model=FALSE)
-      expert.pars <- napply(expert.pars, function(x) c(x, exp(var(Y))))
+      expert.pars <- napply(expert.pars, function(x) c(x, log(var(Y))))
       names(expert.pars) <- expert.nodes
     } else {
       expert.pars <- napply(expert.nodes, function(x) runif(ncol(X) , -2, 2))

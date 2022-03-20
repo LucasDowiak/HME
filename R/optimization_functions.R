@@ -9,7 +9,6 @@ m_step <- function(tree, hme_type, expert_type, Y, X, Z, exp.pars, gat.pars, roo
                          exp.pars, Y, X)
   list_posteriors <- napply(names(gat.pars), posterior_weights,
                             tree, list_priors, list_density)
-  
   for (e in names(exp.pars)) {
     jpw <- joint_posterior_weight(e, list_posteriors, root_prior)
     opt_blk <- optimize_block(e, tree, exp.pars, Y, X, jpw, expert_type, hme_type)
@@ -53,7 +52,6 @@ optimize_block <- function(node, treestr, par.list, Y=NULL, X, wts,
   hme_type <- match.arg(hme_type)
   theta <- par.list[[node]]
   # log-likelihood and gradient functionals
-  # needs to be function that returns a function
   D <- gradient(block_type) 
   Q <- Q(block_type)
   if (block_type == "binomial") {
@@ -332,9 +330,6 @@ cross_logistic_hessian <- function(node1, node2, list_priors, list_density, Z)
       out_arrays[[csn]] <- out_arrays[[csn]] + (denom[t] * partial_term - square_term) * ZZ
     }
   }
-  # Divide by sample size to take average
-  # out_arrays <- lapply(out_arrays, function(x) (1 / nrow(Z)) * x)
-  
   # fit together the output of out_arrays into the hessian
   # this will be a splits1 * splits2 * length(gate.nodes)
   colms <- vector("list", ncol(cross_split_names))
@@ -389,7 +384,7 @@ gaussian_hessian <- function(expert, expert.pars, list_priors, list_density, Y, 
     XX <- Xt %o% Xt
     XX <- expert_lik_prop[t] * ( std_err[t]**2 * (1 - expert_lik_prop[t]) - (1 / variance) ) * XX
     XV <- 0.5 * expert_lik_prop[t] * std_err[t] * ( (eps[t]**2 / variance - 1) * (1 - expert_lik_prop[t]) - 2 ) * Xt
-    VV <- 0.25 * expert_lik_prop[t] * ( (eps[t]**2 / variance - 1)**2 * (1 - expert_lik_prop[t]) - (4 * eps[t]**2 / variance) )
+    VV <- 0.25 * expert_lik_prop[t] * ( (eps[t]**2 / variance - 1)**2 * (1 - expert_lik_prop[t]) - (2 * eps[t]**2 / variance) )
     out_array[,,t] <- cbind(rbind(XX, XV), c(t(XV), VV))
   }
   out_array <- rowSums(out_array, dims=2L)
