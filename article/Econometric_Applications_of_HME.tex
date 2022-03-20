@@ -96,190 +96,50 @@ mixture models, Mincer wage equation, machine learning
 
 \section{Introduction}
 
-The concepts of mixture models and mixture distributions are old hat
-in the economics field. \citet{Hamilton1989} and \citet{GoldfeldQuant1973}
-are a few of the pioneering works for time series and cross sectional
-regression, respectively. Today, the modern computing environment is dominated by machine
-learning, and its reigning champion, the artificial neural network, has
-been successfully adapted and studied in the context of applied econometrics.
-This essay adds to the small body of literature that employs a novel
-neural network architecture to model the weights of a mixture model. In doing
-so, the model leverages the highly flexible nature of a neural network but maintain
-interpretability and the means to quantify marginal effects.
-The model under investigation is called the Hierarchical Mixture
-of Experts (HME), a class of mixture models whose defining feature is 
-its conditional weighting scheme. The model's origin story traces back to \citet{JJNH1991}.
-The authors use a single multinomial classifier to assign, in a probabilistic
-sense, input patterns to \textit{local experts}. These experts are
-almost always some flavor of regression or classification model.
-The multinomial structure that assigns inputs to experts is
-referred to as the \textit{gating network}. The authors employ this
-mixture of experts (ME) framework to model vowel discrimination in a speech
-recognization context. Shortly after, \citet{JordanJacobs1992}
-generalize this single-layer multinomial gating network to one with an arbitrary
-number of layers. \citet{JordanJacobs1993} then demonstrate
-an Expectation-Maximization approach to model estimation that is capable of handling the additional complexity
-the generalization requires during optimization. The result
-of this extension is a gating network that takes on a tree-like structure,
-stemming from an initial multinomial split and filtering down through additional
-multinomial partitions of the input space. HME models nest ME models as special case.
-Pushing a little further, one additional case is studied as well. As the depth of an HME
-grows, so too must the number of experts. In the case of a symmetric HME network,
-this growth is geometric with respect to the network's depth. With this in mind,
-a further extension can be considered where each expert is not unique, but a member of a fixed
-set of experts. This additional model is referred to as a Hierarchical Mixture of Repeated
-Experts (HMRE). Figure (\ref{fig:network_comparison}) provides an example
-of each of the variations of this class of model.
+The concepts of mixture models and mixture distributions are old hat in the economics field. \citet{Hamilton1989} and \citet{GoldfeldQuant1973} are a few of the pioneering works for time series and cross sectional regression, respectively. Today, the modern computing environment is dominated by machine learning, and its reigning champion, the artificial neural network, has been successfully adapted and studied in the context of applied econometrics. This essay adds to the small body of literature that employs a novel neural network architecture to model the weights of a mixture model. In doing so, the model leverages the highly flexible nature of a neural network but maintain interpretability and the means to quantify marginal effects. The model under investigation is called the Hierarchical Mixture of Experts (HME), a class of mixture models whose defining feature is its conditional weighting scheme. The model's origin story traces back to \citet{JJNH1991}. The authors use a single multinomial classifier to assign, in a probabilistic sense, input patterns to \textit{local experts}. These experts are almost always some flavor of regression or classification model. The multinomial structure that assigns inputs to experts is referred to as the \textit{gating network}. The authors employ this mixture of experts (ME) framework to model vowel discrimination in a speech recognization context. Shortly after, \citet{JordanJacobs1992} generalize this single-layer multinomial gating network to one with an arbitrary number of layers. \citet{JordanJacobs1993} then demonstrate an Expectation-Maximization approach to model estimation that is capable of handling the additional complexity the generalization requires during optimization. The result of this extension is a gating network that takes on a tree-like structure, stemming from an initial multinomial split and filtering down through additional multinomial partitions of the input space. HME models nest ME models as special case. Pushing a little further, one additional case is studied as well. As the depth of an HME grows, so too must the number of experts. In the case of a symmetric HME network, this growth is geometric with respect to the network's depth. With this in mind, a further extension can be considered where each expert is not unique, but a member of a fixed set of experts. This additional model is referred to as a Hierarchical Mixture of Repeated Experts (HMRE). Figure (\ref{fig:network_comparison}) provides an example of each of the variations of this class of model.
 
 \bigskip
 
-This essay investigates the adoption of ME and HME models to an applied
-econometric framework, with particular attention focused on interpretation of
-the gating network and robust inference of parameter estimates. The outline for the
-rest of this essay is as follows: the remainder of this section
-provides a brief literature review and Section \ref{sec:Model} describes
-the model in formal detail. Section \ref{sec:Estimation} discusses the
-expectation-maximization approach to estimation while Section \ref{sec:Inference}
-concerns itself with robust inference of the estimated parameters.
-Section \ref{sec:MarginalEffects} provides detail on how to derive the
-marginal effects of the model's covariates and Section \ref{sec:ModelSelection}
-discusses an approach for model selection. In Section \ref{sec:SimpleExample},
-a very simple demonstration of the HME in action is presented with 
-a more economically relevant example of applying the HME model to
-a Mincer wage equation in Section \ref{sec:MincerWageEx}. Section
-\ref{sec:Conclusion} concludes.
+This essay investigates the adoption of ME and HME models to an applied econometric framework, with particular attention focused on interpretation of the gating network and robust inference of parameter estimates. The outline for the rest of this essay is as follows: the remainder of this section provides a brief literature review and Section \ref{sec:Model} describes the model in formal detail. Section \ref{sec:Estimation} discusses the expectation-maximization approach to estimation while Section \ref{sec:Inference} concerns itself with robust inference of the estimated parameters. Section \ref{sec:MarginalEffects} provides detail on how to derive the marginal effects of the model's covariates and Section \ref{sec:ModelSelection} discusses an approach for model selection. In Section \ref{sec:SimpleExample}, a very simple demonstration of the HME in action is presented with a more economically relevant example of applying the HME model to a Mincer wage equation in Section \ref{sec:MincerWageEx}. Section \ref{sec:Conclusion} concludes.
 
 \begin{figure}[!ht]
   \centering
   \includegraphics[width=\textwidth]{network_types.jpeg}
-  \caption{Networks \textbf{A} - \textbf{D} depict various network
-  architectures that are discussed in this article. For all four networks,
-  gating nodes are represented as blue circles and experts as orange
-  rectangles. Network \textbf{A} illustrates the original Mixture of
-  Experts (ME) architecture with a single multinomial split leading
-  to a set of experts one layer down. Networks \textbf{B} and \textbf{C} both
-  represent different flavors of a Hierarchical Mixture of Experts (HME). Network
-  \textbf{B} is a symmetric network of depth 2 with successive binary splits.
-  Network \textbf{C} is an asymmetric network of depth 3 with successive
-  binary splits. Network \textbf{D} is an example of the Hierarchical
-  Mixture of Repeated Experts (HMRE) architecture. Notice that multiple paths
-  exist from the root node $0$ to each expert. Compare this to networks
-  \textbf{A} - \textbf{C}, where there is only one unique path from the root
-  node to each expert.}
+  \caption{Networks \textbf{A} - \textbf{D} depict various network   architectures that are discussed in this article. For all four networks, gating nodes are represented as blue circles and experts as orange rectangles. Network \textbf{A} illustrates the original Mixture of Experts (ME) architecture with a single multinomial split leading to a set of experts one layer down. Networks \textbf{B} and \textbf{C} both represent different flavors of a Hierarchical Mixture of Experts (HME). Network \textbf{B} is a symmetric network of depth 2 with successive binary splits. Network \textbf{C} is an asymmetric network of depth 3 with successive binary splits. Network \textbf{D} is an example of the Hierarchical Mixture of Repeated Experts (HMRE) architecture. Notice that multiple paths exist from the root node $0$ to each expert. Compare this to networks \textbf{A} - \textbf{C}, where there is only one unique path from the root node to each expert.}
   \label{fig:network_comparison}
 \end{figure}
 
 
 \subsection{Relevant Literature}
 
-ME and HME frameworks have been utilized for both time series and
-cross-sectional analysis. Within the cross-sectional literature,
-\citet{WaterhouseRobinson1995} puts forth a method to grow an HME from a
-single split from the root node. The authors are influenced by the popular
-technique used for classification and regression trees \citep{CART1984} and 
-apply it to an HME structure. Once the gating structure to an HME tree has    
-been grown, the authors suggest an additional trimming algorithm to prevent overfitting.
-\citet{FFW1997} extend the approach of \citet{WaterhouseRobinson1995} by altering their
-growing algorithm with a mind to scaling the model to handle thousands of
-experts. \citet{JordanXuConverge1995} provide an extended discussion on the convergence of the
-model used by \citet{JordanJacobs1993}. The authors also suggest
-algorithmic improvements to help with estimation. Continuing the theoretical
-discussing, \citet{JiangTanner1999} cover convergence rates of an HME model where experts
-are from the exponential family with generalized linear mean functions.
-\citet{JiangTanner2000} provide regularity conditions on the HME structure for
-for a mixture of general linear models estimated by maximum likelihood to
-produce consistent and asymptotically normal estimates of the mean response.
-The conditions are validated for poisson, gamma, gaussian, and binomial experts.
+ME and HME frameworks have been utilized for both time series and cross-sectional analysis. Within the cross-sectional literature, \citet{WaterhouseRobinson1995} puts forth a method to grow an HME from a single split from the root node. The authors are influenced by the popular technique used for classification and regression trees \citep{CART1984} and apply it to an HME structure. Once the gating structure to an HME tree has been grown, the authors suggest an additional trimming algorithm to prevent overfitting. \citet{FFW1997} extend the approach of \citet{WaterhouseRobinson1995} by altering their growing algorithm with a mind to scaling the model to handle thousands of experts. \citet{JordanXuConverge1995} provide an extended discussion on the convergence of the model used by \citet{JordanJacobs1993}. The authors also suggest algorithmic improvements to help with estimation. Continuing the theoretical discussing, \citet{JiangTanner1999} cover convergence rates of an HME model where experts are from the exponential family with generalized linear mean functions. \citet{JiangTanner2000} provide regularity conditions on the HME structure for a mixture of general linear models estimated by maximum likelihood to produce consistent and asymptotically normal estimates of the mean response. The conditions are validated for poisson, gamma, gaussian, and binomial experts.
 
 \bigskip
 
-Alternatively, \citet{WMS1995} provide a detailed discussion 
-examining ME applied in a time series context and provide valuable
-insights to avoid overfitting the model to the data, a common problem in
-neural network applications. The authors' formulation of the model has
-close similarities to other non-linear time series models developed in
-the late 1980's and early 1990's. A ME time series model sits between the
-markov-switching (MS) model of \citet{Hamilton1989} and the smooth transition
-auto-regressive (STAR) model of \citet{Terasvirta1994}, borrowing a bit from both.
-From an estimation perspective, the ME time series follows close to the
-markov-switching model due to the fact that they are both mixture distribution where
-each (conditional) distribution represents a different "state" of nature. 
-The STAR model, on the other hand, posits only a single distribution and 
-different "states" are represented by unique parameter vectors, and 
-as the name implies, the parameters transition smoothly
-from one state to another over time. The association between the ME, MS, and
-STAR models is inverted when it comes to how to frame the time evolution of the
-states. From this perspective, the ME model is very similar to a STAR model in
-that it also uses the logistic (or multinomial) function to force the probability
-of belonging to one state to change over time. For MS models, a discrete state
-markov process is used to model this dynamic change over the time dimension.
-\citet{HuertaJiangTanner2003} extend \citep{WMS1995} to an HME
-framework. Using five and a half decades of monthly US industrial production
-data, the authors allow the series to choose between two models, one modeled
-as a random walk and the other as trend stationary. In addition, they present a
-Bayesian approach to estimation. \citet{CarvalhoTanner2003} lay out the necessary regularity conditions to perform
-hypothesis tests on stationary ME time series of generalized linear models (ME-GLM)
-using Wald tests. The dual cases of a well-specified and a miss-specified model
-are considered. The authors restrict their analysis to ME-GLM models involving
-lagged dependent and lagged external covariate variables only. Generalization to
-include lagged conditional mean values is left for another time.
-\citet{CarvalhoTanner2005} take a similar approach to \citet{CarvalhoTanner2003} but
-apply their analysis to a purely auto-regressive context restricted to Gaussian models.
-The authors extend arguments in \citet{CarvalhoTanner2003} to non-stationary series and
-provide simulated evidence that the BIC is a helpful statistic for selecting the 
-appropriate number of experts to include. \citet{CarvalhoTanner2006} re-focus the discussion on ME of time series
-regressions restricted to exponential family distributions. Distilling
-the available literature at the time, the authors cover the important
-topics of estimation and asymptotic properties in the maximum likelihood
-framework, selection of the number of experts, model validation and
-fitting. \citet{CarvalhoSkoulakis2010} applies ME of a single time series.
-Using stock returns, the authors structure the gating network using lagged
-dependent variables and an 'external' covariate capturing a measure of the
-trade volume at that time.
+Alternatively, \citet{WMS1995} provide a detailed discussion examining ME applied in a time series context and provide valuable insights to avoid overfitting the model to the data, a common problem in neural network applications. The authors' formulation of the model has close similarities to other non-linear time series models developed in the late 1980's and early 1990's. A ME time series model sits between the markov-switching (MS) model of \citet{Hamilton1989} and the smooth transition auto-regressive (STAR) model of \citet{Terasvirta1994}, borrowing a bit from both. From an estimation perspective, the ME time series follows close to the markov-switching model due to the fact that they are both mixture distribution where each (conditional) distribution represents a different "state" of nature. The STAR model, on the other hand, posits only a single distribution and different "states" are represented by unique parameter vectors, and as the name implies, the parameters transition smoothly from one state to another over time. The association between the ME, MS, and STAR models is inverted when it comes to how to frame the time evolution of the states. From this perspective, the ME model is very similar to a STAR model in that it also uses the logistic (or multinomial) function to force the probability of belonging to one state to change over time. For MS models, a discrete state markov process is used to model this dynamic change over the time dimension. \citet{HuertaJiangTanner2003} extend \citep{WMS1995} to an HME framework. Using five and a half decades of monthly US industrial production data, the authors allow the series to choose between two models, one modeled as a random walk and the other as trend stationary. In addition, they present a Bayesian approach to estimation. \citet{CarvalhoTanner2003} lay out the necessary regularity conditions to perform hypothesis tests on stationary ME time series of generalized linear models (ME-GLM) using Wald tests. The dual cases of a well-specified and a miss-specified model are considered. The authors restrict their analysis to ME-GLM models involving lagged dependent and lagged external covariate variables only. Generalization to include lagged conditional mean values is left for another time. \citet{CarvalhoTanner2005} take a similar approach to \citet{CarvalhoTanner2003} but apply their analysis to a purely auto-regressive context restricted to Gaussian models. The authors extend arguments in \citet{CarvalhoTanner2003} to non-stationary series and provide simulated evidence that the BIC is a helpful statistic for selecting the appropriate number of experts to include. \citet{CarvalhoTanner2006} re-focus the discussion on ME of time series regressions restricted to exponential family distributions. Distilling the available literature at the time, the authors cover the important topics of estimation and asymptotic properties in the maximum likelihood framework, selection of the number of experts, model validation and fitting. \citet{CarvalhoSkoulakis2010} applies ME of a single time series. Using stock returns, the authors structure the gating network using lagged dependent variables and an 'external' covariate capturing a measure of the trade volume at that time.
 
 \bigskip
 
-In this essay estimation and inference is from a maximum likelihood 
-perspective and will remain the primary focus. Estimation of ME and HME
-models from a Bayesian has received considerable amount of attention as well.
-\citet{Waterhouse1995BayesianMF} provided an initial approach to estimating
-a ME by combining gaussian priors on the gating and expert parameters
-with gamma hyper-parameter priors in an approximating ensemble to the true
-joint density of the model. Optimization of the parameter vector for the approximating density
-occurs a block of parameters at a time. \citet{UedaGhahramani2002} improve
-on \citet{Waterhouse1995BayesianMF} by optimizing for the appropriate number of
-experts in addition to  model parameters. \citet{BishopSvenson2003} find
-previous bayesian approaches to estimating an HME lacking. Using variational inference, the authors provide a
-complete bayesian estimation approach to the log marginal likelihood. With an eye
-to prediction, the authors advocate that their approach makes the HME model
-easier to estimate without overfitting.
+In this essay estimation and inference is from a maximum likelihood perspective and will remain the primary focus. Estimation of ME and HME models from a Bayesian has received considerable amount of attention as well. \citet{Waterhouse1995BayesianMF} provided an initial approach to estimating a ME by combining gaussian priors on the gating and expert parameters with gamma hyper-parameter priors in an approximating ensemble to the true joint density of the model. Optimization of the parameter vector for the approximating density occurs a block of parameters at a time. \citet{UedaGhahramani2002} improve on \citet{Waterhouse1995BayesianMF} by optimizing for the appropriate number of experts in addition to  model parameters. \citet{BishopSvenson2003} find previous bayesian approaches to estimating an HME lacking. Using variational inference, the authors provide a complete bayesian estimation approach to the log marginal likelihood. With an eye to prediction, the authors advocate that their approach makes the HME model easier to estimate without overfitting.
 
 \bigskip
 
 
 \section{Model} \label{sec:Model}
 
-To start, the HME is presented as a standard mixture model.
-For a given input and output pair $(\boldsymbol{x}_{t}, y_{t})$, each expert
-provides a probabilistic model relating input row $\boldsymbol{x}_{t}$ to
-output $y_{t}$:
+To start, the HME is presented as a standard mixture model. For a given input and output pair $(\boldsymbol{x}_{t}, y_{t})$, each expert provides a probabilistic model relating input row $\boldsymbol{x}_{t}$ to output $y_{t}$:
 
 \begin{equation} \label{eq:ConditionalDistribution}
   P^{m}_{t} \equiv P^{m}(y_{t}|\boldsymbol{x}_{t}; \boldsymbol{\beta}^{m}), \quad m = 1,2,...,M
 \end{equation}
 
-where $m$ is one of the $M$ component experts in the mixture. The experts
-are combined with associated weights into a mixture distribution
+where $m$ is one of the $M$ component experts in the mixture. The experts are combined with associated weights into a mixture distribution
 
 \begin{equation} \label{eq:staticmixture}
   P(y_{t} | \boldsymbol{x}_{t}; \, \boldsymbol{\beta}) = \sum_{m=1}^{M} \expmixwt(m|t) P^{m}(y_{t} | \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
 \end{equation}
 
-Here, $\expmixwt(m|t)$ is the probability that the input unit $t$ belongs
-to expert $m$ and has the usual restrictions: $0 \leq \expmixwt(m|t) \leq 1$
-for each $m$ and $\sum_{m} \expmixwt(m|t) = 1$. The gating network of the model
-applies a particular functional form to model $\expmixwt(m|t)$, which includes a
-second set of covariates $\boldsymbol{z}_{t}$ and parameter vector $\boldsymbol{\Omega}$:
+Here, $\expmixwt(m|t)$ is the probability that the input unit $t$ belongs to expert $m$ and has the usual restrictions: $0 \leq \expmixwt(m|t) \leq 1$ for each $m$ and $\sum_{m} \expmixwt(m|t) = 1$. The gating network of the model applies a particular functional form to model $\expmixwt(m|t)$, which includes a second set of covariates $\boldsymbol{z}_{t}$ and parameter vector $\boldsymbol{\Omega}$:
 
 \begin{equation} \label{eq:mixture}
   P(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\beta}, \boldsymbol{\Omega}) = \sum_{m=1}^{M} \expmixwt(m | \boldsymbol{z}_{t}; \boldsymbol{\Omega}) P^{m}(y_{t} | \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
@@ -288,31 +148,13 @@ second set of covariates $\boldsymbol{z}_{t}$ and parameter vector $\boldsymbol{
 
 \subsection{Gating Network and $\expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega})$} \label{subsec:GatingNetwork}
 
-The gating network model is structured as a collection of nodes in a tree
-structure that branches out in successive layers. The location of these nodes will
-be referred to by their address $a$. The root node resides at the apex of the tree
-and has the address $0$. The root node then splits into $J$ different nodes,
-one level down the tree. The addresses for these $J$ new nodes are 
-$1|0, 2|0, ..., J|0$. This type of naming convention continues as the
-rest of network is traversed. At its most general, each gating node can yield an
-arbitrary number of splits. While a fully generalized gating network is
-conceptually attractive, it presents practical challenges for implementation.
-In this paper we address several architectures for the gating network, each
-with its own set of structural restrictions on the shape of the network and
-the number of splits each gating node can take. For arbitrary gating node at address $a$,
-we use a multinomial logistic regression to model the split in direction $i$ to be:
+The gating network model is structured as a collection of nodes in a tree structure that branches out in successive layers. The location of these nodes will be referred to by their address $a$. The root node resides at the apex of the tree and has the address $0$. The root node then splits into $J$ different nodes, one level down the tree. The addresses for these $J$ new nodes are $1|0, 2|0, ..., J|0$. This type of naming convention continues as the rest of network is traversed. At its most general, each gating node can yield an arbitrary number of splits. While a fully generalized gating network is conceptually attractive, it presents practical challenges for implementation. In this paper we address several architectures for the gating network, each with its own set of structural restrictions on the shape of the network and the number of splits each gating node can take. For arbitrary gating node at address $a$, we use a multinomial logistic regression to model the split in direction $i$ to be:
 
 \begin{equation} \label{eq:softmax}
   g^{a,i}_{t} \equiv g^{a,i}_{t}(\boldsymbol{z_{t}}, \boldsymbol{\omega}^{a}) = \frac{\exp(\boldsymbol{z_{t}} \  \bw{a,i})}{\sum^{J}_{j=1} {\exp(\boldsymbol{z_{t}} \ \bw{a, j})}}
 \end{equation}
 
-The parameters in equation (\ref{eq:softmax}) are subject to the usual
-identification restrictions. For the remainder of this essay, the choice is made
-to set $\boldsymbol{\omega}^{a,J} = \boldsymbol{0}$ for every gating node.
-It is important to keep track of the product path an input vector travels from
-one node to another. If the observation index is suppressed, the product path
-from one node (say the root node $0$) to another (say $k|\ldots|j|i$)
-can be defined as
+The parameters in equation (\ref{eq:softmax}) are subject to the usual identification restrictions. For the remainder of this essay, the choice is made to set $\boldsymbol{\omega}^{a,J} = \boldsymbol{0}$ for every gating node. It is important to keep track of the product path an input vector travels from one node to another. If the observation index is suppressed, the product path from one node (say the root node $0$) to another (say $k|\ldots|j|i$) can be defined as
 
 \begin{equation} \label{eq:gpath}
   \gateprod{g^{0}}{g^{k|\ldots|j|i|0}} =
@@ -322,25 +164,19 @@ can be defined as
     \end{cases}
 \end{equation}
 
-If one of the nodes is an expert, then we can define the mixture weight
-of expert $m$ for input pattern $i$ to be the product of the path taken
-from the root node to expert $m$:
+If one of the nodes is an expert, then we can define the mixture weight of expert $m$ for input pattern $i$ to be the product of the path taken from the root node to expert $m$:
 
 \begin{equation} \label{eq:gpath2}
   \expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega}) = \gateprod{g^{0}}{m}
 \end{equation}
 
-For network architectures with multiple paths from the root node to
-the same expert (see bottom right of figure (\ref{fig:network_comparison})),
-we can index these multiples paths by $l$ so that
+For network architectures with multiple paths from the root node to the same expert (see bottom right of figure (\ref{fig:network_comparison})), we can index these multiples paths by $l$ so that
 
 \begin{equation} \label{eq:pathsums}
   \expmixwt(m | \boldsymbol{Z}, \boldsymbol{\Omega}) = \shortsum{l} \sumgateprod{g^{0}}{m}{l} 
 \end{equation}
 
-By collecting and summing all possible paths from the root node to each
-expert, the conditional probability given in equation (\ref{eq:mixture}) can be
-expanded and expressed as:
+By collecting and summing all possible paths from the root node to each expert, the conditional probability given in equation (\ref{eq:mixture}) can be expanded and expressed as:
 
 \begin{equation} \label{eq:contribution}
   \begin{split}
@@ -349,18 +185,11 @@ expanded and expressed as:
   \end{split}
 \end{equation}
 
-As it was just mentioned, summing over multiple paths $l$ in equation (\ref{eq:contribution})
-is only necessary in the HMRE case. For the ME and HME cases, $l$ equals 1,
-reducing the mixture weight to Equation (\ref{eq:gpath2}). Going forward,
-this essay will concentrate on the ME and HME cases, leaving the
-exposition for the HMRE for another time.
+As it was just mentioned, summing over multiple paths $l$ in equation (\ref{eq:contribution}) is only necessary in the HMRE case. For the ME and HME cases, $l$ equals 1, reducing the mixture weight to Equation (\ref{eq:gpath2}). Going forward, this essay will concentrate on the ME and HME cases, leaving the exposition for the HMRE for another time.
 
 \bigskip
 
-If we concatenate the parameters of the gating network with the parameters
-of the experts as $\boldsymbol{\theta} = [\boldsymbol{\beta} \,\, \boldsymbol{\Omega}]$,
-then the product of these individual probabilities across the full sample size $T$ yields
-the likelihood function. 
+If we concatenate the parameters of the gating network with the parameters of the experts as $\boldsymbol{\theta} = [\boldsymbol{\beta} \,\, \boldsymbol{\Omega}]$, then the product of these individual probabilities across the full sample size $T$ yields the likelihood function. 
 
 \begin{equation} \label{eq:likelihood}
   \mathcal{L}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \prod_{t}  \sum_{m} \gateprod{g^{0}_{t}}{m}  P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
@@ -372,21 +201,12 @@ And taking its log yields the log likelihood
   \boldsymbol{l}(\boldsymbol{\theta}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) = \sum_{t} \log \left[ \sum_{m} \gateprod{g^{0}_{t}}{m} P^{m}(y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta^{m}}) \right]
 \end{equation}
 
-The functional form of the log likelihood (\ref{eq:loglikelihood}) does not
-lend itself easily to direct optimization, but a well established
-technique using expectation maximization \citep{EM_DLR1977} to estimate mixture
-models is available. This was the primary insight of \citet{JordanJacobs1993}'s
-original paper.
+The functional form of the log likelihood (\ref{eq:loglikelihood}) does not lend itself easily to direct optimization, but a well established technique using expectation maximization \citep{EM_DLR1977} to estimate mixture models is available. This was the primary insight of \citet{JordanJacobs1993}'s original paper.
 
 
 \section{EM Set-Up} \label{sec:Estimation}
 
-The EM approach to estimating an HME model starts by suggesting that if a
-researcher had perfect information, each input vector $\boldsymbol{x}_{t}$ could be matched
-to the expert $P^{m}$ that generated it with certainty. If a set of indicator
-variables is introduced that captures this certainty, an \textit{augmented}
-version of the likelihood in equation (\ref{eq:likelihood}) can be put forward.
-Define the indicator set as:
+The EM approach to estimating an HME model starts by suggesting that if a researcher had perfect information, each input vector $\boldsymbol{x}_{t}$ could be matched to the expert $P^{m}$ that generated it with certainty. If a set of indicator variables is introduced that captures this certainty, an \textit{augmented} version of the likelihood in equation (\ref{eq:likelihood}) can be put forward. Define the indicator set as:
 
 \begin{equation} \label{eq:indicator}
   I_{t}(m) = \begin{cases} 
@@ -409,12 +229,7 @@ leading to the complete-data log-likelihood
 
 
 \subsection{E-Step} \label{sec:Estep}
-The E-step of the algorithm performs an expectation over the complete
-log-likelihood equation (\ref{eq:augloglikelihood}), where the expectation
-includes the additional information contained in the expert regressions.
-One of the results of this expectation is the creation of second set of
-weights $h^{a}$ that parallel the weights from the gating network $g^{a}$
-discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
+The E-step of the algorithm performs an expectation over the complete log-likelihood equation (\ref{eq:augloglikelihood}), where the expectation includes the additional information contained in the expert regressions. One of the results of this expectation is the creation of second set of weights $h^{a}$ that parallel the weights from the gating network $g^{a}$ discussed in section (\ref{subsec:GatingNetwork}). For an HME model:
 
 \begin{equation} \label{eq:Estep}
   \begin{split}
@@ -443,23 +258,12 @@ and the $h^{a, i}_{t}$ are arrived at using Bayes' theorem.
 \end{equation}
 
 
-So, now we have two different forms of weights, $g$'s and $h$'s. The
-way the $g$'s are formed in equation (\ref{eq:softmax}), they are only
-functions of the nodes in the gating network, separate from the
-expert regressions and the information they contain. For this reason,
-\citet{JordanJacobs1993} refer to $g$'s as \textit{priors}.
-The $h$'s draw from both the gating network and the expert regressions and
-are referred to as \textit{posterior} weights.
+So, now we have two different forms of weights, $g$'s and $h$'s. The way the $g$'s are formed in equation (\ref{eq:softmax}), they are only functions of the nodes in the gating network, separate from the expert regressions and the information they contain. For this reason, \citet{JordanJacobs1993} refer to $g$'s as \textit{priors}. The $h$'s draw from both the gating network and the expert regressions and are referred to as \textit{posterior} weights.
 
 
 \subsection{M-Step} \label{sec:Mstep}
 
-One of the more attractive features of using EM to a optimize a
-HME is how the log-likelihood function compartmentalizes into a set 
-of independent functions which can be individually optimized. After
-taking the expectation of the log-likelihood function (\ref{eq:Estep}), the
-parameters governing each expert and each gating network can be grouped
-together and optimized on their own. For the experts we have:
+One of the more attractive features of using EM to a optimize a HME is how the log-likelihood function compartmentalizes into a set of independent functions which can be individually optimized. After taking the expectation of the log-likelihood function (\ref{eq:Estep}), the parameters governing each expert and each gating network can be grouped together and optimized on their own. For the experts we have:
 
 \begin{equation} \label{eq:BetaUpdate}
   \argmax_{\boldsymbol{\beta^{m}}} \sum_{t} \gateprod{h^{0}_{t}}{m} \log P^{m} (y_{t}| \boldsymbol{x}_{t}; \boldsymbol{\beta}^{m})
@@ -471,42 +275,21 @@ and for the gating nodes:
   \argmax_{\boldsymbol{\omega^{a}}} \sum_{t} \gateprod{h^{0}_{t}}{a} \log g( \boldsymbol{z}_{t}, \boldsymbol{\omega}^{a})
 \end{equation}
 
-It is worth noting that the weights in these optimizations 
-$\gateprod{h^{0}_{t}}{h^{a}_{t}}$ are provided to the M-step by the
-E-step and should be considered constant values.
+It is worth noting that the weights in these optimizations $\gateprod{h^{0}_{t}}{h^{a}_{t}}$ are provided to the M-step by the E-step and should be considered constant values.
 
 \subsection{The EM-Algorithm}
 
-The EM algorithm iterates back-and-forth between the E-step and the M-step. 
-Given the data ($\boldsymbol{y}_{t}$, 
-$\boldsymbol{X}_{t}$, $\boldsymbol{Z}_{t}$) and the current set of parameters
-$\boldsymbol{\theta}^{k}$, the expected value of the complete log-likelihood
-(eq. (\ref{eq:augloglikelihood})) is found, resulting in the deterministic
-function Q($\boldsymbol{\theta}^{k}$). In essence,
-the main objective of the E-step is to derive the values of the posterior weights
-($\h{a,i}{t}$) using equations (\ref{eq:ConditionalDistribution}), (\ref{eq:softmax}), (\ref{eq:gpath}), (\ref{eq:hpath}) and (\ref{eq:posteriornode}).
-Once the posterior weights have been calculated in the E-step,
-the M-step holds them constant and then re-estimates the parameter vector:
+The EM algorithm iterates back-and-forth between the E-step and the M-step. Given the data ($\boldsymbol{y}_{t}$, $\boldsymbol{X}_{t}$, $\boldsymbol{Z}_{t}$) and the current set of parameters $\boldsymbol{\theta}^{k}$, the expected value of the complete log-likelihood (eq. (\ref{eq:augloglikelihood})) is found, resulting in the deterministic function Q($\boldsymbol{\theta}^{k}$). In essence, the main objective of the E-step is to derive the values of the posterior weights ($\h{a,i}{t}$) using equations (\ref{eq:ConditionalDistribution}), (\ref{eq:softmax}), (\ref{eq:gpath}), (\ref{eq:hpath}) and (\ref{eq:posteriornode}). Once the posterior weights have been calculated in the E-step, the M-step holds them constant and then re-estimates the parameter vector:
 
 \begin{equation}
     \boldsymbol{\theta}^{k + 1}  = \argmax_{\boldsymbol{\theta}} Q(\hat{\boldsymbol{\theta}}^{k}) = \left[ \argmax_{\boldsymbol{\beta}} Q^{(1)} ( \hat{\boldsymbol{\beta}}^{k} ) \,\,\,\, \argmax_{\boldsymbol{\Omega}} Q^{(2)} ( \hat{\boldsymbol{\Omega}}^{k} ) \right]
 \end{equation}
 
-Again, due to the separable nature of $Q$ (see the middle equality of eq (\ref{eq:Estep})),
-the parameters of each expert regression and each gating node can be
-updated one-at-a-time with equations (\ref{eq:BetaUpdate}) and
-(\ref{eq:OmegaUpdate}), respectively. The separability of the Q function -- when
-applied to finite mixture -- was noticed in the original and excellent
-work of \citet{EM_DLR1977}. See Section 4.3 for the authors' example. 
-From a computational perspective, this set-up has the additional benefit
-of being embarrassingly parallel, making it easier to scale to larger
-and larger data sets.
-
+Again, due to the separable nature of $Q$ (see the middle equality of eq (\ref{eq:Estep})), the parameters of each expert regression and each gating node can be updated one-at-a-time with equations (\ref{eq:BetaUpdate}) and (\ref{eq:OmegaUpdate}), respectively. The separability of the Q function -- when applied to finite mixture -- was noticed in the original and excellent work of \citet{EM_DLR1977}. See Section 4.3 for the authors' example. From a computational perspective, this set-up has the additional benefit of being embarrassingly parallel, making it easier to scale to larger and larger data sets.
 
 \bigskip
 
-It is worth mentioning a few more of the remarkable properties of the EM algorithm
-that are established in \citet{EM_DLR1977}:
+It is worth mentioning a few more of the remarkable properties of the EM algorithm that are established in \citet{EM_DLR1977}:
 
 \begin{enumerate}
   \item Given a sequence of parameter values produced by the General EM algorithm,
@@ -530,31 +313,13 @@ that are established in \citet{EM_DLR1977}:
 
 \section{Inference} \label{sec:Inference}
 
-When considering inference, it is worth thinking about what would motivate
-a researcher to turn to an HME model in the first place. At times,
-a researcher may suspect that a latent structure exists within the data
-and that a single regression $y_{t} = \boldsymbol{x}_{t} \boldsymbol{\beta}$
-may mask a critical change in relationship depending on membership to
-some unknown sub-group $m$ of the data $y_{t,m} = \boldsymbol{x}_{t} \boldsymbol{\beta}^{m}$.
-A wide variety of time series, especially those with longer histories,
-experience changes in behavior over time. They can be subjected to sharp one-off
-structural breaks or the changes can be more gradual changes over time. Regardless of
-the context, any latent structural change in the data generating
-process may also introduce some hidden form of heterogeneity to the error terms. 
-Rather than taking a firm stance on any concealed structure, an HME
-setup ideally limits the work the researcher needs to do to specifying
-a set of well-chosen conditioning variables $\boldsymbol{Z}$ to feed through the gating
-network. This limited workload may come at a cost, though. By allowing the 
-gating network to find its own mixture allocations, the odds of arriving at a
-misspecified model becomes a concern. To guard against this, we use a sandwich
-estimator for the variance-covariance matrix:
+When considering inference, it is worth thinking about what would motivate a researcher to turn to an HME model in the first place. At times, a researcher may suspect that a latent structure exists within the data and that a single regression $y_{t} = \boldsymbol{x}_{t} \boldsymbol{\beta}$ may mask a critical change in relationship depending on membership to some unknown sub-group $m$ of the data $y_{t,m} = \boldsymbol{x}_{t} \boldsymbol{\beta}^{m}$. A wide variety of time series, especially those with longer histories, experience changes in behavior over time. They can be subjected to sharp one-off structural breaks or the changes can be more gradual changes over time. Regardless of the context, any latent structural change in the data generating process may also introduce some hidden form of heterogeneity to the error terms. Rather than taking a firm stance on any concealed structure, an HME setup ideally limits the work the researcher needs to do to specifying a set of well-chosen conditioning variables $\boldsymbol{Z}$ to feed through the gating network. This limited workload may come at a cost, though. By allowing the gating network to find its own mixture allocations, the odds of arriving at a misspecified model becomes a concern. To guard against this, we use a sandwich estimator for the variance-covariance matrix:
 
 \begin{equation} \label{eq:robustgatevarcov}
   \boldsymbol{V}(\boldsymbol{\theta}) = \HI{\boldsymbol{\theta}} \boldsymbol{G}(\boldsymbol{\theta}) \HI{\boldsymbol{\theta}}
 \end{equation}
 
-where $\boldsymbol{G}(\boldsymbol{\theta})$ is the sum of the outer products of the score 
-vectors
+where $\boldsymbol{G}(\boldsymbol{\theta})$ is the sum of the outer products of the score vectors
 
 \begin{equation} \label{eq:OPG}
   \boldsymbol{G}(\boldsymbol{\theta}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\theta})^\top
@@ -566,24 +331,17 @@ and $\HH{\boldsymbol{\theta}}$ is the empirical Hessian:
   \HH{\boldsymbol{\theta}} = \sum_{t} \Ht{\boldsymbol{\theta}}
 \end{equation}
 
-The following sections discusses how to form the score and hessian matrices 
-for the log-likelihood described in equation (\ref{eq:loglikelihood}).
+The following sections discusses how to form the score and hessian matrices for the log-likelihood described in equation (\ref{eq:loglikelihood}).
 
 \subsection{The Score} \label{sec:TheScore}
 
-The notation is tedious but the acyclic nature of the
-gating network makes interpretation of the score vectors clear and
-straightforward. The full score vector is the concatenated scores  
-of each gating node and those of each local expert.
+The notation is tedious but the acyclic nature of the gating network makes interpretation of the score vectors clear and straightforward. The full score vector is the concatenated scores of each gating node and those of each local expert.
 
 \begin{equation}
   \boldsymbol{S}_{t}(\boldsymbol{\theta}) = [ \boldsymbol{S}_{t}(\boldsymbol{\beta})^{\top} \,\, \boldsymbol{S}_{t}(\boldsymbol{\Omega})^{\top} ]^{\top}
 \end{equation}
 
-Starting with
-parameters of the gating network, they can be partitioned 
-in some logical order into the sub-vectors of each node's individual
-score.
+Starting with parameters of the gating network, they can be partitioned in some logical order into the sub-vectors of each node's individual score.
 
 \begin{equation}
   \boldsymbol{S}_{t}(\boldsymbol{\Omega}) = [ \boldsymbol{S}_{t}(\boldsymbol{\omega}^{0})^{\top} \,\, \boldsymbol{S}_{t}(\boldsymbol{\omega}^{1 | 0})^{\top} \,\, \boldsymbol{S}_{t}(\boldsymbol{\omega}^{2 | 0})^{\top} \,\, \ldots \, ]^{\top}
@@ -593,15 +351,7 @@ score.
   \boldsymbol{S}_{t}(\boldsymbol{\omega}^{a}) = [ \boldsymbol{S}_{t}(\bw{a, 1})^{\top} \,\, \ldots \,\, \boldsymbol{S}_{t}(\bw{a, J - 1})^{\top} ]^{\top}
 \end{equation}
 
-In what follows, the functions $M(a)$ and $M(a, i)$ will be used to return
-a subset of experts from a general HME model. The function $M(a)$ will
-return the set of all experts that are ancestors of node $a$, while
-$M(a, i)$ returns the set of experts that are ancestors from branch
-$i$ of node $a$. For instance, in network $\boldsymbol{C}$ of Figure
-\ref{fig:network_comparison}, $M('1|0') = \{'1|1|1|0', \, '2|1|1|0', \, '2|1|0'\}$,
-$M('1|0', 1) = \{'1|1|1|0', \, '2|1|1|0'\}$, and $M('1|0', 2) = \{'2|1|0'\}$.
-For a generic gating node $a$ we can define the individual score for 
-sample $t$ as:
+In what follows, the functions $M(a)$ and $M(a, i)$ will be used to return a subset of experts from a general HME model. The function $M(a)$ will return the set of all experts that are ancestors of node $a$, while $M(a, i)$ returns the set of experts that are ancestors from branch $i$ of node $a$. For instance, in network $\boldsymbol{C}$ of Figure \ref{fig:network_comparison}, $M('1|0') = \{'1|1|1|0', \, '2|1|1|0', \, '2|1|0'\}$, $M('1|0', 1) = \{'1|1|1|0', \, '2|1|1|0'\}$, and $M('1|0', 2) = \{'2|1|0'\}$. For a generic gating node $a$ we can define the individual score for sample $t$ as:
 
 \begin{equation} \label{eq:gateScore}
   \boldsymbol{S}_{t}(\bw{a, i}) = \frac{\partial \boldsymbol{l}_{t}(\boldsymbol{\theta}^{*}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) }{\partial \boldsymbol{\omega}^{a,i}} = \left[ \frac{ \FnOmegaNaught{a}{i} }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} } \right] \boldsymbol{z}_{t}^{\top} 
@@ -613,44 +363,17 @@ with
   \FnOmegaNaught{a}{i} = \left( (1 - g^{a, i}_{t}) \sum_{m}^{M(a, i)} \gateprod{g^{0}_{t}}{m} P^{m}_{t} - \sum_{j \neq i} g^{a, j}_{t} \sum_{m'}^{M(a, j)} \gateprod{g^{0}_{t}}{m'}  P^{m'}_{t} \right)
 \end{equation}
 
-In expression (\ref{eq:gateScore}) above, $ \FnOmegaNaught{a}{i} \left[ \sum_{k} \gateprod{g^{0}_{t}}{P^{k}_{t}} P^{k}_{t}\right]^{-1}$
-is the instantaneous rate of change of the $t^{\mathrm{th}}$ contribution to
-the log-likelihood caused by a small perturbation of $\bw{a, i}$.
-At the maximum likelihood estimator $ \theta^{*}$, the sum
-of (\ref{eq:omegaScore}) over the full sample should be approximately zero.
-This implies that the optimal $\bw{a, i}$
-balances any gain of moving more weight to the set of experts that can be
-reached by taking direction $i$ at node $a$ against the loss suffered by 
-removing weight from the experts at the end of any path $j$ that does not 
-equal $i$.
+In expression (\ref{eq:gateScore}) above, $ \FnOmegaNaught{a}{i} \left[ \sum_{k} \gateprod{g^{0}_{t}}{P^{k}_{t}} P^{k}_{t}\right]^{-1}$ is the instantaneous rate of change of the $t^{\mathrm{th}}$ contribution to the log-likelihood caused by a small perturbation of $\bw{a, i}$. At the maximum likelihood estimator $ \theta^{*}$, the sum of (\ref{eq:omegaScore}) over the full sample should be approximately zero. This implies that the optimal $\bw{a, i}$ balances any gain of moving more weight to the set of experts that can be reached by taking direction $i$ at node $a$ against the loss suffered by removing weight from the experts at the end of any path $j$ that does not equal $i$.
 
 \bigskip
 
-Turning our attention to the expert regressions, the exact functional form
-of the score vector depends on the type of regression we wish to run. In most
-cases, all experts in an HME model are from the same family
-(\citet{HuertaJiangTanner2003} is a notable exception). When all experts share
-the same functional form, it is standard to accept the restriction that no experts
-in the HME model produce the same parameter vector
-$\boldsymbol{\beta}^{m} \neq \boldsymbol{\beta}^{k}$. Such an HME is defined by
-\citet{JiangTanner2000} as being \textit{irreducible}. The irreducibility of an HME
-plays a critical role in guaranteeing the convergence of the model.
-In this essay, each HME discussed will employ a set of experts running 
-a standard linear regression model with Gaussian errors. To aid with model optimization,
-the specification of the parameter vector for each regression,
- $\boldsymbol{\beta}^{m} = [\beta_{0}^{m} \,\, \ldots \,\, \beta_{k}^m \,\, \phi^{m}]^{\top}$,
-takes on a unique form where we model the log variance explicitly:
-$\phi = \log \sigma^{2}$.
+Turning our attention to the expert regressions, the exact functional form of the score vector depends on the type of regression we wish to run. In most cases, all experts in an HME model are from the same family (\citet{HuertaJiangTanner2003} is a notable exception). When all experts share the same functional form, it is standard to accept the restriction that no experts in the HME model produce the same parameter vector $\boldsymbol{\beta}^{m} \neq \boldsymbol{\beta}^{k}$. Such an HME is defined by \citet{JiangTanner2000} as being \textit{irreducible}. The irreducibility of an HME plays a critical role in guaranteeing the convergence of the model. In this essay, each HME discussed will employ a set of experts running a standard linear regression model with Gaussian errors. To aid with model optimization, the specification of the parameter vector for each regression,  $\boldsymbol{\beta}^{m} = [\beta_{0}^{m} \,\, \ldots \,\, \beta_{k}^m \,\, \phi^{m}]^{\top}$, takes on a unique form where we model the log variance explicitly: $\phi = \log \sigma^{2}$.
 
 \begin{equation}
   P^{m}(y_{t} | \boldsymbol{x}_{t}; \, \boldsymbol{\beta}^{m}, \phi^{m}) = \left( 2 \pi \exp ( \phi^{m} ) \right)^{-\frac{1}{2}} \exp{ \left( -\frac{  ( y_{t} - \boldsymbol{x}_{t} \boldsymbol{\beta}^{m} )^{2}  }{2 \exp (\phi^{m}) } \right) }
 \end{equation}
 
-To help save space in the sections below, the following shorthand will be used 
-to denote the residual of each local expert: $\epsilon^{m}_{t} = y_{t} - \boldsymbol{x}_{t} \boldsymbol{\beta}^{m}$.
-Beginning with the original log-likelihood equation defined in Equation (\ref{eq:loglikelihood}),
-and noting that there is only one path from root node to each expert in an HME ($l = 1$),
-the score vector for all expert regressions can be expressed as:
+To help save space in the sections below, the following shorthand will be used to denote the residual of each local expert: $\epsilon^{m}_{t} = y_{t} - \boldsymbol{x}_{t} \boldsymbol{\beta}^{m}$. Beginning with the original log-likelihood equation defined in Equation (\ref{eq:loglikelihood}), and noting that there is only one path from root node to each expert in an HME ($l = 1$), the score vector for all expert regressions can be expressed as:
 
 \begin{equation}
   \boldsymbol{S}_{t}(\boldsymbol{\beta}) = [ \boldsymbol{S}_{t}(\boldsymbol{\beta}^{1})^{\top} \,\, \ldots \,\, \boldsymbol{S}_{t}(\boldsymbol{\beta}^{M})^{\top} ]^{\top}
@@ -676,19 +399,12 @@ and
 \end{align}
 
 
-Expressions (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance})
-are the same as the score vectors for a single (non-logged) OLS regression but
-with an appended term representing expert $m$'s portion of the total
-contribution to the likelihood for that observation.
+Expressions (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance}) are the same as the score vectors for a single (non-logged) OLS regression but with an appended term representing expert $m$'s portion of the total contribution to the likelihood for that observation.
 
 
 \subsection{The Hessian} \label{sec:TheHessian}
 
-The hessian, admittedly, has a complicated form. At its most general it
-can be written as $\Ht{\boldsymbol{\theta}}$ in the equation below. The
-exact nature of the full hessian depends critically on the structure of the
-gating network and the locations of the gate and expert nodes in relation to 
-each other.
+The hessian, admittedly, has a complicated form. At its most general it can be written as $\Ht{\boldsymbol{\theta}}$ in the equation below. The exact nature of the full hessian depends critically on the structure of the gating network and the locations of the gate and expert nodes in relation to each other.
 
 \begin{equation} \label{eq:FullHessian}
   \Ht{\boldsymbol{\theta}} =  \begin{bmatrix}
@@ -701,12 +417,7 @@ each other.
     \end{bmatrix}
 \end{equation}
 
-Each block of the hessian will be non-zero. Looking at the score vectors in Equations
-(\ref{eq:gateScore}), (\ref{eq:ExpertScoreBeta}), and (\ref{eq:ExpertScoreVariance}),
-each contains the expression $\left[ \sum_{m} \gateprod{g^{0}_{t}}{P^{m}_{t}} P^{m}_{t} \right]^{-1}$.
-This term holds the parameters for every gate, split, and local expert in the model. The
-basic details for a generic block of the hessian can be described by the following
-three expressions:
+Each block of the hessian will be non-zero. Looking at the score vectors in Equations (\ref{eq:gateScore}), (\ref{eq:ExpertScoreBeta}), and (\ref{eq:ExpertScoreVariance}), each contains the expression $\left[ \sum_{m} \gateprod{g^{0}_{t}}{P^{m}_{t}} P^{m}_{t} \right]^{-1}$. This term holds the parameters for every gate, split, and local expert in the model. The basic details for a generic block of the hessian can be described by the following three expressions:
 
 \begin{align}
   \Ht{\boldsymbol{\beta}^{m}, \boldsymbol{\beta}^{n}} &= \begin{bmatrix} \label{eq:expertNodeHessian}
@@ -719,33 +430,17 @@ three expressions:
 
 \bigskip
 
-The expressions for the cross-partial derivatives
-between a gating parameter vector and an expert parameter vector can differ
-based on the relative position between $\bw{a, i}$ and
-$\boldsymbol{\beta}^{m}$ in the HME structure.
-For instance, start at the root node and consider what path is needed to
-traverse the network to expert $m$. When arriving at
-node $a$ (which is on the path to expert $m$), if the direction needed to take to reach expert $m$ is along
-branch $i$, then $\bw{a,i}$ will be called an \textit{explicit} parameter
-vector with respect to expert $m$. If taking branch $i$ leads to a different expert
-than $m$, then $\bw{a,i}$ will be referred to as an \textit{implicit}
-parameter vector. Now, define $\mathbb{1}\{a, i, m\}$ as an indicator function
-that equals one if $\bw{a, i}$ is an explicit parameter vector to expert $m$
-and zero if it is an implicit parameter vector (it can only be one or the other).
-With this notation, the details to the hessian in equation (\ref{eq:FullHessian})
-can now be tackled.
+The expressions for the cross-partial derivatives between a gating parameter vector and an expert parameter vector can differ based on the relative position between $\bw{a, i}$ and $\boldsymbol{\beta}^{m}$ in the HME structure. For instance, start at the root node and consider what path is needed to traverse the network to expert $m$. When arriving at node $a$ (which is on the path to expert $m$), if the direction needed to take to reach expert $m$ is along branch $i$, then $\bw{a,i}$ will be called an \textit{explicit} parameter vector with respect to expert $m$. If taking branch $i$ leads to a different expert than $m$, then $\bw{a,i}$ will be referred to as an \textit{implicit} parameter vector. Now, define $\mathbb{1}\{a, i, m\}$ as an indicator function that equals one if $\bw{a, i}$ is an explicit parameter vector to expert $m$ and zero if it is an implicit parameter vector (it can only be one or the other). With this notation, the details to the hessian in equation (\ref{eq:FullHessian}) can now be tackled.
 
 \bigskip
 
-Starting with equation (\ref{eq:gateScore}), the second-order partial
-derivatives for a pair of gating vectors is:
+Starting with equation (\ref{eq:gateScore}), the second-order partial derivatives for a pair of gating vectors is:
 
 \begin{equation} \label{eq:nodehessian}
   \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\omega}^{a, i} \partial \boldsymbol{\omega}^{b,n}} = - \left[ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} \right]^{-2} \FnOmegaNaught{a}{i} \cdot \FnOmegaNaught{b}{n} \, \boldsymbol{z}^{\top}_{t} \boldsymbol{z}_{t} \, + \, \left[ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}\right]^{-1} \boldsymbol{z}^{\top}_{t} \, \frac{ \partial \FnOmegaNaught{a}{i} }{\partial \bw{b, n}}^{\top}
 \end{equation}
 
-where the value $\frac{ \partial \FnOmegaNaught{a}{i} }{\partial \bw{b, n}}$
-depends on the relative locations of $\bw{a, i}$ and $\bw{b, n}$:
+where the value $\frac{ \partial \FnOmegaNaught{a}{i} }{\partial \bw{b, n}}$ depends on the relative locations of $\bw{a, i}$ and $\bw{b, n}$:
 
 \begin{equation}
   \frac{ \partial \FnOmegaNaught{a}{i} }{\partial \boldsymbol{\omega}^{b, n}} = \begin{cases} 
@@ -765,9 +460,7 @@ and the terms $\Omega^{(1)}_{t}$ and $\Omega^{(2)}_{t}$ are defined by:
   \FnOmegaTwo{a}{i}{n} = - \sum_{m}^{M(a)} g^{a, i}_{t} ( \mathbb{1}\{i = n\} - g^{a, n}_{t} ) \gateprod{g^{0}_{t}}{m} P^{m}_{t}
 \end{equation}
 
-The cross-partial derivatives for a general gating node and an expert
-regression depends on their relative location. If expert $m \in M(a)$,
-then:
+The cross-partial derivatives for a general gating node and an expert regression depends on their relative location. If expert $m \in M(a)$, then:
 
 \begin{equation} 
   \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\omega}^{a, i}} =  \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \left( \mathbb{1}\{a, i, m\} - g^{a, i}_{t} \right)  - \frac{ \Omega^{(0)}_{t}(a, i) }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} }  \right] \left[ \frac{ (\epsilon^{m}_{t}) }{\exp(\phi^{m})} \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{z}_{t}  
@@ -787,9 +480,7 @@ And if $m \not\in M(a)$, then:
   \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \phi^{m} \partial \boldsymbol{\omega}^{a, i}} =  - \frac{1}{2} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{ \Omega^{(0)}_{t}(a, i) }{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t} }  \right] \left[ \frac{ (\epsilon^{m}_{t})^{2} }{\exp(\phi^{m})} - 1 \right] \boldsymbol{z}_{t}^{\top} 
 \end{equation}
 
-Starting from equations (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance}),
-the next set of equations express the second-order partial derivatives for parameters
-of the same individual expert:
+Starting from equations (\ref{eq:ExpertScoreBeta}) and (\ref{eq:ExpertScoreVariance}), the next set of equations express the second-order partial derivatives for parameters of the same individual expert:
 
 \begin{equation} 
   \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial (\boldsymbol{\beta}^{m})^{2}} =  \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \left( \frac{ \epsilon^{m}_{t} }{ \exp( \phi^{m}) } \right)^{2} \left( 1 - \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right) - \frac{1}{ \exp( \phi^{m} ) }  \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{x}_{t}
@@ -803,8 +494,7 @@ of the same individual expert:
   \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial (\phi^{m})^{2}} =  \frac{1}{4} \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \left( \frac{ ( \epsilon^{m}_{t} )^{2} }{ \exp( \phi^{m}) } - 1 \right) \left( 1 - \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right) - \frac{ 2 (\epsilon^{m}_{t})^{2} }{ \exp(\phi^{m}) }  \right] 
 \end{equation}
 
-Finally, the set of equations for the second-order partial derivatives for parameters
-of two separate experts:
+Finally, the set of equations for the second-order partial derivatives for parameters of two separate experts:
 
 \begin{equation} 
   \frac{\partial^{2} \boldsymbol{l}_{t}}{\partial \boldsymbol{\beta}^{m} \partial \boldsymbol{\beta}^{n} } = - \left[ \frac{\gateprod{g^{0}_{t}}{m} P^{m}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right] \left[ \frac{\gateprod{g^{0}_{t}}{n} P^{n}_{t}}{ \sum_{k} \gateprod{g^{0}_{t}}{k} P^{k}_{t}} \right]  \left[ \frac{\epsilon^{m}_{t}}{\exp(\phi^{m})} \right] \left[ \frac{\epsilon^{n}_{t}}{\exp(\phi^{n})} \right] \boldsymbol{x}_{t}^{\top} \boldsymbol{x}_{t} 
@@ -821,31 +511,13 @@ of two separate experts:
 
 \section{Marginal Effects} \label{sec:MarginalEffects}
 
-Due to the complexity of the model's structure and the ability to 
-place covariates in either the gating network, the expert regressions,
-or both, viewing the relationship between the covariates and the dependent
-variable through their marginal effects may provide a simplifying lens of the 
-model's governing principles. Just as for logistic and multinomial regression,
-the marginal effects of an HME model have a closed form solution. Starting
-with equation (\ref{eq:mixture}) we replace the expert distributions
-$P^{m}_{t}$ with the expected output for each of the $m$ regressions and use
-the relationship in equation (\ref{eq:gpath2}) to arrive at: 
+Due to the complexity of the model's structure and the ability to place covariates in either the gating network, the expert regressions, or both, viewing the relationship between the covariates and the dependent variable through their marginal effects may provide a simplifying lens of the model's governing principles. Just as for logistic and multinomial regression, the marginal effects of an HME model have a closed form solution. Starting with equation (\ref{eq:mixture}) we replace the expert distributions $P^{m}_{t}$ with the expected output for each of the $m$ regressions and use the relationship in equation (\ref{eq:gpath2}) to arrive at: 
 
 \begin{equation} \label{eq:mixture2}
   \mathbb{E} \left[ y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}, \boldsymbol{\theta} \right] = \sum_{m=1}^{M} \gateprod{g^{0}_{t}}{m} \mathbb{E} \left[ y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}, \boldsymbol{\theta}, m \right]
 \end{equation}
 
-In what follows, $\mathbb{E} \left[y_{t}\right]$ and $\Eym$ will be used as shorthand
-for $\mathbb{E} \left[ y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}, \boldsymbol{\theta} \right]$
-and $\mathbb{E} \left[ y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}, \boldsymbol{\theta}, m \right]$,
-respectively. The functional form of the marginal effect depends on where the variables
-appear in the model. Our existing notation labels the covariates in gating
-network as $\boldsymbol{Z}$ and the covariates in the expert regressions 
-as $\boldsymbol{X}$. As seen later, the variables belonging to
-$\boldsymbol{Z}$ and $\boldsymbol{X}$ do not need to be mutually
-exclusive. There is also no requirement that they differ at all.
-In light of this, a few more notational definitions are needed to cover
-all the cases:
+In what follows, $\mathbb{E} \left[y_{t}\right]$ and $\Eym$ will be used as shorthand for $\mathbb{E} \left[ y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}, \boldsymbol{\theta} \right]$ and $\mathbb{E} \left[ y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}, \boldsymbol{\theta}, m \right]$, respectively. The functional form of the marginal effect depends on where the variables appear in the model. Our existing notation labels the covariates in gating network as $\boldsymbol{Z}$ and the covariates in the expert regressions as $\boldsymbol{X}$. As seen later, the variables belonging to $\boldsymbol{Z}$ and $\boldsymbol{X}$ do not need to be mutually exclusive. There is also no requirement that they differ at all. In light of this, a few more notational definitions are needed to cover all the cases:
 
 \begin{itemize}  
   \item $\boldsymbol{T} = \boldsymbol{Z} \cup \boldsymbol{X}$
@@ -855,19 +527,13 @@ all the cases:
 \end{itemize}
 
 
-The full list of variables considered in the model is labeled $\boldsymbol{T}$.
-Covariates that appear in both the gating network and the expert regressions
-are collected in $\boldsymbol{V}$. $\boldsymbol{U}_{Z}$ and $\boldsymbol{U}_{X}$ are
-used to label variables that appear only in the gating network or only in the expert
-regressions, respectively. With this notation, we can express the full marginal effects
-of the HME by where the explanatory variables appear in the model.
+The full list of variables considered in the model is labeled $\boldsymbol{T}$. Covariates that appear in both the gating network and the expert regressions are collected in $\boldsymbol{V}$. $\boldsymbol{U}_{Z}$ and $\boldsymbol{U}_{X}$ are used to label variables that appear only in the gating network or only in the expert regressions, respectively. With this notation, we can express the full marginal effects of the HME by where the explanatory variables appear in the model.
 
 \begin{equation} \label{eq:hme_marginal_effect_def}
   \frac{\partial \mathbb{E} \left[y_{t}\right]}{\partial \boldsymbol{T}} \equiv \boldsymbol{\Delta}_{t} = \sum_{m=1}^{M} \boldsymbol{\Delta}^{m}_{t} = \sum_{m=1}^{M} \left[ \frac{\partial \Eym}{\partial \boldsymbol{U}_{Z}}   \quad   \frac{\partial \Eym}{\partial \boldsymbol{V}}   \quad   \frac{\partial \Eym}{\partial \boldsymbol{U}_{X}}   \right]
 \end{equation}
 
-with the functional form of the each covariate group in (\ref{eq:hme_marginal_effect_def})
-defined as:
+with the functional form of the each covariate group in (\ref{eq:hme_marginal_effect_def}) defined as:
 
 \begin{equation} \label{eq:ME_gating}
   \frac{\partial \Eym}{\partial \boldsymbol{U}_{Z}} = \frac{\partial \gateprod{g^{0}_{t}}{m}}{{\partial \boldsymbol{U}_{Z}}} \Eym
@@ -883,17 +549,7 @@ defined as:
   \frac{\partial \Eym}{\partial \boldsymbol{V}} = \frac{\partial \gateprod{g^{0}_{t}}{m}}{{\partial \boldsymbol{V}}} \Eym + \gateprod{g^{0}_{t}}{m} \frac{\partial \Eym}{{\partial \boldsymbol{V}}}
 \end{equation}
 
-Not matter how complex the model becomes, the researcher can always interpret
-the estimated HME through a single vector of marginal effects of $\boldsymbol{T}$.
-Of the four components in equations (\ref{eq:ME_gating}) - (\ref{eq:ME_both}),
-three have already been established: $\Eym$ is the output from local
-expert $m$, $\gateprod{g^{0}_{t}}{m_{t}}$ is the prior weight for
-input $t$ for local expert $m$, and $\frac{\partial \Eym}{{\partial \boldsymbol{X}}}$
-is the marginal effect of the local expert $m$ with respect to covariates $\boldsymbol{X}$.
-What is left is the partial derivative of the gating network with respect to a
-variable in that network $\frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \boldsymbol{z}_{t}}$.
-Starting with equation (\ref{eq:gpath}), we take the partial with
-respect to parameters in the gating matrix:
+Not matter how complex the model becomes, the researcher can always interpret the estimated HME through a single vector of marginal effects of $\boldsymbol{T}$. Of the four components in equations (\ref{eq:ME_gating}) - (\ref{eq:ME_both}), three have already been established: $\Eym$ is the output from local expert $m$, $\gateprod{g^{0}_{t}}{m_{t}}$ is the prior weight for input $t$ for local expert $m$, and $\frac{\partial \Eym}{{\partial \boldsymbol{X}}}$ is the marginal effect of the local expert $m$ with respect to covariates $\boldsymbol{X}$. What is left is the partial derivative of the gating network with respect to a variable in that network $\frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \boldsymbol{z}_{t}}$. Starting with equation (\ref{eq:gpath}), we take the partial with respect to parameters in the gating matrix:
 
 \begin{equation} \label{eq:hme_gate_marginal_effect_1}
   \boldsymbol{\delta}^{m}_{t} \equiv \frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \boldsymbol{z}_{t}} = \frac{\partial g^{0, i}_{t} g^{i|0, j}_{t} \cdots g^{k|\cdots|j|i|0, m}_{t}}{\partial \boldsymbol{z}_{t}}
@@ -916,8 +572,7 @@ Since
   \frac{\partial g^{a, i}_{t}}{\partial \boldsymbol{z}_{t}} = g^{a, i}_{t} \left( \bw{a, i} - \sum_{j} g^{a, j}_{t} \bw{a, j} \right)^{\top} = g^{a, i}_{t} \left( \bw{a, i} - \mean{\boldsymbol{\omega}}^{a} \right)^{\top}
 \end{equation}
 
-we can substitute equation (\ref{eq:node_marginal_effect}) into
-(\ref{eq:hme_gate_marginal_effect_2}) to arrive at:
+we can substitute equation (\ref{eq:node_marginal_effect}) into (\ref{eq:hme_gate_marginal_effect_2}) to arrive at:
 
 \begin{equation} \label{eq:marginal_effects}
   \begin{split}
@@ -926,24 +581,12 @@ we can substitute equation (\ref{eq:node_marginal_effect}) into
   \end{split}
 \end{equation}
 
-Looking closely at equation (\ref{eq:marginal_effects}), the instantaneous rate
-of change of $\gateprod{g^{0}_{t}}{m}$ to small deviations of $\boldsymbol{z}_{t}$
-has an interesting representation. The row vector $( \boldsymbol{W}^{m} )^{\top}$
-mean differences the parameter values of each edge in the path from the
-root node to expert $m$. This path is the \textit{only} path from the root
-node to expert $m$. The sum of the mean parameter deviations are then appropriately
-weighted by the prior gate path $\gateprod{g^{0}}{m}$.
+Looking closely at equation (\ref{eq:marginal_effects}), the instantaneous rate of change of $\gateprod{g^{0}_{t}}{m}$ to small deviations of $\boldsymbol{z}_{t}$ has an interesting representation. The row vector $( \boldsymbol{W}^{m} )^{\top}$ mean differences the parameter values of each edge in the path from the root node to expert $m$. This path is the \textit{only} path from the root node to expert $m$. The sum of the mean parameter deviations are then appropriately weighted by the prior gate path $\gateprod{g^{0}}{m}$.
 
 
 \subsection{Delta Method}
 
-Using the delta method, we can approximate standard
-errors for the marginal effects of the HME model. Starting with equation
-(\ref{eq:hme_marginal_effect_def}) from the previous section, we break down
-the gradient of the marginal effects with respect to the parameters by those 
-in the gating network, $\boldsymbol{\Omega}$, and the parameters in the
-expert regressions, $\boldsymbol{\beta}$. These results are collected in Table
- \ref{tbl:delta_method_gradients}.
+Using the delta method, we can approximate standard errors for the marginal effects of the HME model. Starting with equation (\ref{eq:hme_marginal_effect_def}) from the previous section, we break down the gradient of the marginal effects with respect to the parameters by those in the gating network, $\boldsymbol{\Omega}$, and the parameters in the expert regressions, $\boldsymbol{\beta}$. These results are collected in Table \ref{tbl:delta_method_gradients}.
 
  \bigskip
 
@@ -961,30 +604,13 @@ expert regressions, $\boldsymbol{\beta}$. These results are collected in Table
 \end{table}
 
 
-Again, many of the expressions in Table \ref{tbl:delta_method_gradients}
-have already been defined in previous sections. The three expressions new to this
-section are $\frac{\partial^{2} \Eym}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}$,
-$\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$,
-and $\frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \bw{a,i}}$.
-For the standard OLS regressions that are considered in this paper,
-$\frac{\partial^{2} \Eym}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}} = \boldsymbol{1}$.
-Conceptually, $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$
-describes how the marginal effects of the gating network change in response
-to small changes in the parameters of $\boldsymbol{\Omega}$. The value of
-$\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$
-depends on what role $\boldsymbol{\omega}^{a,i}$ plays in navigating an input
-pattern from the root node to the expert $m$. In what follows, the indicator notation
-introduced in Section \ref{sec:TheHessian} will be used where $\mathbb{1}\{a, i, m\}$
-is equal to one if $\bw{a, i}$ is an explicit gating vector for expert $m$ and zero
-if it is an implicit gating vector. With this notation in mind, the partial
-derivative of the prior weight with respect to gate parameter vector $\bw{a, i}$ is:
+Again, many of the expressions in Table \ref{tbl:delta_method_gradients} have already been defined in previous sections. The three expressions new to this section are $\frac{\partial^{2} \Eym}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}}$, $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$, and $\frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \bw{a,i}}$. For the standard OLS regressions that are considered in this paper, $\frac{\partial^{2} \Eym}{\partial \boldsymbol{X} \partial \boldsymbol{\beta}^{m}} = \boldsymbol{1}$. Conceptually, $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$ describes how the marginal effects of the gating network change in response to small changes in the parameters of $\boldsymbol{\Omega}$. The value of $\frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \boldsymbol{\omega}^{a,i}}$ depends on what role $\boldsymbol{\omega}^{a,i}$ plays in navigating an input pattern from the root node to the expert $m$. In what follows, the indicator notation introduced in Section \ref{sec:TheHessian} will be used where $\mathbb{1}\{a, i, m\}$ is equal to one if $\bw{a, i}$ is an explicit gating vector for expert $m$ and zero if it is an implicit gating vector. With this notation in mind, the partial derivative of the prior weight with respect to gate parameter vector $\bw{a, i}$ is:
 
 \begin{equation}
   \frac{\partial \gateprod{g^{0}_{t}}{m}}{\partial \bw{a,i}} = \gateprod{g^{0}_{t}}{f^{m}} \left( \mathbb{1}\{a, i, m\} - g^{a,i} \right) \boldsymbol{z}_{t}^{\top}
 \end{equation}
 
-The partial derivative of the marginal effects of an HME with respect to
-a gate parameter vector is expressed as:
+The partial derivative of the marginal effects of an HME with respect to a gate parameter vector is expressed as:
 
 \begin{equation} \label{eq:delta_gate_partial_exp}
   \frac{\partial \boldsymbol{\delta}^{m}_{t}}{\partial \bw{a,i}} = \gateprod{g^{0}_{t}}{m} (\mathbb{1}\{a, i, m\} - g^{a,i}_{t})  +  \gateprod{g^{0}_{t}}{m} \left[  (\mathbb{1}\{a, i, m\} - g^{a,i}_{t}) (\boldsymbol{W}^{m})^{\top}  - (\boldsymbol{G}^{a,i})^{\top}  \right] \boldsymbol{z}_{t}^{\top}
@@ -996,12 +622,7 @@ where $\boldsymbol{W}^{m}$ was first seen in equation (\ref{eq:marginal_effects}
   \boldsymbol{G}^{a,i} = \left\{ g^{a,i} (1 - g^{a,i}) \bw{a,i} - \sum_{j \neq i} g^{a,i} g^{a,j} \bw{a,j} \right\}
 \end{equation}
 
-
-
-Standard errors for the marginal effects for the HME models can then be
-constructed with the robust variance-covariance matrix from equation
-(\ref{eq:robustgatevarcov}) and the collection of equations in this Section
-that fully defines $\frac{\partial \boldsymbol{\Delta}}{\partial \boldsymbol{\theta}}$.
+Standard errors for the marginal effects for the HME models can then be constructed with the robust variance-covariance matrix from equation (\ref{eq:robustgatevarcov}) and the collection of equations in this Section that fully defines $\frac{\partial \boldsymbol{\Delta}}{\partial \boldsymbol{\theta}}$.
 
 
 \begin{equation} \label{eq:std_errs_full_marginal_effects}
@@ -1011,60 +632,23 @@ that fully defines $\frac{\partial \boldsymbol{\Delta}}{\partial \boldsymbol{\th
 
 \section{Model Selection} \label{sec:ModelSelection}
 
-For model discrimination we follow the sequential approach described 
-by \citet{Voung1989} for comparing two models with a potential set of overlapping
-conditional distributions. A few of the author's definitions, equations, and theorems relevant 
-to this article are collected and presented below. Much of the original wording
-and notation remain unchanged though some small alterations have been made to align with the
-notation of this article. 
+For model discrimination we follow the sequential approach described by \citet{Voung1989} for comparing two models with a potential set of overlapping conditional distributions. A few of the author's definitions, equations, and theorems relevant to this article are collected and presented below. Much of the original wording and notation remain unchanged though some small alterations have been made to align with the notation of this article. 
 
 \bigskip
 
-\citet{Voung1989} centers his work on the likelihood-ratio (LR) framework.
-Suppose that there are two (H)ME models with different functional forms that need
-to be compared. These models will be labeled model A and model B and have parameters
-of length p and q, respectively. The log-likelihood
-for model A at the pseudo-true value $\boldsymbol{\theta}^{o}$ is given by
-$\boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$
-which is defined in Equation (\ref{eq:loglikelihood}). The value
-$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
-is the expectation of the log-likelihood value where the expectation is taken over the
-joint distribution of $(\boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$. Although
-$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
-is unknown, it can be consistently estimated by (1/N) times the log-likelihood
-value evaluated at the quasi-maximum likelihood estimator (MLE). Therefore (1/N) times
-the log-likelihood ratio statistic evaluated at the MLE is a consistent estimator of 
-$\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] - \mathbb{E} \left[ \boldsymbol{l}^{B}(\boldsymbol{\gamma}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$.
-The sample analogue for the LR statistic is defined in equation (\ref{eq:LR_statistic}):
+\citet{Voung1989} centers his work on the likelihood-ratio (LR) framework. Suppose that there are two (H)ME models with different functional forms that need to be compared. These models will be labeled model A and model B and have parameters of length p and q, respectively. The log-likelihood for model A at the pseudo-true value $\boldsymbol{\theta}^{o}$ is given by $\boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$ which is defined in Equation (\ref{eq:loglikelihood}). The value $\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$ is the expectation of the log-likelihood value where the expectation is taken over the joint distribution of $(\boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$. Although $\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$ is unknown, it can be consistently estimated by (1/N) times the log-likelihood value evaluated at the quasi-maximum likelihood estimator (MLE). Therefore (1/N) times the log-likelihood ratio statistic evaluated at the MLE is a consistent estimator of $\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right] - \mathbb{E} \left[ \boldsymbol{l}^{B}(\boldsymbol{\gamma}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$. The sample analogue for the LR statistic is defined in equation (\ref{eq:LR_statistic}):
 
 \begin{equation} \label{eq:LR_statistic}
   LR_{N} (\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \equiv  \sum_{t}^{N} \boldsymbol{l}^{A}_{t}(\hat{\boldsymbol{\theta}}) - \boldsymbol{l}^{B}_{t}(\hat{\boldsymbol{\gamma}}) = \sum_{t}^{N} \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) }
 \end{equation}
 
-\citet{Voung1989} characterizes the asymptotic distribution of the $LR_{N}$ statistic under very general
-conditions, covering the cases where the competing models are non-nested, overlapping,
-or nested and whether both, one, or neither model is misspecified.
-The overlapping case is particularly relevant for this article, best exemplified 
-when a M-expert ME model is compared to a M-expert HME model and the probability
-of the two competing models sharing a common set of conditional distributions
-is high. What follows is a sequence procedure that identifies the limiting
-distribution of the likelihood-ratio statistic expressed in Equation
-(\ref{eq:sample_LR_convergence_to_population_LR}).
+\citet{Voung1989} characterizes the asymptotic distribution of the $LR_{N}$ statistic under very general conditions, covering the cases where the competing models are non-nested, overlapping, or nested and whether both, one, or neither model is misspecified. The overlapping case is particularly relevant for this article, best exemplified when a M-expert ME model is compared to a M-expert HME model and the probability of the two competing models sharing a common set of conditional distributions is high. What follows is a sequence procedure that identifies the limiting distribution of the likelihood-ratio statistic expressed in Equation (\ref{eq:sample_LR_convergence_to_population_LR}).
 
 \begin{equation} \label{eq:sample_LR_convergence_to_population_LR}
   \frac{1}{c} LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}}) \overset{a.s.}{\longrightarrow} \mathbb{E} \left[ \log \frac{P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o})}{P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})} \right]
 \end{equation}
 
-First, the correct asymptotic distribution of
-$LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$ needs to be 
-identified and its convergence rate ($1/c$). Second, given the correct asymptotic
-distribution, provide a directional test for to determine which model is preferred over
-the other or if they are observationally equivalent given the data.
-For the overlapping model case there are two possible limiting distributions
-for $LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$, as indicated
-below. In one circumstance, the asymptotic distribution is normally distributed.
-In a second circumstance, a weighted sum of chi-squares is the limiting distribution.
-A weighted sum of chi-squares distribution has the following definition:
+First, the correct asymptotic distribution of $LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$ needs to be identified and its convergence rate ($1/c$). Second, given the correct asymptotic distribution, provide a directional test for to determine which model is preferred over the other or if they are observationally equivalent given the data. For the overlapping model case there are two possible limiting distributions for $LR_{N}(\hat{\boldsymbol{\theta}}, \, \hat{\boldsymbol{\gamma}})$, as indicated below. In one circumstance, the asymptotic distribution is normally distributed. In a second circumstance, a weighted sum of chi-squares is the limiting distribution. A weighted sum of chi-squares distribution has the following definition:
 
 \begin{definition}[Weighted Sums of Chi-Square Distributions] \label{def:WeightSum_of_ChiSq}
   \emph{Let $\boldsymbol{Z} = (Z_{1}, ..., Z_{m})^{\top}$ be a vector of m independent standard normal variables,
@@ -1074,8 +658,7 @@ A weighted sum of chi-squares distribution has the following definition:
   $M_{m}(\cdot; \boldsymbol{\lambda})$.}
 \end{definition}
 
-Theorem 3.1 from \citet{Voung1989} states the conditions that lead to the two different
-asymptotic distributions for $LR_{N}$. This theorem is reproduced here:
+Theorem 3.1 from \citet{Voung1989} states the conditions that lead to the two different asymptotic distributions for $LR_{N}$. This theorem is reproduced here:
 
 \begin{theorem}[Asymptotic Distribution of the LR Statistic] \label{th:AsymDistLR}
   \emph{Given assumptions A1-A5 in \citet{Voung1989}:
@@ -1099,11 +682,7 @@ asymptotic distributions for $LR_{N}$. This theorem is reproduced here:
   }
 \end{theorem}
 
-In the theorem above, $\boldsymbol{G}(\boldsymbol{\theta})$ and $\HI{\boldsymbol{\theta}}$
-have been defined in Equations (\ref{eq:OPG}) and (\ref{eq:Hessian}) while 
-$\boldsymbol{G}(\boldsymbol{\theta}, \, \boldsymbol{\gamma}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\gamma})^\top$.
-The term $w^{2}_{o}$ also appears in Theorem (\ref{th:AsymDistLR}). This represents
-the pseudo-true variance of the LR statistic and is defined as:
+In the theorem above, $\boldsymbol{G}(\boldsymbol{\theta})$ and $\HI{\boldsymbol{\theta}}$ have been defined in Equations (\ref{eq:OPG}) and (\ref{eq:Hessian}) while $\boldsymbol{G}(\boldsymbol{\theta}, \, \boldsymbol{\gamma}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\gamma})^\top$. The term $w^{2}_{o}$ also appears in Theorem (\ref{th:AsymDistLR}). This represents the pseudo-true variance of the LR statistic and is defined as:
 
 \begin{align*}
   w_{o}^{2} \equiv & \mathbb{Var} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \\
@@ -1116,9 +695,7 @@ The sample analogue for the population statistic has a straightforward definitio
   \hat{w}^{2}_{N} \equiv \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right]^{2} - \left[ \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right] \right]^{2}
 \end{equation}
 
-\citet{Voung1989} demonstrates that the sample variance converges almost surely
-to the population pseudo-true variance and gives the limiting distribution in
-Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
+\citet{Voung1989} demonstrates that the sample variance converges almost surely to the population pseudo-true variance and gives the limiting distribution in Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
 
 \begin{theorem}[Asymptotic Distribution of the Variance Statistics given $w^{2} = 0$] \label{th:AsymDistVar_at_null}
   \emph{Given assumptions A1-A7 in \citet{Voung1989} and Definition (\ref{def:WeightSum_of_ChiSq})
@@ -1131,31 +708,16 @@ Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
 
 \subsection{The Variance Test}
 
-The first step in comparing model A and model B is to determine whether the
-following relationship holds: $P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) = P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})$.
-As seen in Theorem (\ref{th:AsymDistLR}), whether $P^{A} = P^{B}$ holds has
-direct implications on the limiting distribution of
-$LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}})$.
-\citet{Voung1989} points out that testing this relationship is equivalent to testing
-whether the variance of the LR statistic is significantly different from zero.
+The first step in comparing model A and model B is to determine whether the following relationship holds: $P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) = P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o})$. As seen in Theorem (\ref{th:AsymDistLR}), whether $P^{A} = P^{B}$ holds has direct implications on the limiting distribution of $LR_{N}(\hat{\boldsymbol{\theta}}, \hat{\boldsymbol{\gamma}})$. \citet{Voung1989} points out that testing this relationship is equivalent to testing whether the variance of the LR statistic is significantly different from zero.
 
-For the variance test the null hypothesis is that $w^{2}_{o} = 0$, which is
-equivalent to $H_{0}: P^{A} = P^{B}$. For some significance level $\alpha_{w}$, 
-if we fail to reject the null we can draw the
-conclusion that the two models are observationally equivalent given the data.
-If we do have enough evidence in the data to reject the null, the next step
-is to test for a preference between the two competing models.
+\bigskip
+
+For the variance test the null hypothesis is that $w^{2}_{o} = 0$, which is equivalent to $H_{0}: P^{A} = P^{B}$. For some significance level $\alpha_{w}$, if we fail to reject the null we can draw the conclusion that the two models are observationally equivalent given the data. If we do have enough evidence in the data to reject the null, the next step is to test for a preference between the two competing models. 
 
 
 \subsection{Directional Test}
 
-For models with an overlapping relationship, after a rejection of the null
-hypothesis of the variance test ($H_{0}: P^{A} = P^{B}$), Theorem
-(\ref{th:AsymDistLR}) ensures that the limiting distribution of the
-LR statistic is the normal distribution. With this knowledge and Theorem (5.1)
-from \citet{Voung1989} it is straightforward to test if the LR statistic
-is statistically different from zero. Theorem (5.1) from \citet{Voung1989}
-is reproduced here:
+For models with an overlapping relationship, after a rejection of the null hypothesis of the variance test ($H_{0}: P^{A} = P^{B}$), Theorem (\ref{th:AsymDistLR}) ensures that the limiting distribution of the LR statistic is the normal distribution. With this knowledge and Theorem (5.1) from \citet{Voung1989} it is straightforward to test if the LR statistic is statistically different from zero. Theorem (5.1) from \citet{Voung1989} is reproduced here:
 
 \begin{theorem}[Model Selection Tests for Strictly Non-Nested Models] \label{th:NonNestAsyLRDist}
   \emph{
@@ -1169,21 +731,9 @@ is reproduced here:
   }
 \end{theorem}
 
-The null of the model selection test is that of no observational difference
-between the competing models. At some significance level $\alpha_{LR}$,
-a rejection of the null indicates that one model is preferred over the other
-and the sign of the LR statistic indicates which one. Referencing the LR
-statistics definition in Equation (\ref{eq:LR_statistic}), a positive 
-value indicates that model A is preferred over model B and vice-versa for
-a negative value.
+The null of the model selection test is that of no observational difference between the competing models. At some significance level $\alpha_{LR}$, a rejection of the null indicates that one model is preferred over the other and the sign of the LR statistic indicates which one. Referencing the LR statistics definition in Equation (\ref{eq:LR_statistic}), a positive value indicates that model A is preferred over model B and vice-versa for a negative value.
 
-It is worth pointing out that the size of the HME models can become quite large.
-The class of models investigated in this article have parameter vectors that range
-in length from 21 to 122. To penalize parameter size when weighing competing models,
-a correction factor can be deducted from the LR statistic. This essay uses a correction 
-factor based on the \citet{Schwarz1978} information criterion and provided in \citet{Voung1989}.
-The correction factor is defined in Equation (\ref{eq:Schwarz_correction_factor})
-and the adjusted LR statistic is defined in Equation (\ref{eq:AdjustedLR})
+It is worth pointing out that the size of the HME models can become quite large. The class of models investigated in this article have parameter vectors that range in length from 21 to 122. To penalize parameter size when weighing competing models, a correction factor can be deducted from the LR statistic. This essay uses a correction factor based on the \citet{Schwarz1978} information criterion and provided in \citet{Voung1989}. The correction factor is defined in Equation (\ref{eq:Schwarz_correction_factor}) and the adjusted LR statistic is defined in Equation (\ref{eq:AdjustedLR}):
 
 \begin{equation} \label{eq:Schwarz_correction_factor}
   K_{N}(P^{A}_{\boldsymbol{\theta}}, P^{B}_{\boldsymbol{\gamma}}) = (p / 2) log N - (q / 2) log N
@@ -1196,24 +746,11 @@ and the adjusted LR statistic is defined in Equation (\ref{eq:AdjustedLR})
 
 \section{A Simple Example} \label{sec:SimpleExample}
 
-In order to provide a concrete example of the concepts discussed previously,
-the ME and HME models are demonstrated on a small and well known dataset
-collected by \citet{Anderson1936} and popularized in the
-statistics literature by \citet{Fisher1936}. Anderson collected
-50 measurements each from three different species of iris flowers; the width and
-length of both the petal and the sepal. Figure \ref{fig:Iris_dataset} provides a
-basic view of the species specific clustering inherent in the data.
-The work below uses the ME and HME architectures to estimate a flower's sepal
-width using only its petal width as a predictor. The petal width will be used
-as the sole covariate in the local linear expert regressions ($\boldsymbol{X}$) as well as
-in the gating network ($\boldsymbol{Z}$). 
+In order to provide a concrete example of the concepts discussed previously, the ME and HME models are demonstrated on a small and well known dataset collected by \citet{Anderson1936} and popularized in the statistics literature by \citet{Fisher1936}. Anderson collected 50 measurements each from three different species of iris flowers; the width and length of both the petal and the sepal. Figure \ref{fig:Iris_dataset} provides a basic view of the species specific clustering inherent in the data. The work below uses the ME and HME architectures to estimate a flower's sepal width using only its petal width as a predictor. The petal width will be used as the sole covariate in the local linear expert regressions ($\boldsymbol{X}$) as well as in the gating network ($\boldsymbol{Z}$). 
 
 \begin{figure}[!ht]
   \includegraphics[width=\textwidth]{basic_iris_plot.jpeg}
-  \caption{Three different iris species: Setosa
-  (blue circles), Versicolor (orange triangles), Virginia (green crosses).
-  Sepal width is on the vertical axis and petal width on the horizontal
-  axis.}
+  \caption{Three different iris species: Setosa (blue circles), Versicolor (orange triangles), Virginia (green crosses). Sepal width is on the vertical axis and petal width on the horizontal axis.}
   \label{fig:Iris_dataset}
 \end{figure}
 
@@ -1221,43 +758,13 @@ in the gating network ($\boldsymbol{Z}$).
     sepal.width_{i} = \beta_{0} + \beta_{1} * petal.width_{i} + \varepsilon_{i} \enspace | \enspace \omega_{0} + \omega_{1} * petal.width_{i}
 \end{equation}
 
-The goal is to have the gating network of the 
-models identify the inherent species-specific clustering without explicit
-knowledge of each observation's species classification and then fit an
-appropriate local regression to the self-identified clusters. As a benchmark,
-an OLS model is run where a flower's petal width is interacted with its species,
-resulting in a species-specific estimation of sepal width.
+The goal is to have the gating network of the models identify the inherent species-specific clustering without explicit knowledge of each observation's species classification and then fit an appropriate local regression to the self-identified clusters. As a benchmark, an OLS model is run where a flower's petal width is interacted with its species, resulting in a species-specific estimation of sepal width.
 
 \begin{equation} \label{eq:OLS_iris}
     sepal.width_{is} = \beta_{0,s} + \beta_{1, s} * petal.width_{is} + \varepsilon_{is}
 \end{equation}
 
-Two sets of regressions are run. Since the Versicolor and Virginica species
-can be viewed as one large cluster, a two-expert ME model is run
-and compared to a benchmark OLS where Versicolor and Virginica are labelled
-as the same species. A second set of regressions are run with three mixture
-experts. When moving to the three expert model, there is now a choice
-on what kind of gating architecture to employ. We can go deep by adding 
-a gating network with depth two (HME), or we can go wide by keeping the
-depth of the gating network at one (ME). Again, for comparative purposes, a benchmark
-OLS regression is estimated for each species separately. Results are collected in Table \ref{tbl:Iris}.
-Coefficients for local experts in the two expert ME regression match closely with the OLS
-benchmark with the exception being the coefficient for Setosa Peta.Width.
-The strong separation between the Setosa and Versicolor/Virginica
-clusters makes it easy for the ME gating network to discriminate between the two using
-just the Petal Width dimension. This task becomes more complicated when
-considering all three species at the same time since there exists some overlap
-between the Versicolor and Virginica clusters. When comparing the coefficients of the
-local regressions (see Table \ref{tbl:Iris}), the HME architecture clearly
-outperforms the ME architecture. While the ME model does obtain a larger
-likelihood value than the OLS estimate, it fails to identify the three
-separate species that are known to exist. The HME model, on the other hand,
-naturally picks up on the three underlying clusters while also providing a superior
-likelihood value. This speaks to one of the major caveats of using this class of model.
-The likelihood value of an ME or HME can always been improved by adding more and
-more experts, but this improvement should not be confused with the model gaining a
-finer understanding of the underlying data generating process. It simply may start to
-over-fit the data at hand.
+Two sets of regressions are run. Since the Versicolor and Virginica species can be viewed as one large cluster, a two-expert ME model is run and compared to a benchmark OLS where Versicolor and Virginica are labelled as the same species. A second set of regressions are run with three mixture experts. When moving to the three expert model, there is now a choice on what kind of gating architecture to employ. We can go deep by adding a gating network with depth two (HME), or we can go wide by keeping the depth of the gating network at one (ME). Again, for comparative purposes, a benchmark OLS regression is estimated for each species separately. Results are collected in Table \ref{tbl:Iris}. Coefficients for local experts in the two expert ME regression match closely with the OLS benchmark with the exception being the coefficient for Setosa Peta.Width. The strong separation between the Setosa and Versicolor/Virginica clusters makes it easy for the ME gating network to discriminate between the two using just the Petal Width dimension. This task becomes more complicated when considering all three species at the same time since there exists some overlap between the Versicolor and Virginica clusters. When comparing the coefficients of the local regressions (see Table \ref{tbl:Iris}), the HME architecture clearly outperforms the ME architecture. While the ME model does obtain a larger likelihood value than the OLS estimate, it fails to identify the three separate species that are known to exist. The HME model, on the other hand, naturally picks up on the three underlying clusters while also providing a superior likelihood value. This speaks to one of the major caveats of using this class of model. The likelihood value of an ME or HME can always been improved by adding more and more experts, but this improvement should not be confused with the model gaining a finer understanding of the underlying data generating process. It simply may start to over-fit the data at hand.
 
 \begin{landscape}
 \begin{table} 
@@ -1318,11 +825,7 @@ over-fit the data at hand.
 
 \begin{figure}[!ht]
   \includegraphics[width=\textwidth]{Iris_fitted_regressions.jpeg}
-  \caption{Comparison of the fitted experts between the ME and HME architectures
-  applied all three species of the Iris dataset. OLS regression estimates are
-  drawn in solid lines. Although the HME and ME both achieve superior
-  log-likelihood values compared to OLS, only the HME is able to identify the
-  three iris species clusters.}
+  \caption{Comparison of the fitted experts between the ME and HME architectures   applied all three species of the Iris dataset. OLS regression estimates are drawn in solid lines. Although the HME and ME both achieve superior log-likelihood values compared to OLS, only the HME is able to identify the three iris species clusters.}
   \label{fig:Iris_fitted_regressions}
 \end{figure}
 
@@ -1331,63 +834,22 @@ over-fit the data at hand.
 
 \section{A Mincer Wage Equation} \label{sec:MincerWageEx}
 
-For a more economically relevant example, we turn our attention to a common
-topic in labor economics: the income return on an additional year of
-education. At times called the "Mincer wage equation", this essay's version of it
-will be:
+For a more economically relevant example, we turn our attention to a common topic in labor economics: the income return on an additional year of education. At times called the "Mincer wage equation", this essay's version of it will be:
 
 \begin{equation} \label{eq:mincer_equ}
   \log (wage) = \beta_{0} + \beta_{1} * \textnormal{Age} + \beta_{2} * \textnormal{Age}^{2} + \beta_{3} * \textnormal{YrsEdu} + \boldsymbol{\beta_{4}}\boldsymbol{X} + \varepsilon
 \end{equation}
 
-with $\boldsymbol{X}$ containing a set of individual-specific 
-variables as well as a set of occupation-specific attributes. 
-The data will come from two sources. First, from the 2000 Census,
-a measure of the hourly (log) wage is devised. In addition to income,
-information on age, years of education (YrsEdu), job occupations codes, 
-and a set of demographic identifiers indicating the race of the
-individuals are also obtained from the Census sample. For the occupational codes,
-the Standard Occupation Classification (SOC) codes from the
-Occupation Information Network (ONet) are used. Each occupation is
-associated with a set of knowledge and skill-based
-attributes describing which qualities are necessary to perform each
-job suitably. A federally sponsored source, ONet details, "the knowledge,
-skills, and abilities required as well as how the work is
-performed in terms of tasks, work activities, and other descriptors"
-\citep{ONET}. The cross walk provided by \citet{Crosswalk} is used to
-link the occupational codes in the Census data to the SOC codes used
-by ONet. This mapping is not one-to-one. When more than one SOC code
-points to a single census code, the average of the SOC codes is taken.
-After a quick but careful scan of the job attributes
-available on ONet, the following four were selected to provide
-a small but diverse set of attributes that contrast well, with each attribute
-embodying a skill valued across industry, culture, and society:
-Social Perceptiveness \footnote{https://www.onetonline.org/find/descriptor/result/2.B.1.a},
-Data Analytics \footnote{https://www.onetonline.org/find/descriptor/result/4.A.2.a.4},
-Design \footnote{https://www.onetonline.org/find/descriptor/result/2.C.3.c},
-and Creative Thinking \footnote{https://www.onetonline.org/find/descriptor/result/4.A.2.b.2}.
-The footnotes provide a link to  full classification hierarchy listed on the website. 
+with $\boldsymbol{X}$ containing a set of individual-specific variables as well as a set of occupation-specific attributes. The data will come from two sources. First, from the 2000 Census, a measure of the hourly (log) wage is devised. In addition to income, information on age, years of education (YrsEdu), job occupations codes, and a set of demographic identifiers indicating the race of the individuals are also obtained from the Census sample. For the occupational codes, the Standard Occupation Classification (SOC) codes from the Occupation Information Network (ONet) are used. Each occupation is associated with a set of knowledge and skill-based attributes describing which qualities are necessary to perform each job suitably. A federally sponsored source, ONet details, "the knowledge, skills, and abilities required as well as how the work is performed in terms of tasks, work activities, and other descriptors" \citep{ONET}. The cross walk provided by \citet{Crosswalk} is used to link the occupational codes in the Census data to the SOC codes used by ONet. This mapping is not one-to-one. When more than one SOC code points to a single census code, the average of the SOC codes is taken. After a quick but careful scan of the job attributes available on ONet, the following four were selected to provide a small but diverse set of attributes that contrast well, with each attribute embodying a skill valued across industry, culture, and society: Social Perceptiveness \footnote{https://www.onetonline.org/find/descriptor/result/2.B.1.a}, Data Analytics \footnote{https://www.onetonline.org/find/descriptor/result/4.A.2.a.4}, Design \footnote{https://www.onetonline.org/find/descriptor/result/2.C.3.c}, and Creative Thinking \footnote{https://www.onetonline.org/find/descriptor/result/4.A.2.b.2}. The footnotes provide a link to  full classification hierarchy listed on the website. 
 
 \bigskip
 
-For these selected attributes, ONet grades their relevance on a
-100 point scale. Each attribute contains two scales, an "importance" (I)
-scale and a "level" (L) scale. The importance scale denotes how critical the
-attribute is to the occupation while the level indicates how much the
-skill is required or needed to perform the occupation. To unify the two
-measures into a single value, a Cobb-Douglass style average with a
-2/3 weight for importance and a 1/3 weight for the level scale is used:
-$A = L^{\frac{1}{3}} I^{\frac{2}{3}}$. With a unified attribute measure
-for every occupation in ONet's index, each attribute is mean centered and
-scaled to have unit variance across all ONet occupations.
+For these selected attributes, ONet grades their relevance on a 100 point scale. Each attribute contains two scales, an "importance" (I) scale and a "level" (L) scale. The importance scale denotes how critical the attribute is to the occupation while the level indicates how much the skill is required or needed to perform the occupation. To unify the two measures into a single value, a Cobb-Douglass style average with a 2/3 weight for importance and a 1/3 weight for the level scale is used: $A = L^{\frac{1}{3}} I^{\frac{2}{3}}$. With a unified attribute measure for every occupation in ONet's index, each attribute is mean centered and scaled to have unit variance across all ONet occupations.
 
 
 \begin{figure}[t!]
   \includegraphics[width=\textwidth]{Job_characteristic_density.jpeg}
-  \caption{Density estimates of ONet job attributes for the Census sample broken down by
-  sex. \textbf{Note:} The job attributes have been mean centered and scaled to
-  have unit variance at the \textit{occupational} level and not at the observation
-  level with respect to the sample.}
+  \caption{Density estimates of ONet job attributes for the Census sample broken down by sex. \textbf{Note:} The job attributes have been mean centered and scaled to have unit variance at the \textit{occupational} level and not at the observation level with respect to the sample.}
   \label{fig:JobChar_vs_sex}
 \end{figure}
 
@@ -1423,87 +885,29 @@ scaled to have unit variance across all ONet occupations.
   \end{threeparttable}
 \end{table}
 
-The total number of individuals in the Census data numbers 105,796.
-After applying the crosswalk, 75,957 cases remain with complete
-information across both datasets. Of those 75,957, roughly ten percent
-(7,315) are randomly held out and used as a test set to gauge
-out-of-sample forecast performance across model specifications.
-This leaves 68,642 individuals left as a training set. A statistical summary
-of the covariates is provided in Table \ref{tbl:census_cov_summary}.
+The total number of individuals in the Census data numbers 105,796. After applying the crosswalk, 75,957 cases remain with complete information across both datasets. Of those 75,957, roughly ten percent (7,315) are randomly held out and used as a test set to gauge out-of-sample forecast performance across model specifications. This leaves 68,642 individuals left as a training set. A statistical summary of the covariates is provided in Table \ref{tbl:census_cov_summary}.
 
 \bigskip
 
-A natural question to consider as a researcher is where to put the variable(s)
-of interest while performing an HME estimation. \citet{JiangTanner2000}
-provide their proof of model consistency for HME of GLMs for the case where
-all covariates appear in the gating network as well as the experts. This will
-be referred to as the \textit{full} specification:
+A natural question to consider as a researcher is where to put the variable(s) of interest while performing an HME estimation. \citet{JiangTanner2000} provide their proof of model consistency for HME of GLMs for the case where all covariates appear in the gating network as well as the experts. This will be referred to as the \textit{full} specification:
 
 \begin{equation} \label{eq:full_formula}
   log(wage) = Age + YrsEdu + Sex +  Race + Occ \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
-The \textit{full} specification will be compare to two others.
-First, a \textit{mid} specification where the local experts contain age and
-years of education while removing demographic indicators:
+The \textit{full} specification will be compare to two others. First, a \textit{mid} specification where the local experts contain age and years of education while removing demographic indicators:
 
 \begin{equation} \label{eq:mid_formula}
   log(wage) = Age + YrsEdu \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
-And second, a \textit{minimal} specification where our core variable
-of interest, years of education, appears solely in the gating network.
+And second, a \textit{minimal} specification where our core variable of interest, years of education, appears solely in the gating network.
 
 \begin{equation} \label{eq:min_formula}
   log(wage) = Age \; | \; Age + YrsEdu + Sex +  Race + Occ
 \end{equation}
 
-For comparative purposes, several different regressions across three
-different dimensions will be estimated: model architectures (ME vs HME), the number of experts,
-and the regression specification (Equations (\ref{eq:full_formula}) -
-(\ref{eq:min_formula})). Model comparison results across these dimensions
-are collected in Tables \ref{tbl:model_comparison} and \ref{tbl:voung_comparison}.
-Table \ref{tbl:model_comparison} reports the standard set of model selection criterion
-including the log-likelihood value at the fitted parameter estimates, the Akaike
-Information Criterion (AIC), the Bayesian Information Criterion (BIC), and the
-predictive mean squared error (MSE) of the model when applied to the hold-out test set.
-Several items are worth mentioning. First, there is a general advantage
-to using the HME structure if the aim is to maximize the
-likelihood value. The HME structure shows consistent improvement
-across specifications over the ME structure, holding the number of experts
-constant. The only exception is the full specification HME with four experts which
-has a lower likelihood value than its ME analogue. This increase in efficiency
-is most likely due to the HME's more refined gating architecture, whose recursive
-partitioning is more effective at finding the next improvement in the parameter
-vector than the single multinomial split in the ME. Second, it is best to give the expert
-regressions as much information as possible. The Full specification clearly outperforms
-the Mid specification, which outperforms the Min specification. If one holds the
-architecture and the number of experts constant, the performance metrics show clear
-improvement as the model specification adds more explanatory variables to the expert
-regressions. Third, for Full specification models, there is
-disagreement among the selection criterion about which model has the best performance.
-If using the log-likelihood or AIC values as the discriminating factor the 5-expert HME
-model is selected. If a heavier penalty term is used for models with a greater number
-of parameters, as is the case with the BIC, the 3-expert HME model would be selected.
-And, finally, if judging by out-of-sample forecast performance using the MSE the 3-expert
-ME model would prevail. This nuance does not hold for the Mid and Min specifications.
-For these cases, the 5-expert HME is the unanimous winner. In Table \ref{tbl:voung_comparison},
-the results for Voung's LR based model comparison tests discussed in Section \ref{sec:ModelSelection}
-are summarized. Overall, the LR based selection tests align with the models selected by the
-BIC and MSE selection criterion with one important caveat: the possibility of two models
-being observationally equivalent. Having a potential outcome of model equivalency
-is what separates the LR based test from the standard selection criterion.
-It provides a more nuanced comparison of the (H)ME models and can help the researcher
-detect when the number of experts in a model starts to exceed the number of latent
-populations in the data. This topic will be expanded upon during the Monte Carlo
-exercises in Section \ref{sec:MonteCarlo}. According to the LR tests, the 3-expert HME
-and ME models perform \emph{equally} well, either being the preferred model
-or observationally equivalent to all other model specifications and architectures.
-Looking at the middle block of tests where the Mid specifications are
-compared to each other, the 4 and 5-expert HME models are jointly favored 
-over the other Mid specifications. The last diagonal block comparing the Min
-specifications to themselves indicates that all three HME models are joint preferred
-over the ME models. 
+For comparative purposes, several different regressions across three different dimensions will be estimated: model architectures (ME vs HME), the number of experts, and the regression specification (Equations (\ref{eq:full_formula}) - (\ref{eq:min_formula})). Model comparison results across these dimensions are collected in Tables \ref{tbl:model_comparison} and \ref{tbl:voung_comparison}. Table \ref{tbl:model_comparison} reports the standard set of model selection criterion including the log-likelihood value at the fitted parameter estimates, the Akaike Information Criterion (AIC), the Bayesian Information Criterion (BIC), and the predictive mean squared error (MSE) of the model when applied to the hold-out test set. Several items are worth mentioning. First, there is a general advantage to using the HME structure if the aim is to maximize the likelihood value. The HME structure shows consistent improvement across specifications over the ME structure, holding the number of experts constant. The only exception is the full specification HME with four experts which has a lower likelihood value than its ME analogue. This increase in efficiency is most likely due to the HME's more refined gating architecture, whose recursive partitioning is more effective at finding the next improvement in the parameter vector than the single multinomial split in the ME. Second, it is best to give the expert regressions as much information as possible. The Full specification clearly outperforms the Mid specification, which outperforms the Min specification. If one holds the architecture and the number of experts constant, the performance metrics show clear improvement as the model specification adds more explanatory variables to the expert regressions. Third, for Full specification models, there is disagreement among the selection criterion about which model has the best performance. If using the log-likelihood or AIC values as the discriminating factor the 5-expert HME model is selected. If a heavier penalty term is used for models with a greater number of parameters, as is the case with the BIC, the 3-expert HME model would be selected. And, finally, if judging by out-of-sample forecast performance using the MSE the 3-expert ME model would prevail. This nuance does not hold for the Mid and Min specifications. For these cases, the 5-expert HME is the unanimous winner. In Table \ref{tbl:voung_comparison}, the results for Voung's LR based model comparison tests discussed in Section \ref{sec:ModelSelection} are summarized. Overall, the LR based selection tests align with the models selected by the BIC and MSE selection criterion with one important caveat: the possibility of two models being observationally equivalent. Having a potential outcome of model equivalency is what separates the LR based test from the standard selection criterion. It provides a more nuanced comparison of the (H)ME models and can help the researcher detect when the number of experts in a model starts to exceed the number of latent populations in the data. This topic will be expanded upon during the Monte Carlo exercises in Section \ref{sec:MonteCarlo}. According to the LR tests, the 3-expert HME and ME models perform \emph{equally} well, either being the preferred model or observationally equivalent to all other model specifications and architectures. Looking at the middle block of tests where the Mid specifications are compared to each other, the 4 and 5-expert HME models are jointly favored over the other Mid specifications. The last diagonal block comparing the Min specifications to themselves indicates that all three HME models are joint preferred over the ME models. 
 
 \begin{table}[b!] \centering
   \caption{Comparing Complexity, Architecture, and Regression Specification}
@@ -1552,11 +956,8 @@ Min      &  ME   &    2    & 0.650      & -1.299      & -1.296      & 0.1923    
     \end{tabular}
     }
     \begin{tablenotes}
-      \item{\footnotesize \textbf{Note:} Log-Likelihood, AIC, and BIC are divided by the sample size of 68,642.
-      Italicized entries are the winning values within specification while underlined entries are the best values across all three specifications.
-      The MSE is calculated from a hold-out test set with sample size of 7,315}
-      \item{\footnotesize \textbf{Note:} After looking at the results two themes emerge. \textbf{One}, there is a general advantage to using the HME structure if the aim is to maximize the likelihood value.
-      The HME structure shows consistent improvement across specifications over the ME structure, holding the number of experts constant. The only exception is the the full specification with four experts.
+      \item{\footnotesize \textbf{Note:} Log-Likelihood, AIC, and BIC are divided by the sample size of 68,642. Italicized entries are the winning values within specification while underlined entries are the best values across all three specifications. The MSE is calculated from a hold-out test set with sample size of 7,315}
+      \item{\footnotesize \textbf{Note:} After looking at the results two themes emerge. \textbf{One}, there is a general advantage to using the HME structure if the aim is to maximize the likelihood value. The HME structure shows consistent improvement across specifications over the ME structure, holding the number of experts constant. The only exception is the the full specification with four experts.
       \textbf{Two}, give the expert regressions as much information as possible. The Full specification clearly outperforms the Mid and Min specifications across the board.
       }
       \item{\footnotesize }
@@ -1612,28 +1013,14 @@ Min      & ME  & 2       & -1  & -1  & -1  & -1  & -1   & -1   &  -1          &&
       \end{itemize}
       }
       \item{\footnotesize \textbf{Note:}
-      A significance level of 5\% was used for both the variance test and
-      the LR test. When comparing models, an adjustment to the LR statistic
-      is made to penalize models with a larger number of parameters. See
-      Equation (\ref{eq:Schwarz_correction_factor}). By looking at the
-      top set of rows, we can see that the Full specification
-      clearly outperforms the Mid and Min specifications as a group.}
+      A significance level of 5\% was used for both the variance test and the LR test. When comparing models, an adjustment to the LR statistic is made to penalize models with a larger number of parameters. See Equation (\ref{eq:Schwarz_correction_factor}). By looking at the top set of rows, we can see that the Full specification clearly outperforms the Mid and Min specifications as a group.}
     \end{tablenotes} \label{tbl:voung_comparison}
   \end{threeparttable}
 \end{table}
 \end{landscape}
 
 
-Turning attention to the main variable of focus, Table \ref{tbl:YrsEdu_coef} provides a 
-comparison of the average marginal effect for \textit{YrsEdu} across the same dimensions
-explored for the performance metrics. There is a noticeable change across model specifications.
-Compared to the OLS coefficient of 0.076, the Min specification,
-which includes \textit{YrsEdu} only in the gating network, underestimates the returns
-to education. The Mid specification, which includes \textit{Age} and
-\textit{YrsEdu} in the expert regressions as well as the gating network,
-overestimates the returns to education for all model specifications. The Full specification,
-which has the entire suite of variables in both places, matches the closest
-to the OLS estimate across the estimated models.
+Turning attention to the main variable of focus, Table \ref{tbl:YrsEdu_coef} provides a comparison of the average marginal effect for \textit{YrsEdu} across the same dimensions explored for the performance metrics. There is a noticeable change across model specifications. Compared to the OLS coefficient of 0.076, the Min specification, which includes \textit{YrsEdu} only in the gating network, underestimates the returns to education. The Mid specification, which includes \textit{Age} and \textit{YrsEdu} in the expert regressions as well as the gating network, overestimates the returns to education for all model specifications. The Full specification, which has the entire suite of variables in both places, matches the closest to the OLS estimate across the estimated models.
 
 
 
@@ -1659,84 +1046,26 @@ to the OLS estimate across the estimated models.
     \end{tabular}
     \begin{tablenotes}
       \item{\footnotesize \textbf{Note:} OLS coef: 0.076}
-      \item{\footnotesize \textbf{Note:} There is a noticeable change across in the marginal return to an extra year of education.
-      Compared to the OLS coefficient of 0.076, the Min specification, which includes \textit{YrsEdu} only in the gating network, underestimates the returns to education.
-      The Mid specification, which includes \textit{Age} and \textit{YrsEdu} in the expert regressions as well as the gating network, overestimates the returns to education in all the models except the HME with four and five experts.
-      The Full specification, which has the entire suite of variables in both places, matches most closely to the OLS estimate across the estimated models.}
+      \item{\footnotesize \textbf{Note:} There is a noticeable change across in the marginal return to an extra year of education. Compared to the OLS coefficient of 0.076, the Min specification, which includes \textit{YrsEdu} only in the gating network, underestimates the returns to education. The Mid specification, which includes \textit{Age} and \textit{YrsEdu} in the expert regressions as well as the gating network, overestimates the returns to education in all the models except the HME with four and five experts. The Full specification, which has the entire suite of variables in both places, matches most closely to the OLS estimate across the estimated models.}
     \end{tablenotes} \label{tbl:YrsEdu_coef}
   \end{threeparttable}
 \end{table}
 
 \bigskip
 
-Given the model selection results in Tables \ref{tbl:model_comparison} and
-\ref{tbl:voung_comparison}, the remainder of this section will focus on exploring
-the details of the full specification regressions for the 2-expert and 3-expert models
-only. Full regression results for the Mincer wage equation (\ref{eq:mincer_equ}) 
-with two experts is presented first in Table \ref{tbl:2E_full_regressions_results}.
-At this specification there is no distinction between the HME and ME.
-Results for the three expert models are then presented for the two
-different architectures (HME vs ME) in Tables \ref{tbl:3W_full_regressions_results} and 
-\ref{tbl:3D_full_regressions_results}. To compliment the regression summaries,
-Tables \ref{tbl:ME2_sample_comparison}, \ref{tbl:ME3_sample_comparison},
-and \ref{tbl:HME3_sample_comparison} provide mean and median values for the subset of individuals
-in the census sample that are attributed to each expert based on the value of
-their prior weights\footnote{For example, observation $i$ is assigned to expert $j$
-if the prior weight vector's largest value is the $j$-th index:
-$\argmax \boldsymbol{h}_{i} = h_{ij}$.}.
+Given the model selection results in Tables \ref{tbl:model_comparison} and \ref{tbl:voung_comparison}, the remainder of this section will focus on exploring the details of the full specification regressions for the 2-expert and 3-expert models only. Full regression results for the Mincer wage equation (\ref{eq:mincer_equ}) with two experts is presented first in Table \ref{tbl:2E_full_regressions_results}. At this specification there is no distinction between the HME and ME. Results for the three expert models are then presented for the two different architectures (HME vs ME) in Tables \ref{tbl:3W_full_regressions_results} and \ref{tbl:3D_full_regressions_results}. To compliment the regression summaries, Tables \ref{tbl:ME2_sample_comparison}, \ref{tbl:ME3_sample_comparison}, and \ref{tbl:HME3_sample_comparison} provide mean and median values for the subset of individuals in the census sample that are attributed to each expert based on the value of their prior weights\footnote{For example, observation $i$ is assigned to expert $j$ if the prior weight vector's largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$.}.
 
 \bigskip
 
-Broadly speaking, all three models explored share the same macro view of the data.
-On the right side of Tables \ref{tbl:2E_full_regressions_results},
-\ref{tbl:3W_full_regressions_results}, and \ref{tbl:3D_full_regressions_results}
-are a group of columns titled '(H)ME Marginal Effects'.
-Here the marginal effects of the model can be broken down and attributed to the
-gating network or the expert regressions. "Both", "Experts", and "Gates" refers to marginal effects referenced by equations
-(\ref{eq:ME_both}), (\ref{eq:ME_expert}), and (\ref{eq:ME_gating}),
-respectively. The values are fairly consistent across variables and model
-architectures with the coefficients for \textit{Age} and its square a modest exception,
-ranging from 0.028 (HME) to 0.042 (2-Expert ME) for \textit{Age}. Notice also that the
-marginal effects from the expert regressions are the lion's share of total marginal effect,
-ranging from one to two orders of magnitude larger than marginal effects for the gating
-network. When looking at the occupational attributes there is similar agreement between
-the estimated models. The marginal effects for all three are in close proximity between
-the ME and HME models. Those individuals who specialize in performing analytics
-enjoy the greatest hourly rate (0.126 - 0.128). Design (0.074 to 0.081) and 
-Perceptive (0.053 to 0.057) attributes get a smaller bump to the their hourly
-wage while Creative types (-0.044 to -0.043) clearly have alternative motivation than
-monetary gain.
+Broadly speaking, all three models explored share the same macro view of the data. On the right side of Tables \ref{tbl:2E_full_regressions_results}, \ref{tbl:3W_full_regressions_results}, and \ref{tbl:3D_full_regressions_results} are a group of columns titled '(H)ME Marginal Effects'. Here the marginal effects of the model can be broken down and attributed to the gating network or the expert regressions. "Both", "Experts", and "Gates" refers to marginal effects referenced by equations (\ref{eq:ME_both}), (\ref{eq:ME_expert}), and (\ref{eq:ME_gating}), respectively. The values are fairly consistent across variables and model architectures with the coefficients for \textit{Age} and its square a modest exception, ranging from 0.028 (HME) to 0.042 (2-Expert ME) for \textit{Age}. Notice also that the marginal effects from the expert regressions are the lion's share of total marginal effect, ranging from one to two orders of magnitude larger than marginal effects for the gating network. When looking at the occupational attributes there is similar agreement between the estimated models. The marginal effects for all three are in close proximity between the ME and HME models. Those individuals who specialize in performing analytics enjoy the greatest hourly rate (0.126 - 0.128). Design (0.074 to 0.081) and Perceptive (0.053 to 0.057) attributes get a smaller bump to the their hourly wage while Creative types (-0.044 to -0.043) clearly have alternative motivation than monetary gain.
 
 \bigskip
 
-When left to segment the data set on its own, the fitted HME models that are
-returned lead to some interesting conclusions. The first segmentation of 
-the sample is seen by the two expert ME model that estimates two different wage equations.
-One for a majority of the population that
-tends to be older (median Age-16 = 25), whiter (78\%), more educated
-(median YrsEduc = 14), and a second smaller population that is more diverse
-(70\% white), significantly younger (median Age-16 = 7) and with less education on average (median YrsEduc = 12)
-(see Tables \ref{tbl:2E_full_regressions_results} and \ref{tbl:ME2_sample_comparison}).
-The difference between the average age of the two populations is noticeable
-and may play a role behind the marginal effects for \textit{Age} moving around
-as much as it does. Notice also that the members of the younger cohort
-hold lower-skilled jobs: the mean and median values for their occupational
-attributes are uniformly lower than their older and more educated counterparts.
-Finally, notice that the "penalty" for occupying a female or non-white body
-is less severe (and even turns positive for Indian and Asian) in the younger
-cohort. 
+When left to segment the data set on its own, the fitted HME models that are returned lead to some interesting conclusions. The first segmentation of the sample is seen by the two expert ME model that estimates two different wage equations. One for a majority of the population that tends to be older (median Age-16 = 25), whiter (78\%), more educated (median YrsEduc = 14), and a second smaller population that is more diverse (70\% white), significantly younger (median Age-16 = 7) and with less education on average (median YrsEduc = 12) (see Tables \ref{tbl:2E_full_regressions_results} and \ref{tbl:ME2_sample_comparison}). The difference between the average age of the two populations is noticeable and may play a role behind the marginal effects for \textit{Age} moving around as much as it does. Notice also that the members of the younger cohort hold lower-skilled jobs: the mean and median values for their occupational attributes are uniformly lower than their older and more educated counterparts. Finally, notice that the "penalty" for occupying a female or non-white body is less severe (and even turns positive for Indian and Asian) in the younger cohort. 
 
 \bigskip
 
-Additional narratives present themselves as the segmentation continues and
-the number of experts expands. To reduce the chance of confusion the results
-from the deep three-expert HME model are used in what follows due to its superior
-likelihood value over the three-expert ME model (see Table \ref{tbl:model_comparison}).
-The main segmentation discovered by the two-expert ME model is carried over to the
-three expert HME model while a third latent sub-population emerges.
-The dominate cluster from the two-expert model is still quite large (78.3\% of the
-posterior weight) compared to the younger cohort (13.3\% of the posterior weight)
-and the new third cohort (8.4\%). Three features distinguish this new population:
+Additional narratives present themselves as the segmentation continues and the number of experts expands. To reduce the chance of confusion the results from the deep three-expert HME model are used in what follows due to its superior likelihood value over the three-expert ME model (see Table \ref{tbl:model_comparison}). The main segmentation discovered by the two-expert ME model is carried over to the three expert HME model while a third latent sub-population emerges. The dominate cluster from the two-expert model is still quite large (78.3\% of the posterior weight) compared to the younger cohort (13.3\% of the posterior weight) and the new third cohort (8.4\%). Three features distinguish this new population:
 
 \begin{enumerate}
   \item It skews slightly older than dominate cluster (27 vs 25 for median age-16)
@@ -1744,16 +1073,7 @@ and the new third cohort (8.4\%). Three features distinguish this new population
   \item Members of this group are employed in positions where it is critically important to be aware of and understand others individual's behavior (Perceptive).
 \end{enumerate}
 
-Just as with the two-expert ME model, the returns to education vary across these 
-sub-groups. The young cohort, whose typical member has a high school diploma, has
-the lowest returns to education (0.034). The dominate cohort, whose median educational attainment 
-is an Associate's degree, sees the highest returns to their years of schooling (0.082).
-There is a drop in returns (0.074) for the third and oldest cohort, even though the educational
-attainment for that group is the highest of the three groups with the median years of
-education equaling a Bachelor's degree. Taken together, the HME models
-suggests there is significant heterogeneity to returns in education over an
-individual's lifetime, across job types, and even by within similar cohorts.
-cohort.
+Just as with the two-expert ME model, the returns to education vary across these sub-groups. The young cohort, whose typical member has a high school diploma, has the lowest returns to education (0.034). The dominate cohort, whose median educational attainment is an Associate's degree, sees the highest returns to their years of schooling (0.082). There is a drop in returns (0.074) for the third and oldest cohort, even though the educational attainment for that group is the highest of the three groups with the median years of education equaling a Bachelor's degree. Taken together, the HME models suggests there is significant heterogeneity to returns to education over an individual's lifetime, across job types, and even by within similar cohorts.
 
 
 \begin{landscape}
@@ -1830,10 +1150,7 @@ cohort.
       \begin{tablenotes}
         \item{\footnotesize $^{1}$ The share is calculated by summing the 
         posterior weights across observations for each expert.}
-        \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-        in the census sample that are classified based on the value of their prior weights.
-        For example, observation $i$ is assigned to expert $j$ if the prior vector's
-        largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+        \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals in the census sample that are classified based on the value of their prior weights. For example, observation $i$ is assigned to expert $j$ if the prior vector's largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
       \end{tablenotes} \label{tbl:ME2_sample_comparison}
     \end{threeparttable}
   \end{table}
@@ -1878,7 +1195,6 @@ cohort.
           \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
           \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
           \item $^{4}$ The share is calculated by summing the prior weights across observations for each expert.
-  
         \end{tablenotes} \label{tbl:3W_full_regressions_results}
       \end{threeparttable}
   \end{table}
@@ -1913,10 +1229,7 @@ cohort.
       \begin{tablenotes}
         \item{\footnotesize $^{1}$ The share is calculated by summing the 
         posterior weights across observations for each expert.}
-        \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-        in the census sample that are classified based on the value of their prior weights.
-        For example, observation $i$ is assigned to expert $j$ if the prior vector's
-        largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+        \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals in the census sample that are classified based on the value of their prior weights. For example, observation $i$ is assigned to expert $j$ if the prior vector's largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
       \end{tablenotes} \label{tbl:ME3_sample_comparison}
     \end{threeparttable}
   \end{table}
@@ -2001,10 +1314,7 @@ cohort.
         \begin{tablenotes}
           \item{\footnotesize $^{1}$ The share is calculated by summing the 
           posterior weights across observations for each expert.}
-          \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-          in the census sample that are classified based on the value of their prior weights.
-          For example, observation $i$ is assigned to expert $j$ if the prior vector's
-          largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
+          \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals in the census sample that are classified based on the value of their prior weights. For example, observation $i$ is assigned to expert $j$ if the prior vector's largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
         \end{tablenotes} \label{tbl:HME3_sample_comparison}
       \end{threeparttable}
     \end{table}
@@ -2043,9 +1353,8 @@ where $X_{1}$ is also sampled from a standard normal distribution independent of
     Y = X + Z \,\,|\,\, Z
 \end{equation}
 
+
 \subsection{Experiment One}
-
-
 
 The first experiment will examine the variability of the estimated model parameters across Monte Carlo samples and compare the standard deviation of the converged parameter values to the standard errors produced by the three available variance-covariance matrices (the outer-product-of-the-gradient, the hessian, and the sandwich estimator). The baseline sampling procedure discussed above will be used to create 1000 Monte Carlo samples. Each sample will have 1000 observations. After the sample has been created, the probability of membership to each sub-population is then calculated as a function of Z. The logistic function will be used estimate these probabilities:
 
