@@ -109,11 +109,12 @@ ME2 <- marginal_effects(hme2)
 
 hme3 <- hme(c("0",
              "0.1", "0.2", "0.3"),
-             formula = form_mid,
+             formula = form_full,
              data=dtftrain, holdout=dtftest, maxiter=1000, tolerance=1e-4, trace=0)
              # init_gate_pars = hme3$gate.pars, init_expert_pars = hme3$expert.pars)
 hme3$full.vcv <- calculate_sandwich_vcov(hme3)
 vs <- voung_selection(hme3, readRDS("models/hme_5d_full_v2.RDS"))
+
 str(vs)
 str(hme3$call_)
 saveRDS(hme3, file="models/hme_3w_mid_v2.RDS")
