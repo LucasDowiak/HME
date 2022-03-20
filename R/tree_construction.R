@@ -204,7 +204,8 @@ grow_the_tree <- function(obj)
   return(list(tree=newtree, init_gate_pars=new_gate_pars))
 }
 
-
+# Estimate an GLM model, find the fitted values and standard errors, and then
+# produce n random draws of the parameter vector 
 bootstrap_glm <- function(n=2, ...)
 {
   object <- glm(...)
@@ -226,7 +227,7 @@ bootstrap_glm <- function(n=2, ...)
   Qr <- stats:::qr.lm(object)
   covmat.unscaled <- chol2inv(Qr$qr[p1, p1, drop = FALSE])
   covmat <- dispersion * covmat.unscaled
-  
+  # Randomly draw n set of initial coef
   replicate(n,
             rnorm(p, mean=object$coefficients, sd = sqrt(diag(covmat))),
             simplify=FALSE)

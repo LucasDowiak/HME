@@ -55,17 +55,6 @@ sample_multinomial <- function(X, Om)
 }
 
 
-generate_data3 <- function(X)
-{
-  # Should we switch this be dependent on the X variable?
-  wt1 <- logit(X[, 2], scale=-8, mid=0.25)
-  wt2 <- logit(X[, 2], scale=8, mid=0.75)
-  wt3 <- 1 - (wt1 + wt2)
-  W <- cbind(wt1, wt2, wt3)
-  return(apply(W, 1, function(x) sample.int(3, 1, prob=x)))
-}
-
-
 generate_data <- function(n, B, rho=1, scale=1, mid=0.5)
 {
   M <- generate_obs(n, rho=rho)
@@ -139,11 +128,11 @@ calc_KL_divergence <- function(B, plot_dist=FALSE)
 }
 
 
-simulate_2me <- function(seed, n, B, rho, scale, mid)
+simulate_2me <- function(seed, n, B, rho, scale, mid, ...)
 {
   set.seed(seed)
   dat <- generate_data(n=n, B=B, rho=rho, scale=scale, mid=mid)
-  mod <- hme(c("0", "0.1", "0.2"), y ~ x + z | z, data=dat, trace=1L)
+  mod <- hme(c("0", "0.1", "0.2"), y ~ x + z | z, data=dat, trace=1L, ...)
   mod$full.vcv <- calculate_sandwich_vcov(mod)
   mod[c("Y", "X", "Z", "scores", "parM")] <- NA
   return(list(seed=seed, model=mod))
@@ -201,21 +190,39 @@ DEF_mid <- 0.5
 
 
 Mids <- c(0, 0.1, 0.2, 0.3, 0.4)
-Scales <- c(125, 25, 4, 2, 1, 0.01)
-Rhos <- c(0.125, 0.25, 0.5, 2, 4)
-for (r in Rhos) {
-  filenm <- paste0(sprintf("models/simulations/Rhos_%d.RDS", as.integer(r * 1000)))
+for (m in Mids) {
+  filenm <- paste0(sprintf("models/simulations/monte_carlo/Mid_%d.RDS", as.integer(m * 10)))
   run_monte_carlo(S=1000, f=simulate_2me, output_file=filenm,
-                  N=1000, B=Betas, rho=r, scale=DEF_scale, mid=DEF_mid)
+                  n=N, B=Betas, rho=DEF_rho, scale=DEF_scale, mid=m,
+                  init_expert_pars=Betas)
 }
 
 
+Scales <- c(125, 25, 4, 2, 1, 0.01)
+for (s in Scales) {
+  filenm <- paste0(sprintf("models/simulations/monte_carlo/Scales_%d.RDS", as.integer(s * 100)))
+  run_monte_carlo(S=1000, f=simulate_2me, output_file=filenm,
+                  n=N, B=Betas, rho=DEF_rho, scale=s, mid=DEF_mid,
+                  init_expert_pars=Betas)
+}
 
-r <- 4
-file_nm <- paste0(sprintf("models/simulations/Rhos_%d.RDS", as.integer(r * 1000)))
-mods <- readRDS(file_nm)
-loglikes <- sapply(mods, function(x) logLik(x$model))
-hist(loglikes)
+
+Rhos <- c(0.125, 0.25, 0.5, 2, 4)
+for (r in Rhos) {
+  filenm <- paste0(sprintf("models/simulations/monte_carlo/Rhos_%d.RDS", as.integer(r * 1000)))
+  run_monte_carlo(S=1000, f=simulate_2me, output_file=filenm,
+                  n=N, B=Betas, rho=r, scale=DEF_scale, mid=DEF_mid,
+                  init_expert_pars=Betas)
+}
+
+
+for (m in Mids) {
+  file_nm <- paste0(sprintf("models/simulations/monte_carlo/Mid_%d.RDS", as.integer(m * 10)))
+  mods <- readRDS(file_nm)
+  loglikes <- sapply(mods, function(x) logLik(x$model))
+  hist(loglikes, main=sprintf("Mids: %d", m * 10))
+}
+
 
 seeds <- sapply(mods, `[[`, "seed")
 
@@ -229,7 +236,7 @@ for (ii in seq_along(mods)) {
       newseed <- sample.int(1e8, 1)
       if (newseed %in% seeds)
         next
-      newmod <- simulate_2me(seed=newseed, N=N, B=Betas, rho=r, scale=DEF_scale, mid=DEF_mid)
+      newmod <- simulate_2me(seed=newseed, n=N, B=Betas, rho=DEF_rho, scale=DEF_scale, mid=DEF_mid)
       newLL <- logLik(newmod[["model"]])
       if (newLL > thresh)
         mods[[ii]] <- newmod
@@ -237,6 +244,7 @@ for (ii in seq_along(mods)) {
   }
 }
 
+hist(sapply(mods, function(x) logLik.hme(x[[2]])))
 saveRDS(mods, file=file_nm)
 
 summary(tst)
@@ -322,7 +330,7 @@ grab_all <- function(lst, vcv=c("sandwich", "OPG", "hessian"))
   pars <- do.call(rbind, lapply(values, `[[`, "pars"))
   pars <- cbind(t(data.frame(apply(pars, 2, sd))), data.frame(type="Par Std Dev"))
   std_errs <- do.call(rbind, lapply(values, `[[`, "std_errs"))
-  std_errs <- cbind(t(data.frame(colMeans(std_errs))), data.frame(type="Avg Std Err"))
+  std_errs <- cbind(t(data.frame(colMeans(std_errs, na.rm = T))), data.frame(type="Avg Std Err"))
   return(rbind(pars, std_errs))
 }
 
@@ -413,6 +421,9 @@ ggplot(collect_scale, aes(x=x_label, y=value, col=type)) +
 
 
 
+# Hacky re-estimate vcv of all stored models
+
+
 # ------------------------------ Coverage Ratio ------------------------------ #
 
 grab_coverage_ratio <- function(lst, B, vcv=c("sandwich", "OPG", "hessian"))
@@ -429,7 +440,7 @@ grab_coverage_ratio <- function(lst, B, vcv=c("sandwich", "OPG", "hessian"))
     lb <- B - qnorm(0.975) * std_errs[ii, ]
     out[ii, ] <- pars[ii, ] < lb | pars[ii, ] > ub
   }
-  out <- data.frame(t(colMeans(out)))
+  out <- data.frame(t(colMeans(out, na.rm = T)))
   names(out) <- c("c1", "x1", "z1", "sd1", "c2", "x2", "z2", "sd2")
   return(out)
 }
@@ -456,6 +467,8 @@ for (m in Metric) {
     collect <- rbind(collect, tst)
   }
 }
+
+with(collect, collect[Metric=="Scales", c(12, 9, 1:8)])
 
 
 
@@ -491,7 +504,7 @@ grid()
 par(mfrow=c(2, 3))
 Rhos <- c(0.125, 0.25, 0.5, 1, 2, 4)
 for (r in Rhos) {
-  tst <- generate_data(N, B=Betas, rho=r, scale=DEF_scale, mid=DEF_mid)
+  tst <- generate_data(100, B=Betas, rho=r, scale=DEF_scale, mid=DEF_mid)
   plot(tst[, 2:1], ylim=c(-4,4), xlim=c(-0.05, 1), main=bquote(rho == .(r)))
   grid()
 }
