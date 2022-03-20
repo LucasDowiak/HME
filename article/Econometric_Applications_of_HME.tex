@@ -9,9 +9,6 @@
 \usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{pdflscape}
-%\usepackage{algorithmic}
-%\usepackage{algorithm}
-%\usepackage{algpseudocode}
 \usepackage{graphicx}
 
 % The hessian:
@@ -81,15 +78,7 @@ New York, NY, 10016, \textit{Email: ldowiak@gradcenter.cuny.edu}
 
 \begin{abstract}
 
-In this article, a novel mixture model is studied.
-Named the hierarchical mixture of experts (HME) in the machine learning literature,
-the mixture model utilizes a set of covariates and a tree-based architecture to
-efficiently allocate each observation to the appropriate local regression.
-The nature of the conditional weighting scheme provides the researcher a natural
-interpretation of how the local (and latent) sub-populations are formed.
-Marginal effects, robust standard errors, and model selection are also discussed.
-The model is demonstrated by estimating a Mincer wage equation using US census
-data and occupational skills data from the Occupational Information Network.
+In this article, a novel mixture model is studied. Named the hierarchical mixture of experts (HME) in the machine learning literature, the mixture model utilizes a set of covariates and a tree-based architecture to efficiently allocate each observation to the appropriate local regression. The nature of the conditional weighting scheme provides the researcher a natural interpretation of how the local (and latent) sub-populations are formed. Marginal effects, robust standard errors, and model selection are also discussed. The model is demonstrated by estimating a Mincer wage equation using US census data and occupational skills data from the Occupational Information Network. Several Monte Carlo exercises are carried out to better understand the behavior of the model on simulated datasets with varying degrees of heterogeneity.
  
 
 ˇ\end{abstract}
@@ -1035,7 +1024,7 @@ notation of this article.
 Suppose that there are two (H)ME models with different functional forms that need
 to be compared. These models will be labeled model A and model B and have parameters
 of length p and q, respectively. The log-likelihood
-for model A at the psuedo-true value $\boldsymbol{\theta}^{o}$ is given by
+for model A at the pseudo-true value $\boldsymbol{\theta}^{o}$ is given by
 $\boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z})$
 which is defined in Equation (\ref{eq:loglikelihood}). The value
 $\mathbb{E} \left[ \boldsymbol{l}^{A}(\boldsymbol{\theta}^{o}| \boldsymbol{y}, \boldsymbol{X}, \boldsymbol{Z}) \right]$
@@ -1058,7 +1047,7 @@ or nested and whether both, one, or neither model is misspecified.
 The overlapping case is particularly relevant for this article, best exemplified 
 when a M-expert ME model is compared to a M-expert HME model and the probability
 of the two competing models sharing a common set of conditional distributions
-is high. What follows is a sequence proceedure that identifies the limiting
+is high. What follows is a sequence procedure that identifies the limiting
 distribution of the likelihood-ratio statistic expressed in Equation
 (\ref{eq:sample_LR_convergence_to_population_LR}).
 
@@ -1114,21 +1103,21 @@ In the theorem above, $\boldsymbol{G}(\boldsymbol{\theta})$ and $\HI{\boldsymbol
 have been defined in Equations (\ref{eq:OPG}) and (\ref{eq:Hessian}) while 
 $\boldsymbol{G}(\boldsymbol{\theta}, \, \boldsymbol{\gamma}) = \sum_{t} \boldsymbol{S}_{t}(\boldsymbol{\theta}) \boldsymbol{S}_{t}(\boldsymbol{\gamma})^\top$.
 The term $w^{2}_{o}$ also appears in Theorem (\ref{th:AsymDistLR}). This represents
-the psuedo-true variance of the LR statistic and is defined as:
+the pseudo-true variance of the LR statistic and is defined as:
 
 \begin{align*}
   w_{o}^{2} \equiv & \mathbb{Var} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \\
    = & \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right]^{2} - \left[ \mathbb{E} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\theta}^{o}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \boldsymbol{\gamma}^{o}) } \right] \right]^{2}
 \end{align*}
 
-The sample analogue for the population statistic has a straighforward definition:
+The sample analogue for the population statistic has a straightforward definition:
 
 \begin{equation}
   \hat{w}^{2}_{N} \equiv \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right]^{2} - \left[ \frac{1}{N} \sum_{t}^{N} \left[ \log \frac{ P^{A}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\theta}}) }{ P^{B}(y_{t} | \boldsymbol{x}_{t}, \boldsymbol{z}_{t}; \, \hat{\boldsymbol{\gamma}}) } \right] \right]^{2}
 \end{equation}
 
 \citet{Voung1989} demonstrates that the sample variance converges almost surely
-to the population psuedo-true variance and gives the limiting distribution in
+to the population pseudo-true variance and gives the limiting distribution in
 Theorem 4.3 of \citet{Voung1989}. That theorem is reproduced here:
 
 \begin{theorem}[Asymptotic Distribution of the Variance Statistics given $w^{2} = 0$] \label{th:AsymDistVar_at_null}
@@ -1499,7 +1488,7 @@ of parameters, as is the case with the BIC, the 3-expert HME model would be sele
 And, finally, if judging by out-of-sample forecast performance using the MSE the 3-expert
 ME model would prevail. This nuance does not hold for the Mid and Min specifications.
 For these cases, the 5-expert HME is the unanimous winner. In Table \ref{tbl:voung_comparison},
-the results for Voung's LR based model comparision tests discussed in Section \ref{sec:ModelSelection}
+the results for Voung's LR based model comparison tests discussed in Section \ref{sec:ModelSelection}
 are summarized. Overall, the LR based selection tests align with the models selected by the
 BIC and MSE selection criterion with one important caveat: the possibility of two models
 being observationally equivalent. Having a potential outcome of model equivalency
@@ -1783,15 +1772,15 @@ cohort.
   Age-16                 &  0.032 & *   & *   &  0.066 & *   & *    &&  0.035 & *     &&  0.042 &     &      &  0.038  & *   & *   &  0.004 &     &   \\
   $\textrm{Age-16}^{2}$  & -0.000 & *   & *   & -0.002 & *   & *    && -0.001 & *     && -0.001 &     &      & -0.001  & *   & *   & -0.000 &     &   \\
   YrsEduc                &  0.082 & *   & *   &  0.042 & *   & *    &&  0.076 & *     &&  0.076 &     &      &  0.075  & *   & *   &  0.000 &     &   \\
-  Female                 & -0.244 & *   & *   & -0.031 & *   & *    && -0.215 & *     && -0.209 & *   & *    & -0.207  & *   & *   & -0.002 &     &   \\
-  Af Amer                & -0.076 & *   & *   & -0.044 & *   & *    && -0.076 & *     && -0.076 & *   & *    & -0.071  & *   & *   & -0.005 &     &   \\
+  Female                 & -0.244 & *   & *   & -0.031 & -   & *    && -0.215 & *     && -0.209 & *   & *    & -0.207  & *   & *   & -0.002 &     &   \\
+  Af Amer                & -0.076 & *   & *   & -0.044 & *   & *    && -0.076 & *     && -0.076 & +   & *    & -0.071  & *   & *   & -0.005 &     &   \\
   Indian                 & -0.081 & *   & *   & -0.069 & -   & *    && -0.091 & *     && -0.085 & +   & -    & -0.079  & *   & *   & -0.005 &     &   \\
-  Asian                  & -0.045 & *   & +   &  0.053 & -   & +    && -0.032 & *     && -0.024 &     &      & -0.028  & *   & *   &  0.003 &     &   \\
+  Asian                  & -0.045 & *   & +   &  0.053 &     & +    && -0.032 & *     && -0.024 &     &      & -0.028  & +   & *   &  0.003 &     &   \\
   Hisp                   & -0.121 & *   & *   & -0.069 & *   & *    && -0.106 & *     && -0.112 & *   & *    & -0.112  & *   & *   & -0.000 &     &   \\
   Creativity             & -0.054 & *   & *   & -0.004 &     &      && -0.046 & *     && -0.044 & *   & *    & -0.045  & *   & *   &  0.002 &     &   \\
   Design                 &  0.080 & *   & *   &  0.080 & *   & *    &&  0.082 & *     &&  0.081 & *   & *    &  0.080  & *   & *   &  0.001 &     &   \\
   Analytics              &  0.133 & *   & *   &  0.107 & *   & *    &&  0.131 & *     &&  0.126 & *   & *    &  0.129  & *   & *   & -0.003 &     &   \\
-  Perceptive             &  0.063 & *   & *   & -0.017 & *   & *    &&  0.058 & *     &&  0.053 & *   & *    &  0.049  & *   & *   &  0.004 &     &   \\
+  Perceptive             &  0.063 & *   & *   & -0.017 & +   & *    &&  0.058 & *     &&  0.053 & *   & *    &  0.049  & *   & *   &  0.004 &     &   \\
   Log-Variance           & -1.651 & *   & *   & -2.675 & *   & *    &&  --    &       &&  --    &     &      &  --     &     &     &  --    &     &   \\
                   \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){9-10} \cmidrule(l){12-14} \cmidrule(l){15-17} \cmidrule(l){18-20}
   Share$^{4}$:           &  0.826 &     &     &  0.174 &     &      &&  1.000 &       &&  --    &     &      &  --     &     &     &  --    &     &   \\
@@ -1805,7 +1794,7 @@ cohort.
           \item $^{1}$ Fitted coefficients from the two-expert model with the full parameter specification from equation (\ref{eq:full_formula})
           \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
           \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
-          \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
+          \item $^{4}$ The share is calculated by summing the prior weights across observations for each expert.
         \end{tablenotes} \label{tbl:2E_full_regressions_results}
       \end{threeparttable}
   \end{table}
@@ -1842,8 +1831,8 @@ cohort.
         \item{\footnotesize $^{1}$ The share is calculated by summing the 
         posterior weights across observations for each expert.}
         \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-        in the census sample that are classified based on the value of their posterior weights.
-        For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+        in the census sample that are classified based on the value of their prior weights.
+        For example, observation $i$ is assigned to expert $j$ if the prior vector's
         largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
       \end{tablenotes} \label{tbl:ME2_sample_comparison}
     \end{threeparttable}
@@ -1862,20 +1851,20 @@ cohort.
   \cmidrule(l){2-10}    \cmidrule(l){12-13}     \cmidrule(l){15-23}
   & Coef.  & $^{[S]}$ & $^{[O]}$ &  Coef. & $^{[S]}$ & $^{[O]}$ & Coef.  & $^{[S]}$ & $^{[O]}$  && \multicolumn{2}{c}{Coef.} && Both   & $^{[S]}$ & $^{[O]}$ & Experts & $^{[S]}$ & $^{[O]}$ & Gates  & $^{[S]}$ & $^{[O]}$ \\
                         \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
-  Intercept             &  1.379 & * & * &  1.574 & *  & * &  0.562 & *  & * &&  1.241 & *     &&  1.367 & + & *    &  1.335 & *  & *   &  0.032 &   &     \\
-  Age-16                &  0.021 & * & * &  0.045 & *  & * &  0.060 & *  & * &&  0.035 & *     &&  0.029 &   &      &  0.027 & *  & *   &  0.002 &   &     \\
-  $\textrm{Age-16}^{2}$ & -0.000 & * & * & -0.001 &    & + & -0.001 & *  & * && -0.001 & *     && -0.000 &   &      & -0.000 & *  & *   &  0.000 &   &     \\
-  YrsEduc               &  0.082 & * & * &  0.032 & *  & * &  0.080 & *  & * &&  0.076 & *     &&  0.074 &   &      &  0.077 & *  & *   & -0.002 &   &     \\
-  Female                & -0.251 & * & * & -0.022 & +  & + & -0.149 & *  & * && -0.215 & *     && -0.206 & * & *    & -0.218 & *  & *   &  0.012 &   &     \\
-  Af Amer               & -0.084 & * & * & -0.056 & *  & * & -0.054 &    &   && -0.076 & *     && -0.076 &   & +    & -0.078 & *  & *   &  0.002 &   &     \\
-  Indian                & -0.105 & * & * & -0.046 &    &   &  0.010 &    &   && -0.091 & *     && -0.091 &   &      & -0.090 & *  & *   & -0.002 &   &     \\
-  Asian                 & -0.030 & * & * &  0.057 & -  & - & -0.091 & -  &   && -0.032 & *     && -0.024 &   &      & -0.025 & +  & +   &  0.001 &   &     \\
-  Hisp                  & -0.136 & * & * & -0.061 & *  & * &  0.071 &    &   && -0.106 & *     && -0.107 &   & *    & -0.111 & *  & *   &  0.004 &   &     \\
-  Creativity            & -0.038 & * & * & -0.022 & +  & + & -0.177 & *  & * && -0.046 & *     && -0.044 &   & -    & -0.047 & *  & *   &  0.003 &   &     \\
-  Design                &  0.080 & * & * &  0.080 & *  & * & -0.037 &    & - &&  0.082 & *     &&  0.075 & - & +    &  0.071 & *  & *   &  0.004 &   &     \\
-  Analytics             &  0.123 & * & * &  0.110 & *  & * &  0.196 & *  & * &&  0.131 & *     &&  0.128 & * & *    &  0.128 & *  & *   &  0.000 &   &     \\
-  Perceptive            &  0.060 & * & * & -0.008 &    & * &  0.168 & *  & * &&  0.058 & *     &&  0.057 &   & -    &  0.061 & *  & *   & -0.004 &   &     \\
-  Log-Variance          & -1.893 & * & * & -2.891 & *  & * & -0.627 & *  & * &&  --    &       &&        &   &      &        &    &     &        &   &     \\
+  Intercept             &  1.379 &   & * &  1.574 &    & * &  0.562 &    & * &&  1.241 & *     &&  1.367 &   & *    &  1.335 &    & *   &  0.032 &   &     \\
+  Age-16                &  0.021 &   & * &  0.045 &    & * &  0.060 &    & * &&  0.035 & *     &&  0.029 &   &      &  0.027 &    & *   &  0.002 &   &     \\
+  $\textrm{Age-16}^{2}$ & -0.000 &   & * & -0.001 &    & + & -0.001 &    & * && -0.001 & *     && -0.000 &   &      & -0.000 &    & *   &  0.000 &   &     \\
+  YrsEduc               &  0.082 &   & * &  0.032 &    & * &  0.080 &    & * &&  0.076 & *     &&  0.074 &   &      &  0.077 &    & *   & -0.002 &   &     \\
+  Female                & -0.251 &   & * & -0.022 &    & + & -0.149 &    & * && -0.215 & *     && -0.206 &   & *    & -0.218 &    & *   &  0.012 &   &     \\
+  Af Amer               & -0.084 &   & * & -0.056 &    & * & -0.054 &    &   && -0.076 & *     && -0.076 &   & +    & -0.078 &    & *   &  0.002 &   &     \\
+  Indian                & -0.105 & * & * & -0.046 &    &   &  0.010 &    &   && -0.091 & *     && -0.091 &   &      & -0.090 &    & *   & -0.002 &   &     \\
+  Asian                 & -0.030 &   & * &  0.057 &    & - & -0.091 &    &   && -0.032 & *     && -0.024 &   &      & -0.025 &    & +   &  0.001 &   &     \\
+  Hisp                  & -0.136 &   & * & -0.061 &    & * &  0.071 &    &   && -0.106 & *     && -0.107 &   & *    & -0.111 &    & *   &  0.004 &   &     \\
+  Creativity            & -0.038 &   & * & -0.022 &    & * & -0.177 &    & * && -0.046 & *     && -0.044 &   & -    & -0.047 &    & *   &  0.003 &   &     \\
+  Design                &  0.080 & * & * &  0.080 & *  & * & -0.037 &    & - &&  0.082 & *     &&  0.075 &   & +    &  0.071 &    & *   &  0.004 &   &     \\
+  Analytics             &  0.123 & + & * &  0.110 &    & * &  0.196 &    & * &&  0.131 & *     &&  0.128 & * & *    &  0.128 &    & *   &  0.000 &   &     \\
+  Perceptive            &  0.060 &   & * & -0.008 &    &   &  0.168 &    & * &&  0.058 & *     &&  0.057 &   & -    &  0.061 &    & *   & -0.004 &   &     \\
+  Log-Variance          & -1.893 & * & * & -2.891 &    & * & -0.627 &    & * &&  --    &       &&        &   &      &        &    &     &        &   &     \\
                         \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
   Share$^{4}$:          & 0.811  &   &   & 0.110  &    &   &  0.080 &    &   &&  1.000 &       &&  --    &   &      &  --    &    &     &  --    &   &     \\
   \hline
@@ -1888,7 +1877,7 @@ cohort.
           \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
           \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
           \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
-          \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
+          \item $^{4}$ The share is calculated by summing the prior weights across observations for each expert.
   
         \end{tablenotes} \label{tbl:3W_full_regressions_results}
       \end{threeparttable}
@@ -1925,8 +1914,8 @@ cohort.
         \item{\footnotesize $^{1}$ The share is calculated by summing the 
         posterior weights across observations for each expert.}
         \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-        in the census sample that are classified based on the value of their posterior weights.
-        For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+        in the census sample that are classified based on the value of their prior weights.
+        For example, observation $i$ is assigned to expert $j$ if the prior vector's
         largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
       \end{tablenotes} \label{tbl:ME3_sample_comparison}
     \end{threeparttable}
@@ -1945,19 +1934,19 @@ cohort.
             \cmidrule(l){2-10}    \cmidrule(l){12-13}     \cmidrule(l){15-23}
             & Coef.  & $^{[S]}$ & $^{[O]}$ &  Coef. & $^{[S]}$ & $^{[O]}$ & Coef.  & $^{[S]}$ & $^{[O]}$  && \multicolumn{2}{c}{Coef.} && Both   & $^{[S]}$ & $^{[O]}$ & Experts & $^{[S]}$ & $^{[O]}$ & Gates  & $^{[S]}$ & $^{[O]}$ \\
             \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
-    Intercept             &  1.404 & * & *   &  1.559 & * & *   &  0.898 & * & *   &&  1.241 & *     &&  1.393 & * & *     &  1.382 & * & *     &  0.011 &  \\
+    Intercept             &  1.404 & * & *   &  1.559 & * & *   &  0.898 & * & *   &&  1.241 & *     &&  1.393 & + & *     &  1.382 & * & *     &  0.011 &  \\
     Age-16                &  0.020 & * & *   &  0.050 & * & *   &  0.044 & * & *   &&  0.035 & *     &&  0.028 &   &       &  0.026 & * & *     &  0.003 &  \\
     $\textrm{Age-16}^{2}$ & -0.000 & * & *   & -0.001 & * & *   & -0.001 & * & *   && -0.001 & *     && -0.000 &   &       & -0.000 & * & *     &  0.000 &  \\
     YrsEduc               &  0.082 & * & *   &  0.034 & * & *   &  0.074 & * & *   &&  0.076 & *     &&  0.073 &   &       &  0.075 & * & *     & -0.001 &  \\
     Female                & -0.257 & * & *   & -0.034 & * & *   & -0.131 & * & *   && -0.215 & *     && -0.209 & * & *     & -0.217 & * & *     &  0.008 &  \\
-    Af Amer               & -0.086 & * & *   & -0.048 & * & *   & -0.041 &   &     && -0.076 & *     && -0.076 &   &       & -0.077 & * & *     &  0.001 &  \\
+    Af Amer               & -0.086 & * & *   & -0.048 & * & *   & -0.041 &   &     && -0.076 & *     && -0.076 &   & +     & -0.077 & * & *     &  0.001 &  \\
     Indian                & -0.113 & * & *   & -0.057 &   & -   &  0.043 &   &     && -0.091 & *     && -0.100 &   &       & -0.093 & * & *     & -0.007 &  \\
     Asian                 & -0.033 & * & *   &  0.058 & + & +   & -0.062 &   &     && -0.032 & *     && -0.025 &   &       & -0.023 & + & +     & -0.001 &  \\
-    Hisp                  & -0.143 & * & *   & -0.066 & * & *   &  0.077 &   &     && -0.106 & *     && -0.111 &   &       & -0.114 & * & *     &  0.003 &  \\
-    Creativity            & -0.042 & * & *   & -0.021 & + & *   & -0.136 & * & *   && -0.046 & *     && -0.043 &   &       & -0.047 & * & *     &  0.004 &  \\
-    Design                &  0.080 & * & *   &  0.068 & * & *   & -0.048 & + & +   &&  0.082 & *     &&  0.074 & + & +     &  0.068 & * & *     &  0.006 &  \\
+    Hisp                  & -0.143 & * & *   & -0.066 & * & *   &  0.077 &   &     && -0.106 & *     && -0.111 &   & *      & -0.114 & * & *     &  0.003 &  \\
+    Creativity            & -0.042 & * & *   & -0.021 & + & *   & -0.136 & * & *   && -0.046 & *     && -0.043 &   & +     & -0.047 & * & *     &  0.004 &  \\
+    Design                &  0.080 & * & *   &  0.068 & * & *   & -0.048 & + & +   &&  0.082 & *     &&  0.074 & + & *     &  0.068 & * & *     &  0.006 &  \\
     Analytics             &  0.124 & * & *   &  0.112 & * & *   &  0.183 & * & *   &&  0.131 & *     &&  0.128 & * & *     &  0.127 & * & *     &  0.000 &  \\
-    Perceptive            &  0.063 & * & *   & -0.003 &   &     &  0.135 & * & *   &&  0.058 & *     &&  0.056 & + & +     &  0.061 & * & *     & -0.004 &  \\
+    Perceptive            &  0.063 & * & *   & -0.003 &   &     &  0.135 & * & *   &&  0.058 & *     &&  0.056 & + & *     &  0.061 & * & *     & -0.004 &  \\
     Log-Variance          & -1.895 & * & *   & -2.791 & * & *   & -0.622 & * & *   &&  --    &       &&        &   &       &        &   &       &        &  \\
     \cmidrule(l){2-4} \cmidrule(l){5-7} \cmidrule(l){8-10} \cmidrule(l){12-13} \cmidrule(l){15-17} \cmidrule(l){18-20} \cmidrule(l){21-23}
     Share$^{4}$:          & 0.783  &   &     & 0.133  &   &     & 0.084  &   &     &&  1.000 &       &&  --    &   &       &  --    &   &       &  --    &  \\
@@ -1972,7 +1961,7 @@ cohort.
             \item $^{1}$ Fitted coefficients from the three-expert model with the full parameter specification from equation (\ref{eq:full_formula})
             \item $^{2}$ Fitted coefficients from an OLS regression. These coefficient values can be compared to the HME coefficients to their left as well as to the marginal values to their right
             \item $^{3}$ Marginal effects for the HME model. Standard errors are estimated by equation (\ref{eq:std_errs_full_marginal_effects}).
-            \item $^{4}$ The share is calculated by summing the posterior weights across observations for each expert.
+            \item $^{4}$ The share is calculated by summing the prior weights across observations for each expert.
     
           \end{tablenotes} \label{tbl:3D_full_regressions_results}
     
@@ -2013,8 +2002,8 @@ cohort.
           \item{\footnotesize $^{1}$ The share is calculated by summing the 
           posterior weights across observations for each expert.}
           \item{\footnotesize \textbf{Note:} Mean and median values are applied to individuals
-          in the census sample that are classified based on the value of their posterior weights.
-          For example, observation $i$ is assigned to expert $j$ if the posterior vector's
+          in the census sample that are classified based on the value of their prior weights.
+          For example, observation $i$ is assigned to expert $j$ if the prior vector's
           largest value is the $j$-th index: $\argmax \boldsymbol{h}_{i} = h_{ij}$}
         \end{tablenotes} \label{tbl:HME3_sample_comparison}
       \end{threeparttable}
@@ -2026,7 +2015,7 @@ cohort.
 
 \section{Monte Carlo Exercise} \label{sec:MonteCarlo}
 
-As a final exercise, a series of simulation exercises are designed to better understand the practical behavior of the (H)ME models as the relative size and heterogeneity of the sub-populations change, changes in the strength of association between the variables in the model, and misspecification of the number of experts. Both experiments will use the same monte carlo framework discussed below to generate the data but will differ slightly in how the observations are allocated to one expert or another. All experts will have the following function form. Each local expert regression will have two dependent variables $(X, Z)$ and normally distributed error terms. 
+As a final exercise, a series of simulation exercises are designed to better understand the practical behavior of the (H)ME models as the relative size and heterogeneity of the sub-populations change, changes in the strength of association between the variables in the model, and misspecification of the number of experts. Both experiments will use the same Monte Carlo framework discussed below to generate the data but will differ slightly in how the observations are allocated to one expert or another. All experts will have the following function form. Each local expert regression will have two dependent variables $(X, Z)$ and normally distributed error terms. 
 
 \begin{equation} \label{eq:MC_regression_eq}
     y_{i,t} = \beta_{i}^{c} + \beta_{i}^{x}  x_{t} + \beta_{i}^{z}  z_{t} + \varepsilon_{i,t}
@@ -2036,7 +2025,7 @@ As a final exercise, a series of simulation exercises are designed to better und
     \varepsilon_{i,t} \thicksim N(0, \sigma^{2}_{i})
 \end{equation}
 
-Recall from Section \ref{sec:Inference} that the variance parameter is not estimated directly. Rather, a transform is used to remove the non-zero constraint. This transform is defined as $\phi_{i} = \log(\sigma^{2}_{i})$. The monte carlo exercise will follow this convention when setting parameters that govern the underlying data generating process. The random variable $X$ will be destributed as a standard normal:
+Recall from Section \ref{sec:Inference} that the variance parameter is not estimated directly. Rather, a transform is used to remove the non-zero constraint. This transform is defined as $\phi_{i} = \log(\sigma^{2}_{i})$. The Monte Carlo exercise will follow this convention when setting parameters that govern the underlying data generating process. The random variable $X$ will be distributed as a standard normal:
 
 \begin{equation} \label{eq:MC_X_distribution}
     X \thicksim N(0, 1)
@@ -2058,28 +2047,28 @@ where $X_{1}$ is also sampled from a standard normal distribution independent of
 
 
 
-The first experiment will examine the variability of the estimated model parameters across monte carlo samples and compare the standard deviation of the converged parameter values to the standard errors produced by the three available variance-covariance matrices (the outer-product-of-the-gradient, the hessian, and the sandwich estimator). The baseline sampling procedure discussed above will be used to create 1000 monte carlo samples. Each sample will have 1000 observations. After the sample has been created, the probability of membership to each sub-population is then calculated as a function of Z. The logistic function will be used estimate these probabilities:
+The first experiment will examine the variability of the estimated model parameters across Monte Carlo samples and compare the standard deviation of the converged parameter values to the standard errors produced by the three available variance-covariance matrices (the outer-product-of-the-gradient, the hessian, and the sandwich estimator). The baseline sampling procedure discussed above will be used to create 1000 Monte Carlo samples. Each sample will have 1000 observations. After the sample has been created, the probability of membership to each sub-population is then calculated as a function of Z. The logistic function will be used estimate these probabilities:
 
 \begin{equation} \label{eq:general_logistic}
     P(z) = \frac{1}{1 + \exp\{\alpha (c - z)\}}
 \end{equation}
 
-In this version of the logistic function, the parameter $c$ governs the location of the mid-point while $\alpha$ controls the severity of the slope at the mid-point. A 2-expert ME model will be fit on each sample and the converged parameter estimates and their standared errors will be recorded. This process will then be repeated at different values for the parameters governing the association between X and Z and for the parameters that govern the probabilities of group membership. For the baseline model, the sampling and modeling parameters are set to the values below:
+In this version of the logistic function, the parameter $c$ governs the location of the mid-point while $\alpha$ controls the severity of the slope at the mid-point. A 2-expert ME model will be fit on each sample and the converged parameter estimates and their standard errors will be recorded. This process will then be repeated at different values for the parameters governing the association between X and Z and for the parameters that govern the probabilities of group membership. For the baseline model, the sampling and modeling parameters are set to the values below:
 
 \begin{itemize}
     \item Simulation Parameters: $\rho = 1$,\; $c = 0.5$,\; $\alpha = 8$
-    \item Expert One Parameters: $\beta_{1}^{c} = 1.2$, \; $\beta_{1}^{x} = 1.5$, \; $\beta_{1}^{z} = 0.5$, \; $\phi_{1} = -3.218876$
-    \item Expert Two Parameters: $\beta_{2}^{c} = 0.8$, \; $\beta_{2}^{x} = 2.0$, \; $\beta_{2}^{z} = 1.1$, \; $\phi_{2} = -3.429597$
+    \item Expert One Parameters: $\beta_{1}^{c} = 0.8$, \; $\beta_{1}^{x} = 2.0$, \; $\beta_{1}^{z} = 1.1$, \; $\phi_{1} = -3.429597$
+    \item Expert Two Parameters: $\beta_{2}^{c} = 1.2$, \; $\beta_{2}^{x} = 1.5$, \; $\beta_{2}^{z} = 0.5$, \; $\phi_{2} = -3.218876$
 \end{itemize}
 
 Three experiments will be run:
 
 \begin{enumerate}
-    \item The homogeneity of each sub-population will be altered by selecting different values of the slope parameter ($\alpha$) in the logistic function described in Equation (\ref{eq:general_logistic}). Larger values of $\alpha$ lead to a sharper delineation in probabilities (along the Z-axis) of membership between the two sub-populations while values close to zero lead to an equal probability of belonging each sub-group, regardless of the value of Z. Analysis will be run at the following values: $\alpha = [125, 25, 8, 4, 2, 1, 0.01]$. The left side of Figure \ref{fig:MC_logistic_pars} shows the logistic curve with different values of $\alpha$.
+    \item The homogeneity of each sub-population will be altered by selecting different values of the slope parameter ($\alpha$) in the logistic function described in Equation \ref{eq:general_logistic}. Larger values of $\alpha$ lead to a sharper delineation in probabilities (along the Z-axis) of membership between the two sub-populations while values close to zero lead to an equal probability of belonging each sub-group, regardless of the value of Z. Analysis will be run at the following values: $\alpha = [125, 25, 8, 4, 2, 1, 0.01]$. The left side of Figure \ref{fig:MC_logistic_pars} shows the logistic curve with different values of $\alpha$.
     
-    \item The relative size of the two sub-populations can be controlled by manipulating the mid-point parameter ($c$) of the logistic function. At the baseline value of 0.5, every monte carlo sample will have roughly equal proportions of the two groups. Analysis will be run at the following values: $c = [0, 0.1, 0.2, 0.3, 0.4, 0.5]$. The right side of Figure \ref{fig:MC_logistic_pars} shows the logistic curve with different values of $c$.
+    \item The relative size of the two sub-populations can be controlled by manipulating the mid-point parameter ($c$) of the logistic function. At the baseline value of 0.5, every Monte Carlo sample will have roughly equal proportions of the two groups. Smaller values of $c$ will lead to a larger number of observations in the sample whose conditional mean will be governed by expert regression two. Analysis will be run at the following values: $c = [0, 0.1, 0.2, 0.3, 0.4, 0.5]$. The right side of Figure \ref{fig:MC_logistic_pars} shows the logistic curve with different values of $c$.
   
-    \item The strength of association between $X_{1}$ and $Z$ is controlled by $\rho$ in Equation (\ref{eq:MC_XZ_correlation}). Values closer to zero lead to a more tighly coupled relationship while values farther from zero introduce more noise between $X_{1}$ and $Z$. Analysis will be run at the following values: $\rho = [0.125, 0.25, 0.5, 1, 2, 4]$. Figure \ref{fig:MC_rho} shows the different samples of $(X, Z)$ drawn with different values of $\rho$.
+    \item The strength of association between $X_{1}$ and $Z$ is controlled by $\rho$ in Equation \ref{eq:MC_XZ_correlation}. Values closer to zero lead to a more tightly coupled relationship while values farther from zero introduce more noise between $X_{1}$ and $Z$. Analysis will be run at the following values: $\rho = [0.125, 0.25, 0.5, 1, 2, 4]$. Figure \ref{fig:MC_rho} shows the different samples of $(X, Z)$ drawn with different values of $\rho$.
 \end{enumerate}
 
 
@@ -2094,33 +2083,33 @@ Three experiments will be run:
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=\textwidth]{MonteCarlo_rho.jpeg}
-    \caption{The effect of different values of $\rho$ on the strength of association between the joint distribution of $(X_{1}, Z)$. The baseline model sets $\rho = 1$.} 
+    \caption{The effect of different values of $\rho$ on the strength of association between the joint distribution of $(X, Z)$. The baseline model sets $\rho = 1$.} 
     \label{fig:MC_rho}
 \end{figure}
 
-The results of the first experiment are presented in two ways. First, we plot the comparisons between the standard deviation of the fitted parameter estimates against the average standard error of the parameter estimates resulting from each fitted model. Three different average standard error values are calculated, one for each of the three variance-covariance matrices described in Section \ref{sec:Inference}. These results are summarized in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho}. The main take-away from these figures is agreement between the standard deviation of the parameter values with the average standard error, regardless of the variance-covariance estimator used, for every parameter except the log-variance. Surprisingly, for $\phi_{i}$, the OPG estimator is the only estimator that produces standard errors in-line with the standard deviation of the estimated log-variance while the sandwich estimator's estimates are the most biased towards zero. This pattern is consistent across the three simulation parameters that are being altered: $\rho$, c, and $\alpha$. It is not immediately clear the reason behind this discrepency and the accuracy of the the OPG estimator over the Hessian and Sandwich estimators. 
+The results of the first experiment are presented in two ways. First, we plot the comparisons between the standard deviation of the fitted parameter estimates against the average standard error of the parameter estimates resulting from each fitted model. Three different average standard error values are calculated, one for each of the three variance-covariance matrices described in Section \ref{sec:Inference}. These results are summarized in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho}. The main take-away from these figures is agreement between the standard deviation of the parameter values with the average standard error, regardless of the variance-covariance estimator used, for every parameter except the log-variance. Surprisingly, for $\phi_{i}$, the OPG estimator is the only estimator that produces standard errors in-line with the standard deviation of the estimated log-variance while the sandwich estimator's estimates are the most biased towards zero. This pattern is consistent across the three simulation parameters that are being altered: $\rho$, c, and $\alpha$. It is not immediately clear the reason behind this discrepancy and the accuracy of the the OPG estimator over the Hessian and Sandwich estimators. 
 
 \bigskip
 
-A second summary of the monte carlo exercise is provided in Tables \ref{tbl:coverage_ratio_c} - \ref{tbl:coverage_ratio_rho}. These tables provide the coverage probability that the true parameter values underpinning the DGP are contained in a confidence interval produced by each model's fitted parameter vector and variance-covariance estimator. The nominal coverage proability is set at 95\% and the percentages in the table are the proportion of times the confidence interval failed to capture the true parameter value. The general pattern captured in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho} holds here as well: coverage ratios for the regression parameters ($\boldsymbol{\beta_{i}}$) hew closely to the nomial fail rate of 5\% across variance estimators but are drasticly inflated for the log-variance parameters ($\phi_{i}$). The value of this view is its demonstration of the practical impact of using an inappropriate variance estimator for this simulation study. For the Hessian estimator, the 95\% confidence intervals fail to capture the true parameter values of $\phi_{i}$ from 18 to 23 percent of the time. This ratio jumps to a range of 39 to 47 percent of the time if the Sandwich estimator is used. 
+A second summary of the Monte Carlo exercise is provided in Tables \ref{tbl:coverage_ratio_c} - \ref{tbl:coverage_ratio_rho}. These tables provide the coverage probability that the true parameter values underpinning the DGP are contained in a confidence interval produced by each model's fitted parameter vector and variance-covariance estimator. The nominal coverage probability is set at 95\% and the percentages in the table are the proportion of times the confidence interval failed to capture the true parameter value. The general pattern captured in Figures \ref{fig:MonteCarlo_results_c} - \ref{fig:MonteCarlo_results_rho} holds here as well: coverage ratios for the regression parameters ($\boldsymbol{\beta_{i}}$) hew closely to the nominal fail rate of 5\% across variance estimators but are drastically inflated for the log-variance parameters ($\phi_{i}$). The value of this view is its demonstration of the practical impact of using an inappropriate variance estimator for this simulation study. For the Hessian estimator, the 95\% confidence intervals fail to capture the true parameter values of $\phi_{i}$ from 18 to 23 percent of the time. This ratio jumps to a range of 39 to 47 percent of the time if the Sandwich estimator is used. 
 
 \begin{figure}[t!]
   \includegraphics[width=\textwidth]{MonteCarlo_results_c.jpeg}
-  \caption{More captions to come}
+  \caption{Comparison of average standard errors versus the standard deviation of fitted parameter vectors at different values of logistic parameter $c$. Smaller values of $c$ result in a greater imbalance in size between the two sub-populations (see Figure \ref{fig:MC_logistic_pars}). In this experiment, smaller values of $c$ lead to larger number of observations in the sample whose conditional mean will be governed by expert regression two and fewer observations whose conditional mean is governed by expert regression one. The relationship is clear: the greater the number of observations in a sub-population the more precise (smaller values of the standard errors) estimated parameter vector will be.}
   \label{fig:MonteCarlo_results_c}
 \end{figure}
 
 
 \begin{figure}[t!]
   \includegraphics[width=\textwidth]{MonteCarlo_results_alpha.jpeg}
-  \caption{More captions to come}
+  \caption{Comparison of average standard errors versus the standard deviation of fitted parameter vectors at different values of logistic parameter $\alpha$. Larger values of $\alpha$ result in more homogenous sub-populations (see Figure \ref{fig:MC_logistic_pars}). More homogenous groups in the data lead to smaller standard errors for the log-variance parameter and increasing standard errors for in the $Z$ variable. Both these parameters have noticeably larger standard error values than the regression coefficient on the $X$ variable and the intercept term.}
   \label{fig:MonteCarlo_results_alpha}
 \end{figure}
 
 
 \begin{figure}[t!]
   \includegraphics[width=\textwidth]{MonteCarlo_results_rho.jpeg}
-  \caption{More captions to come}
+  \caption{Comparison of average standard errors versus the standard deviation of fitted parameter vectors at different values of association parameter $\rho$. Standard errors for the regression coefficients share a similar decreasing relationship with the value of $\rho$ while standard errors for the log-variance parameter remain unaffected and flat. As the data become less tightly coupled in $(X, Z)$-space (see Figure \ref{fig:MC_rho}) standard errors decline.}
   \label{fig:MonteCarlo_results_rho}
 \end{figure}
 
@@ -2134,26 +2123,26 @@ A second summary of the monte carlo exercise is provided in Tables \ref{tbl:cove
 Std Err Type & Value & $\beta_{1}^{c}$ & $\beta_{1}^{x}$ & $\beta_{1}^{z}$ & $\phi_{1}$ & $\beta_{2}^{c}$ & $\beta_{2}^{x}$ & $\beta_{2}^{z}$ & $\phi_{2}$ \\ 
   \hline
 
-Sandwich  & 0.0 & 0.075 & 0.064 & 0.075 & 0.488 & 0.057 & 0.052 & 0.057 & 0.380 \\
-          & 0.1 & 0.064 & 0.067 & 0.071 & 0.479 & 0.053 & 0.049 & 0.050 & 0.377 \\
-          & 0.2 & 0.057 & 0.059 & 0.061 & 0.437 & 0.063 & 0.052 & 0.056 & 0.382 \\
-          & 0.3 & 0.051 & 0.057 & 0.060 & 0.458 & 0.054 & 0.058 & 0.045 & 0.417 \\
-          & 0.4 & 0.050 & 0.056 & 0.048 & 0.425 & 0.065 & 0.073 & 0.059 & 0.422 \\
-          & 0.5 & 0.051 & 0.051 & 0.058 & 0.444 & 0.057 & 0.050 & 0.054 & 0.424 \\
+Sandwich  & 0.0 & 0.058 & 0.067 & 0.075 & 0.083 & 0.046 & 0.057 & 0.051 & 0.064 \\
+          & 0.1 & 0.066 & 0.055 & 0.072 & 0.080 & 0.066 & 0.063 & 0.060 & 0.053 \\
+          & 0.2 & 0.055 & 0.057 & 0.051 & 0.079 & 0.057 & 0.055 & 0.052 & 0.061 \\
+          & 0.3 & 0.059 & 0.058 & 0.059 & 0.051 & 0.045 & 0.047 & 0.043 & 0.051 \\
+          & 0.4 & 0.049 & 0.047 & 0.052 & 0.061 & 0.069 & 0.057 & 0.066 & 0.061 \\
+          & 0.5 & 0.043 & 0.051 & 0.053 & 0.049 & 0.052 & 0.065 & 0.045 & 0.069 \\
           &     &       &       &       &       &       &       &       &       \\
-Hessian   & 0.0 & 0.075 & 0.061 & 0.070 & 0.263 & 0.060 & 0.045 & 0.056 & 0.211 \\
-          & 0.1 & 0.060 & 0.064 & 0.060 & 0.252 & 0.052 & 0.049 & 0.048 & 0.197 \\
-          & 0.2 & 0.058 & 0.058 & 0.051 & 0.229 & 0.061 & 0.054 & 0.055 & 0.189 \\
-          & 0.3 & 0.047 & 0.052 & 0.046 & 0.234 & 0.054 & 0.056 & 0.044 & 0.208 \\
-          & 0.4 & 0.050 & 0.060 & 0.048 & 0.216 & 0.069 & 0.070 & 0.062 & 0.234 \\
-          & 0.5 & 0.051 & 0.054 & 0.057 & 0.240 & 0.049 & 0.054 & 0.049 & 0.222 \\
+Hessian   & 0.0 & 0.058 & 0.067 & 0.075 & 0.083 & 0.046 & 0.057 & 0.051 & 0.064 \\
+          & 0.1 & 0.066 & 0.055 & 0.072 & 0.080 & 0.066 & 0.063 & 0.060 & 0.053 \\
+          & 0.2 & 0.055 & 0.057 & 0.051 & 0.079 & 0.057 & 0.055 & 0.052 & 0.061 \\
+          & 0.3 & 0.059 & 0.058 & 0.059 & 0.051 & 0.045 & 0.047 & 0.043 & 0.051 \\
+          & 0.4 & 0.049 & 0.047 & 0.052 & 0.061 & 0.069 & 0.057 & 0.066 & 0.061 \\
+          & 0.5 & 0.043 & 0.051 & 0.053 & 0.049 & 0.052 & 0.065 & 0.045 & 0.069 \\
           &     &       &       &       &       &       &       &       &       \\
-OPG       & 0.0 & 0.066 & 0.050 & 0.062 & 0.048 & 0.054 & 0.042 & 0.056 & 0.062 \\
-          & 0.1 & 0.054 & 0.049 & 0.061 & 0.055 & 0.051 & 0.045 & 0.051 & 0.048 \\
-          & 0.2 & 0.056 & 0.054 & 0.046 & 0.050 & 0.060 & 0.057 & 0.053 & 0.052 \\
-          & 0.3 & 0.047 & 0.048 & 0.044 & 0.058 & 0.053 & 0.052 & 0.043 & 0.062 \\
-          & 0.4 & 0.042 & 0.058 & 0.045 & 0.051 & 0.063 & 0.065 & 0.059 & 0.058 \\
-          & 0.5 & 0.047 & 0.055 & 0.050 & 0.053 & 0.046 & 0.053 & 0.043 & 0.062 \\
+OPG       & 0.0 & 0.048 & 0.052 & 0.038 & 0.055 & 0.049 & 0.058 & 0.050 & 0.054 \\
+          & 0.1 & 0.057 & 0.047 & 0.051 & 0.076 & 0.066 & 0.064 & 0.056 & 0.051 \\
+          & 0.2 & 0.048 & 0.043 & 0.052 & 0.064 & 0.059 & 0.054 & 0.053 & 0.058 \\
+          & 0.3 & 0.054 & 0.044 & 0.042 & 0.046 & 0.047 & 0.044 & 0.041 & 0.046 \\
+          & 0.4 & 0.051 & 0.035 & 0.044 & 0.050 & 0.064 & 0.046 & 0.065 & 0.057 \\
+          & 0.5 & 0.041 & 0.045 & 0.047 & 0.047 & 0.049 & 0.051 & 0.045 & 0.057 \\
   \hline
     \end{tabular}
     }
@@ -2173,29 +2162,29 @@ OPG       & 0.0 & 0.066 & 0.050 & 0.062 & 0.048 & 0.054 & 0.042 & 0.056 & 0.062 
 Std Err Type & Value & $\beta_{1}^{c}$ & $\beta_{1}^{x}$ & $\beta_{1}^{z}$ & $\phi_{1}$ & $\beta_{2}^{c}$ & $\beta_{2}^{x}$ & $\beta_{2}^{z}$ & $\phi_{2}$ \\ 
   \hline
 
-Sandwich  & 0.01 & 0.063 & 0.047 & 0.053 & 0.487 & 0.047 & 0.052 & 0.052 & 0.449 \\
-          &    1 & 0.045 & 0.046 & 0.045 & 0.458 & 0.050 & 0.062 & 0.060 & 0.464 \\
-          &    2 & 0.055 & 0.047 & 0.050 & 0.466 & 0.053 & 0.059 & 0.055 & 0.472 \\
-          &    4 & 0.054 & 0.064 & 0.054 & 0.433 & 0.064 & 0.061 & 0.048 & 0.422 \\
-          &    8 & 0.051 & 0.051 & 0.058 & 0.444 & 0.057 & 0.050 & 0.054 & 0.424 \\
-          &   25 & 0.045 & 0.043 & 0.047 & 0.380 & 0.046 & 0.044 & 0.041 & 0.361 \\
-          &  125 & 0.053 & 0.057 & 0.060 & 0.349 & 0.047 & 0.059 & 0.050 & 0.355 \\
+Sandwich  & 0.01 & 0.039 & 0.042 & 0.034 & 0.049 & 0.062 & 0.063 & 0.065 & 0.062 \\
+          &    1 & 0.057 & 0.046 & 0.047 & 0.046 & 0.057 & 0.046 & 0.055 & 0.040 \\
+          &    2 & 0.055 & 0.069 & 0.056 & 0.051 & 0.051 & 0.057 & 0.057 & 0.048 \\
+          &    4 & 0.059 & 0.055 & 0.061 & 0.056 & 0.051 & 0.052 & 0.051 & 0.055 \\
+          &    8 & 0.043 & 0.051 & 0.053 & 0.049 & 0.052 & 0.065 & 0.045 & 0.069 \\
+          &   25 & 0.060 & 0.049 & 0.058 & 0.062 & 0.068 & 0.052 & 0.065 & 0.056 \\
+          &  125 & 0.058 & 0.060 & 0.062 & 0.070 & 0.055 & 0.045 & 0.054 & 0.059 \\
           &      &       &       &       &       &       &       &       &       \\
-Hessian   & 0.01 & 0.062 & 0.046 & 0.056 & 0.252 & 0.047 & 0.051 & 0.051 & 0.247 \\
-          &    1 & 0.045 & 0.044 & 0.045 & 0.236 & 0.049 & 0.063 & 0.056 & 0.239 \\
-          &    2 & 0.051 & 0.045 & 0.056 & 0.224 & 0.053 & 0.061 & 0.055 & 0.237 \\
-          &    4 & 0.053 & 0.055 & 0.049 & 0.212 & 0.063 & 0.059 & 0.045 & 0.230 \\
-          &    8 & 0.051 & 0.054 & 0.057 & 0.240 & 0.049 & 0.054 & 0.049 & 0.222 \\
-          &   25 & 0.047 & 0.041 & 0.045 & 0.210 & 0.042 & 0.043 & 0.039 & 0.179 \\
-          &  125 & 0.052 & 0.055 & 0.052 & 0.181 & 0.047 & 0.059 & 0.054 & 0.185 \\
+Hessian   & 0.01 & 0.035 & 0.049 & 0.039 & 0.047 & 0.065 & 0.060 & 0.063 & 0.063 \\
+          &    1 & 0.052 & 0.043 & 0.046 & 0.046 & 0.056 & 0.047 & 0.058 & 0.040 \\
+          &    2 & 0.058 & 0.069 & 0.048 & 0.048 & 0.052 & 0.054 & 0.057 & 0.046 \\
+          &    4 & 0.060 & 0.053 & 0.058 & 0.054 & 0.049 & 0.051 & 0.043 & 0.053 \\
+          &    8 & 0.043 & 0.046 & 0.050 & 0.050 & 0.049 & 0.057 & 0.044 & 0.064 \\
+          &   25 & 0.057 & 0.047 & 0.058 & 0.058 & 0.065 & 0.049 & 0.060 & 0.050 \\
+          &  125 & 0.055 & 0.059 & 0.061 & 0.067 & 0.051 & 0.047 & 0.051 & 0.055 \\
           &      &       &       &       &       &       &       &       &       \\
-OPG       & 0.01 & 0.058 & 0.044 & 0.055 & 0.045 & 0.049 & 0.050 & 0.048 & 0.052 \\
-          &    1 & 0.043 & 0.042 & 0.046 & 0.051 & 0.052 & 0.060 & 0.045 & 0.056 \\
-          &    2 & 0.050 & 0.041 & 0.056 & 0.042 & 0.054 & 0.059 & 0.055 & 0.049 \\
-          &    4 & 0.053 & 0.054 & 0.046 & 0.056 & 0.055 & 0.053 & 0.047 & 0.044 \\
-          &    8 & 0.047 & 0.055 & 0.050 & 0.053 & 0.046 & 0.053 & 0.043 & 0.062 \\
-          &   25 & 0.044 & 0.041 & 0.046 & 0.078 & 0.040 & 0.037 & 0.037 & 0.047 \\
-          &  125 & 0.050 & 0.056 & 0.051 & 0.053 & 0.045 & 0.051 & 0.050 & 0.061 \\
+OPG       & 0.01 & 0.036 & 0.050 & 0.042 & 0.045 & 0.064 & 0.051 & 0.062 & 0.057 \\
+          &    1 & 0.046 & 0.038 & 0.048 & 0.043 & 0.058 & 0.051 & 0.059 & 0.034 \\
+          &    2 & 0.056 & 0.062 & 0.048 & 0.043 & 0.053 & 0.047 & 0.061 & 0.041 \\
+          &    4 & 0.065 & 0.048 & 0.056 & 0.051 & 0.042 & 0.044 & 0.042 & 0.048 \\
+          &    8 & 0.041 & 0.045 & 0.047 & 0.047 & 0.049 & 0.051 & 0.045 & 0.057 \\
+          &   25 & 0.058 & 0.045 & 0.058 & 0.053 & 0.065 & 0.047 & 0.061 & 0.049 \\
+          &  125 & 0.056 & 0.061 & 0.059 & 0.066 & 0.046 & 0.043 & 0.046 & 0.052 \\
   \hline
     \end{tabular}
     }
@@ -2215,26 +2204,26 @@ OPG       & 0.01 & 0.058 & 0.044 & 0.055 & 0.045 & 0.049 & 0.050 & 0.048 & 0.052
 Std Err Type & Value & $\beta_{1}^{c}$ & $\beta_{1}^{x}$ & $\beta_{1}^{z}$ & $\phi_{1}$ & $\beta_{2}^{c}$ & $\beta_{2}^{x}$ & $\beta_{2}^{z}$ & $\phi_{2}$ \\ 
   \hline
 
-Sandwich  & 0.125 & 0.062 & 0.069 & 0.062 & 0.432 & 0.065 & 0.055 & 0.059 & 0.425 \\
-          &  0.25 & 0.060 & 0.055 & 0.063 & 0.457 & 0.057 & 0.048 & 0.053 & 0.390 \\
-          &   0.5 & 0.053 & 0.051 & 0.055 & 0.417 & 0.063 & 0.049 & 0.057 & 0.417 \\
-          &     1 & 0.051 & 0.051 & 0.058 & 0.444 & 0.057 & 0.050 & 0.054 & 0.424 \\
-          &     2 & 0.066 & 0.057 & 0.060 & 0.380 & 0.056 & 0.052 & 0.054 & 0.418 \\
-          &     4 & 0.052 & 0.043 & 0.063 & 0.428 & 0.067 & 0.060 & 0.065 & 0.421 \\
+Sandwich  & 0.125 & 0.072 & 0.064 & 0.073 & 0.065 & 0.052 & 0.045 & 0.055 & 0.071 \\
+          &  0.25 & 0.041 & 0.044 & 0.036 & 0.063 & 0.051 & 0.049 & 0.059 & 0.061 \\
+          &   0.5 & 0.043 & 0.038 & 0.047 & 0.064 & 0.065 & 0.052 & 0.062 & 0.065 \\
+          &     1 & 0.043 & 0.051 & 0.053 & 0.049 & 0.052 & 0.065 & 0.045 & 0.069 \\
+          &     2 & 0.044 & 0.049 & 0.048 & 0.066 & 0.066 & 0.063 & 0.062 & 0.050 \\
+          &     4 & 0.043 & 0.049 & 0.052 & 0.063 & 0.065 & 0.061 & 0.062 & 0.055 \\
           &       &       &       &       &       &       &       &       &       \\
-Hessian   & 0.125 & 0.058 & 0.057 & 0.059 & 0.220 & 0.065 & 0.052 & 0.060 & 0.225 \\
-          &  0.25 & 0.059 & 0.055 & 0.061 & 0.240 & 0.057 & 0.046 & 0.050 & 0.191 \\
-          &   0.5 & 0.053 & 0.049 & 0.054 & 0.218 & 0.058 & 0.048 & 0.052 & 0.205 \\
-          &     1 & 0.051 & 0.054 & 0.057 & 0.240 & 0.049 & 0.054 & 0.049 & 0.222 \\
-          &     2 & 0.066 & 0.056 & 0.062 & 0.194 & 0.055 & 0.049 & 0.052 & 0.205 \\
-          &     4 & 0.053 & 0.040 & 0.057 & 0.212 & 0.068 & 0.061 & 0.066 & 0.227 \\
+Hessian   & 0.125 & 0.063 & 0.058 & 0.065 & 0.062 & 0.053 & 0.043 & 0.054 & 0.061 \\
+          &  0.25 & 0.039 & 0.040 & 0.043 & 0.061 & 0.048 & 0.049 & 0.054 & 0.057 \\
+          &   0.5 & 0.044 & 0.035 & 0.046 & 0.059 & 0.062 & 0.047 & 0.060 & 0.063 \\
+          &     1 & 0.043 & 0.046 & 0.050 & 0.050 & 0.049 & 0.057 & 0.044 & 0.064 \\
+          &     2 & 0.045 & 0.050 & 0.047 & 0.064 & 0.061 & 0.056 & 0.061 & 0.044 \\
+          &     4 & 0.047 & 0.049 & 0.048 & 0.057 & 0.066 & 0.059 & 0.060 & 0.051 \\
           &       &       &       &       &       &       &       &       &       \\
-OPG       & 0.125 & 0.045 & 0.047 & 0.052 & 0.047 & 0.062 & 0.055 & 0.055 & 0.068 \\
-          &  0.25 & 0.062 & 0.052 & 0.059 & 0.068 & 0.055 & 0.044 & 0.050 & 0.047 \\
-          &   0.5 & 0.046 & 0.047 & 0.053 & 0.055 & 0.059 & 0.050 & 0.049 & 0.047 \\
-          &     1 & 0.047 & 0.055 & 0.050 & 0.053 & 0.046 & 0.053 & 0.043 & 0.062 \\
-          &     2 & 0.063 & 0.053 & 0.061 & 0.044 & 0.043 & 0.050 & 0.049 & 0.060 \\
-          &     4 & 0.050 & 0.038 & 0.051 & 0.036 & 0.071 & 0.053 & 0.058 & 0.063 \\
+OPG       & 0.125 & 0.052 & 0.052 & 0.061 & 0.052 & 0.048 & 0.045 & 0.049 & 0.055 \\
+          &  0.25 & 0.039 & 0.034 & 0.038 & 0.049 & 0.040 & 0.050 & 0.050 & 0.059 \\
+          &   0.5 & 0.040 & 0.031 & 0.048 & 0.053 & 0.054 & 0.048 & 0.055 & 0.055 \\
+          &     1 & 0.041 & 0.045 & 0.047 & 0.047 & 0.049 & 0.051 & 0.045 & 0.057 \\
+          &     2 & 0.049 & 0.047 & 0.047 & 0.052 & 0.061 & 0.054 & 0.063 & 0.041 \\
+          &     4 & 0.041 & 0.049 & 0.046 & 0.055 & 0.061 & 0.056 & 0.060 & 0.049 \\
   \hline
     \end{tabular}
     }
@@ -2272,7 +2261,7 @@ The identification restricting requiring $\boldsymbol{\omega}_{4} = 0$ is ignore
 
 \bigskip 
 
-Table \ref{tbl:monte_carlo_voung_results} collects the results of the experiment. When the data generating process has two sub-populations, all estimated models are equivalent according to Voung's LR tests. This is due to the fact that models with more than two experts continue to split the two individual heterogeneous populations into smaller but homogenous groups with similar regression parameters estimated estimated for each one. The results become more nuanced as attention is turned to the sample with three sub-populations. There are several items worth pointing out. First, the 2-expert ME model is the least preferred amongst all the candidate models. The value of it's log-likelihood is signifcantly lower than the competing models with three and four experts. Second, the HME models are preferred over the ME models when keeping for the number of experts constant. This provides more support to the idea that the recursive gating structure of the HME model is more efficient at discovering the latent structure of a given dataset than the ME models which must partition the data all at once using a single multinomial split. Third, the 3-expert and 4-expert HME models are considered equivalent according to the Voung LR test. The same determiniation holds for the 3 and 4-expert ME models as well. Again, the idea here is similar to what is observed for the sample with two sub-populations: the extra expert has a fitted parameter vector that aligns closely with another expert in the model and applied to observations in the same sub-population. Results for the sample with four sub-populations is complicated and speaks to the difficulty of the (H)ME architecture to pull apart sub-groups that share considerable overlap both in the domain of the joint-distribution of $(X, Z)$ and their conditional distributions. Although there are four sub-groups in the simulated data, the 3-expert HME model is clearly preferred according to the LR test and the log-likelihood values. From Figure \ref{fig:MonteCarlo_cross_experts}, the fourth expert (in light blue) has it's entire mass contained in an interval of $y$ ([1.8, 4]) that also is highly associated with values of $y$ for the first sub-population (in black). The noise in the data has become too great for the model to distinguish without additional covariates.
+Table \ref{tbl:monte_carlo_voung_results} collects the results of the experiment. When the data generating process has two sub-populations, all estimated models are equivalent according to Voung's LR tests. This is due to the fact that models with more than two experts continue to split the two individual heterogeneous populations into smaller but homogenous groups with similar regression parameters estimated estimated for each one. The results become more nuanced as attention is turned to the sample with three sub-populations. There are several items worth pointing out. First, the 2-expert ME model is the least preferred amongst all the candidate models. The value of it's log-likelihood is significantly lower than the competing models with three and four experts. Second, the HME models are preferred over the ME models when keeping for the number of experts constant. This provides more support to the idea that the recursive gating structure of the HME model is more efficient at discovering the latent structure of a given dataset than the ME models which must partition the data all at once using a single multinomial split. Third, the 3-expert and 4-expert HME models are considered equivalent according to the Voung LR test. The same determination holds for the 3 and 4-expert ME models as well. Again, the idea here is similar to what is observed for the sample with two sub-populations: the extra expert has a fitted parameter vector that aligns closely with another expert in the model and applied to observations in the same sub-population. Results for the sample with four sub-populations is complicated and speaks to the difficulty of the (H)ME architecture to pull apart sub-groups that share considerable overlap both in the domain of the joint-distribution of $(X, Z)$ and their conditional distributions. Although there are four sub-groups in the simulated data, the 3-expert HME model is clearly preferred according to the LR test and the log-likelihood values. From Figure \ref{fig:MonteCarlo_cross_experts}, the fourth expert (in light blue) has it's entire mass contained in an interval of $y$ ([1.8, 4]) that also is highly associated with values of $y$ for the first sub-population (in black). The noise in the data has become too great for the model to distinguish without additional covariates.
 
 \begin{figure}[t!]
   \includegraphics[width=\textwidth]{MonteCarlo_cross_experts_data.jpeg}
@@ -2322,7 +2311,7 @@ Table \ref{tbl:monte_carlo_voung_results} collects the results of the experiment
       \hline
     \end{tabular}
     \begin{tablenotes}
-      \item{\footnotesize This table summarizes the comparision of varying (H)ME models estimated on a three different datasets with a known structure. A value of 1 indicates the model in the row is favored, -1 indicates the model in the column is favored, and 0 indicates equivalency of the models.}
+      \item{\footnotesize This table summarizes the comparison of varying (H)ME models estimated on a three different datasets with a known structure. A value of 1 indicates the model in the row is favored, -1 indicates the model in the column is favored, and 0 indicates equivalency of the models.}
     \end{tablenotes} \label{tbl:monte_carlo_voung_results}
   \end{threeparttable}
 \end{table}
@@ -2331,7 +2320,7 @@ Table \ref{tbl:monte_carlo_voung_results} collects the results of the experiment
 
 \section{Conclusion} \label{sec:Conclusion}
 
-In this article, a novel mixture model is explored that borrows equally from the economic and deep learning fields. A flexible gating network is used to learn the latent structure of a sample and then apply local regressions to that latent structure. Robust inference and closed form expressions for marginal effects were developed and demonstrated on two different datasets. Methods for model selection are also explored and demonstrated on these two dataset as well. Several simulation studies were also carried out to better understand the behaviour of the competing gating architectures and how they perform on samples with varying degrees of heterogeneity.
+In this article, a novel mixture model is explored that borrows equally from the economic and deep learning fields. A flexible gating network is used to learn the latent structure of a sample and then apply local regressions to that latent structure. Robust inference and closed form expressions for marginal effects were developed and demonstrated on two different datasets. Methods for model selection are also explored and demonstrated on these two dataset as well. Several simulation studies were  carried out to better understand the behavior of the competing gating architectures and how they perform on samples with varying degrees of heterogeneity.
 
 
 
